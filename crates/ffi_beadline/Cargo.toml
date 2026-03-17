@@ -1,0 +1,27 @@
+[package]
+name = "ffi_beadline"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "staticlib", "lib"]
+
+[dependencies]
+beadline-core = { path = "../beadline-core" }
+beadline-tags = { path = "../beadline-tags" }
+flutter_rust_bridge = "=2.11.1"
+log = "0.4"
+lofty = "0.22"
+sea-orm = { version = "1.1", features = ["sqlx-sqlite", "runtime-tokio"] }
+serde_json = "1"
+tokio = { version = "1", features = ["sync"] }
+
+[features]
+# Used to skip compiling frb_generated.rs during testing (stale until FRB codegen runs)
+skip_frb = []
+
+[dev-dependencies]
+proptest = "1"
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(frb_expand)'] }

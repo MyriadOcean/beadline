@@ -1,0 +1,982 @@
+{
+  "common": {
+    "cancel": "取消",
+    "save": "保存",
+    "delete": "删除",
+    "add": "添加",
+    "edit": "编辑",
+    "rename": "重命名",
+    "create": "创建",
+    "close": "关闭",
+    "retry": "重试",
+    "refresh": "刷新",
+    "search": "搜索",
+    "ok": "确定",
+    "yes": "是",
+    "no": "否",
+    "back": "返回",
+    "skip": "暂时跳过",
+    "apply": "应用",
+    "remove": "移除",
+    "duplicate": "复制",
+    "export": "导出",
+    "import": "导入",
+    "migrate": "迁移",
+    "reset": "重置",
+    "grant": "授权",
+    "enabled": "已启用",
+    "disabled": "已禁用",
+    "on": "开",
+    "off": "关",
+    "error": "错误",
+    "loading": "加载中...",
+    "songs": "首歌曲",
+    "selected": "已选择",
+    "items": "项",
+    "ms": "毫秒",
+    "dismiss": "关闭",
+    "extract": "提取",
+    "extractingThumbnails": "正在提取缩略图...",
+    "noThumbnailsAvailable": "没有可用的缩略图",
+    "displayVideoImage": "显示（视频/图片）",
+    "id": "ID",
+    "url": "URL",
+    "apiKey": "API 密钥",
+    "openParen": "(",
+    "closeParen": ")",
+    "routeNotFound": "未找到路由：{name}",
+    "@routeNotFound": {
+      "placeholders": {
+        "name": {}
+      }
+    },
+    "noResultsEnterSearch": "未找到结果。请输入搜索词并按搜索。",
+    "artistLabel": "艺术家：",
+    "albumLabel": "专辑：",
+    "platformLabel": "平台：",
+    "percentage": "{percentage}%",
+    "testConnection": "测试连接",
+    "disabledInKtvMode": "KTV 模式下禁用",
+    "failedToRename": "重命名失败：{error}",
+    "@failedToRename": {
+      "placeholders": {
+        "error": {}
+      }
+    },
+    "continueText": "继续",
+    "artist": "艺术家",
+    "album": "专辑",
+    "platform": "平台",
+    "addImage": "添加图片",
+    "shuffle": "重新排序",
+    "alreadyInPlaylist": "已在播放列表中",
+    "createAndAdd": "创建并添加"
+  },
+  "nav": {
+    "home": "主页",
+    "library": "曲库",
+    "playlists": "播放列表",
+    "tags": "标签",
+    "settings": "设置"
+  },
+  "app": {
+    "name": "珠链"
+  },
+  "library": {
+    "title": "曲库",
+    "loading": "正在加载曲库...",
+    "searchHint": "搜索曲库...",
+    "noLocations": "未设置曲库位置",
+    "allLocations": "所有位置",
+    "filterByLocation": "按曲库位置筛选",
+    "listView": "列表视图",
+    "gridView": "网格视图",
+    "noItems": "曲库为空",
+    "noResults": "未找到歌曲",
+    "tryDifferentSearch": "请尝试其他搜索词",
+    "audioOnly": "仅音频",
+    "noSong": "无歌曲",
+    "actions": {
+      "viewSongUnits": "查看歌曲单元",
+      "convertToSongUnit": "转换为歌曲单元",
+      "addToPlaylist": "添加到播放列表",
+      "addToQueue": "添加到队列",
+      "promoteToSongUnits": "升级为完整歌曲单元",
+      "mergeSelected": "合并所选",
+      "exportSelected": "导出所选",
+      "deleteSelected": "删除所选",
+      "selectAll": "全选",
+      "addTagsToSelected": "添加标签"
+    },
+    "processing": "处理中...",
+    "exportedTo": "已导出到 {path}",
+    "@exportedTo": {
+      "placeholders": {
+        "path": {}
+      }
+    },
+    "importComplete": "导入完成",
+    "imported": "已导入：{count}",
+    "@imported": {
+      "placeholders": {
+        "count": {}
+      }
+    },
+    "skippedDuplicates": "已跳过（重复）：{count}",
+    "@skippedDuplicates": {
+      "placeholders": {
+        "count": {}
+      }
+    },
+    "importMore": "... 还有 {count} 条",
+    "@importMore": {
+      "placeholders": {
+        "count": {}
+      }
+    },
+    "promotedToSongUnit": "已将 \"{name}\" 提升为歌曲单元",
+    "@promotedToSongUnit": {
+      "placeholders": {
+        "name": {}
+      }
+    },
+    "deleteItemsConfirm": "确定要删除 {count} 项吗？",
+    "@deleteItemsConfirm": {
+      "placeholders": {
+        "count": {}
+      }
+    },
+    "deletedItems": "已删除 {count} 项",
+    "@deletedItems": {
+      "placeholders": {
+        "count": {}
+      }
+    },
+    "addedItemsToQueue": "已将 {count} 项加入队列",
+    "@addedItemsToQueue": {
+      "placeholders": {
+        "count": {}
+      }
+    },
+    "noTemporaryEntriesSelected": "未选择临时条目",
+    "addSongsToPlaylistTitle": "将 {count} 首歌曲添加到播放列表",
+    "@addSongsToPlaylistTitle": {
+      "placeholders": {
+        "count": {}
+      }
+    },
+    "noPlaylistsCreateFirst": "暂无播放列表。请先创建一个。",
+    "sectionMetadata": "元数据",
+    "sectionSources": "源",
+    "sectionTags": "标签",
+    "errorLoadingLibrary": "加载曲库出错",
+    "deleteSongUnit": "删除歌曲单元",
+    "alsoDeleteConfigFile": "同时删除配置文件",
+    "configFileNote": "删除 beadline-*.json 文件。源文件不受影响。",
+    "deleteOriginalAfterMerge": "合并后删除原始歌曲单元",
+    "selectedCount": "{count} 已选择",
+    "@selectedCount": {
+      "placeholders": {
+        "count": {}
+      }
+    },
+    "alreadyInPlaylist": "已在播放列表中",
+    "createAndAdd": "创建并添加",
+    "promoted": "已将 \"{displayName}\" 提升为歌曲单元",
+    "@promoted": {
+      "placeholders": {
+        "displayName": {}
+      }
+    }
+  },
+  "player": {
+    "noSongPlaying": "未在播放",
+    "source": "源",
+    "display": "画面",
+    "audio": "音频",
+    "playback": "播放",
+    "lyrics": "歌词",
+    "fullscreen": "全屏",
+    "exitFullscreen": "退出全屏 (ESC)",
+    "selectSources": "选择源",
+    "play": "播放",
+    "pause": "暂停",
+    "next": "下一首",
+    "displayMode": {
+      "label": "画面模式",
+      "enabled": "启用",
+      "imageOnly": "仅图片",
+      "disabled": "禁用",
+      "hidden": "隐藏"
+    },
+    "audioMode": {
+      "label": "音频模式",
+      "original": "原声",
+      "accompaniment": "伴奏"
+    },
+    "playbackMode": {
+      "label": "播放模式",
+      "sequential": "顺序播放",
+      "repeatOne": "单曲循环",
+      "repeatAll": "列表循环",
+      "random": "随机播放"
+    },
+    "lyricsMode": {
+      "label": "歌词模式",
+      "off": "关闭",
+      "screen": "屏幕显示",
+      "floating": "悬浮窗",
+      "rolling": "滚动显示"
+    }
+  },
+  "queue": {
+    "title": "队列",
+    "manage": "管理队列",
+    "removeDuplicates": "移除重复",
+    "shuffle": "随机排序",
+    "removeAfterPlayOn": "播完移除：开",
+    "removeAfterPlayOff": "播完移除：关",
+    "clearQueue": "清空队列",
+    "removedDuplicates": "已移除 {count} 个重复项",
+    "@removedDuplicates": {
+      "placeholders": {
+        "count": {}
+      }
+    },
+    "noDuplicates": "未发现重复项",
+    "manageQueues": "管理队列",
+    "queueContent": "队列内容",
+    "backToQueues": "返回队列列表",
+    "createQueue": "新建队列",
+    "queueName": "队列名称",
+    "enterQueueName": "输入队列名称",
+    "renameQueue": "重命名队列",
+    "enterNewName": "输入新名称",
+    "deleteQueue": "删除队列",
+    "deleteQueueConfirm": "确定要删除",
+    "deleteQueueWillRemove": "这将从此队列中移除",
+    "deleteQueueFromQueue": "首歌曲",
+    "switchToQueue": "切换到此队列",
+    "empty": "队列为空",
+    "songs": "{count} 首歌曲",
+    "@songs": {
+      "placeholders": {
+        "count": {}
+      }
+    },
+    "actions": "队列操作",
+    "collapse": "折叠",
+    "expand": "展开",
+    "groupActions": "分组操作"
+  },
+  "search": {
+    "title": "搜索",
+    "songUnits": "歌曲单元",
+    "sources": "源",
+    "hint": "搜索...",
+    "textMode": "文本模式",
+    "queryBuilder": "条件构建器",
+    "tag": "标签",
+    "tagExample": "例：artist:value",
+    "range": "范围",
+    "rangeExample": "例：time:[2020-2024]",
+    "searching": "搜索中...",
+    "searchError": "搜索出错",
+    "noSongUnitsFound": "未找到歌曲单元",
+    "loadMore": "加载更多",
+    "play": "播放",
+    "addToQueue": "添加到队列",
+    "all": "全部",
+    "local": "本地",
+    "online": "在线",
+    "searchingSources": "正在搜索源...",
+    "noOnlineSources": "未找到在线源",
+    "noLocalSources": "未找到本地源",
+    "noSources": "未找到源",
+    "addToSongUnit": "添加到歌曲单元",
+    "or": "或",
+    "not": "非",
+    "addedToQueue": "已将\"{title}\"添加到队列",
+    "@addedToQueue": {
+      "placeholders": {
+        "title": {}
+      }
+    },
+    "addSource": "添加源：{title}",
+    "@addSource": {
+      "placeholders": {
+        "title": {}
+      }
+    }
+  },
+  "tags": {
+    "title": "标签",
+    "noTags": "暂无标签",
+    "noTagsHint": "创建标签来整理你的音乐",
+    "loadError": "加载标签失败",
+    "createTag": "创建标签",
+    "createChildTag": "创建子标签",
+    "tagName": "标签名称",
+    "addAlias": "添加别名",
+    "addAliasFor": "为以下标签添加别名",
+    "aliasName": "别名",
+    "enterAlias": "输入别名",
+    "addChildTag": "添加子标签",
+    "deleteTag": "删除标签",
+    "deleteTagTitle": "删除标签？",
+    "deleteTagConfirm": "此操作无法撤销",
+    "deleteTagHasChildren": "此标签有子标签，它们将成为根标签。",
+    "deleteTagAliases": "别名也将被删除。",
+    "deletedTag": "已删除标签",
+    "removeFromSong": "从此歌曲移除标签",
+    "removeAll": "全部移除",
+    "viewSongUnits": "查看歌曲单元",
+    "item": "项",
+    "items": "项",
+    "songUnit": "个歌曲单元",
+    "songUnits": "个歌曲单元",
+    "lockedCollection": "已锁定的集合",
+    "collection": "集合",
+    "locked": "已锁定"
+  },
+  "playlists": {
+    "title": "播放列表",
+    "noPlaylists": "暂无播放列表",
+    "noPlaylistsHint": "右键或长按以创建播放列表",
+    "selectPlaylist": "选择播放列表以查看内容",
+    "createPlaylist": "创建播放列表",
+    "addSongs": "添加歌曲",
+    "createGroup": "创建分组",
+    "addCollectionRef": "添加合集引用",
+    "renamePlaylist": "重命名播放列表",
+    "deletePlaylist": "删除播放列表",
+    "deletePlaylistConfirm": "确定要删除",
+    "deletePlaylistNote": "歌曲不会被删除，仅删除此播放列表",
+    "createGroupTitle": "创建分组",
+    "createGroupHint": "创建一个分组",
+    "groupName": "分组名称",
+    "enterGroupName": "输入分组名称",
+    "addCollectionRefTitle": "添加合集引用",
+    "noOtherCollections": "没有其他可用合集",
+    "addReferenceTo": "添加引用到",
+    "lock": "锁定",
+    "unlock": "解锁",
+    "viewContent": "查看内容",
+    "toggleSelectionMode": "切换选择模式",
+    "moveToGroup": "移动到分组",
+    "noGroupsAvailable": "没有可用的分组。请先创建一个分组。",
+    "song": "首歌曲",
+    "songs": "首歌曲",
+    "locked": "已锁定",
+    "clearSelection": "清除选择",
+    "selected": "已选择",
+    "removeFromGroup": "从分组中移除",
+    "alreadyInPlaylist": "已在播放列表中",
+    "addedToPlaylist": "已添加到 \"{name}\"",
+    "@addedToPlaylist": {
+      "placeholders": {
+        "name": {}
+      }
+    },
+    "createdPlaylistAndAdded": "已创建播放列表 \"{name}\" 并添加了歌曲",
+    "@createdPlaylistAndAdded": {
+      "placeholders": {
+        "name": {}
+      }
+    },
+    "createAndAdd": "创建并添加",
+    "songCount": "{count} 首歌曲",
+    "@songCount": {
+      "placeholders": {
+        "count": {}
+      }
+    },
+    "noSongsInGroup": "此分组中没有歌曲",
+    "dropHere": "拖放到此处",
+    "groupCreated": "已创建分组 \"{name}\"",
+    "@groupCreated": {
+      "placeholders": {
+        "name": {}
+      }
+    },
+    "failedToCreateGroup": "创建分组失败：{error}",
+    "@failedToCreateGroup": {
+      "placeholders": {
+        "error": {}
+      }
+    }
+  },
+  "songEditor": {
+    "titleEdit": "编辑歌曲单元",
+    "titleNew": "新建歌曲单元",
+    "reloadMetadata": "从源重新加载元数据",
+    "writeMetadata": "将元数据写入源",
+    "sources": "源",
+    "display": "画面",
+    "audio": "音频",
+    "accompaniment": "伴奏",
+    "lyricsLabel": "歌词",
+    "noDisplaySources": "无画面源",
+    "noAudioSources": "无音频源",
+    "noAccompanimentSources": "无伴奏源",
+    "noLyricsSources": "无歌词源",
+    "addDisplaySource": "添加画面源",
+    "addAudioSource": "添加音频源",
+    "addAccompanimentSource": "添加伴奏源",
+    "addLyricsSource": "添加歌词源",
+    "editDisplayName": "编辑显示名称",
+    "setOffset": "设置偏移",
+    "setOffsetTitle": "设置偏移量",
+    "offsetHint": "与音频对齐的毫秒偏移量",
+    "offsetNote": "正值 = 延迟，负值 = 提前",
+    "offsetLabel": "偏移量（毫秒）",
+    "editDisplayNameTitle": "编辑显示名称",
+    "originalName": "原始",
+    "displayNameLabel": "显示名称",
+    "displayNameHint": "留空则使用原始名称",
+    "addSource": "添加源",
+    "localFile": "本地文件",
+    "enterUrl": "输入 URL",
+    "urlLabel": "URL",
+    "urlHint": "https://...",
+    "selectSong": "选择歌曲",
+    "selectSongs": "选择歌曲",
+    "addSongs": "添加歌曲",
+    "artist": "艺术家",
+    "thumbnail": "缩略图",
+    "addImage": "添加图片",
+    "selectThumbnails": "选择 ({count})",
+    "@selectThumbnails": {
+      "placeholders": {
+        "count": {}
+      }
+    },
+    "selectThumbnailTitle": "选择缩略图",
+    "errorAddingCustomThumbnail": "添加自定义缩略图出错：{error}",
+    "@errorAddingCustomThumbnail": {
+      "placeholders": {
+        "error": {}
+      }
+    },
+    "audioExtracted": "从 {name} 提取的音频轨道",
+    "@audioExtracted": {
+      "placeholders": {
+        "name": {}
+      }
+    },
+    "noAudioFound": "在 {name} 中未找到音频轨道",
+    "@noAudioFound": {
+      "placeholders": {
+        "name": {}
+      }
+    },
+    "autoDiscovered": "自动发现：{types}",
+    "@autoDiscovered": {
+      "placeholders": {
+        "types": {}
+      }
+    },
+    "chooseMetadataValues": "为每个元数据字段选择值："
+  },
+  "settings": {
+    "title": "设置",
+    "user": "用户",
+    "username": "用户名",
+    "appearance": "外观",
+    "theme": "主题",
+    "themeSystem": "跟随系统",
+    "themeLight": "浅色",
+    "themeDark": "深色",
+    "accentColor": "主题色",
+    "accentColorHint": "自定义应用颜色",
+    "language": "语言",
+    "playback": "播放",
+    "lyricsMode": "歌词模式",
+    "ktvMode": "KTV 模式",
+    "ktvModeHint": "强制屏幕歌词，禁用悬浮窗",
+    "hideDisplayPanel": "隐藏画面面板",
+    "hideDisplayPanelHint": "仅显示歌词和控制栏（纯音乐模式）",
+    "thumbnailBgLibrary": "曲库使用缩略图背景",
+    "thumbnailBgLibraryHint": "在曲库视图中将缩略图用作背景",
+    "thumbnailBgQueue": "队列使用缩略图背景",
+    "thumbnailBgQueueHint": "在队列中将缩略图用作背景",
+    "storage": "存储",
+    "configMode": "配置模式",
+    "configModeCentralized": "集中存储",
+    "configModeInPlace": "就地存储",
+    "libraryLocations": "曲库位置",
+    "libraryLocationsHint": "管理音乐文件的存储位置",
+    "metadataWriteback": "元数据回写",
+    "metadataWritebackHint": "将标签更改同步到源文件",
+    "autoDiscoverAudio": "自动发现音频文件",
+    "autoDiscoverAudioHint": "自动从曲库位置添加音频文件",
+    "debug": "调试",
+    "audioEntriesDebug": "音频条目调试",
+    "audioEntriesDebugHint": "查看已发现的音频条目",
+    "rescanAudio": "重新扫描音频文件",
+    "rescanAudioHint": "清除并重新发现所有音频文件（含更新的元数据）",
+    "about": "关于",
+    "version": "版本",
+    "license": "许可证",
+    "licenseValue": "GNU Affero 通用公共许可证 v3.0 (AGPL-3.0)",
+    "resetFactory": "恢复出厂设置",
+    "resetFactoryHint": "将所有设置重置为默认值",
+    "system": "系统",
+    "resetFactoryTitle": "恢复出厂设置？",
+    "resetFactoryBody": "这将把应用完全重置为初始状态",
+    "resetFactoryItems": "所有设置和偏好\n歌曲单元库和标签\n播放列表、队列和分组\n播放状态",
+    "resetFactoryNote": "磁盘上的实际音乐文件不会被删除",
+    "resetFactoryRestart": "重置后应用将重启",
+    "resetEverything": "全部重置",
+    "rescanTitle": "重新扫描音频文件",
+    "rescanBody": "这将清除所有已发现的音频条目并重新扫描曲库位置",
+    "rescanNote": "大型曲库可能需要几分钟。是否继续？",
+    "rescan": "重新扫描",
+    "migratingConfig": "正在迁移配置",
+    "migratingEntryPoints": "正在迁移入口点文件...",
+    "scanningForSongUnits": "正在扫描歌曲单元...",
+    "storagePermissionTitle": "需要存储权限",
+    "storagePermissionBody": "珠链需要访问你的音乐文件以发现和播放音频",
+    "storagePermissionNote": "请在下一个对话框中授予存储权限，或前往系统设置手动开启",
+    "openSettings": "打开设置",
+    "foundAudioFiles": "找到 {count} 个音频文件",
+    "@foundAudioFiles": {
+      "placeholders": {
+        "count": {}
+      }
+    },
+    "errorScanning": "扫描出错：{error}",
+    "@errorScanning": {
+      "placeholders": {
+        "error": {}
+      }
+    },
+    "audioEntriesCleared": "音频条目已清除",
+    "errorClearingAudio": "清除音频条目出错：{error}",
+    "@errorClearingAudio": {
+      "placeholders": {
+        "error": {}
+      }
+    },
+    "audioRescanSuccess": "音频文件重新扫描成功",
+    "errorRescanning": "重新扫描出错：{error}",
+    "@errorRescanning": {
+      "placeholders": {
+        "error": {}
+      }
+    },
+    "testingConnection": "正在测试连接...",
+    "connectionSuccess": "连接成功！",
+    "connectionFailed": "连接失败",
+    "onlineProviders": "在线源提供商"
+  },
+  "libraryLocations": {
+    "title": "曲库位置",
+    "selectLocation": "选择曲库位置",
+    "nameLocation": "为此位置命名",
+    "enterLocationName": "输入此位置的名称",
+    "locationAdded": "曲库位置已添加",
+    "discoveredImported": "已发现并导入 {count} 个歌曲单元",
+    "@discoveredImported": {
+      "placeholders": {
+        "count": {}
+      }
+    },
+    "switchToInPlace": "切换到就地存储",
+    "switchToCentralized": "切换到集中存储",
+    "migrateToInPlaceBody": "这将把所有入口点文件从集中存储移动到 {path}，与音频源放在一起",
+    "@migrateToInPlaceBody": {
+      "placeholders": {
+        "path": {}
+      }
+    },
+    "migrateToCentralizedBody": "这将把所有入口点文件从 {path} 移动到集中存储",
+    "@migrateToCentralizedBody": {
+      "placeholders": {
+        "path": {}
+      }
+    },
+    "switchedToInPlace": "已切换到就地存储模式",
+    "switchedToCentralized": "已切换到集中存储模式",
+    "migrationFailed": "迁移失败",
+    "migrationError": "迁移出错：{error}",
+    "@migrationError": {
+      "placeholders": {
+        "error": {}
+      }
+    },
+    "renameLocation": "重命名位置",
+    "nameLabel": "名称",
+    "removeLocation": "移除曲库位置",
+    "removeLocationConfirm": "确定要移除 \"{name}\"？",
+    "@removeLocationConfirm": {
+      "placeholders": {
+        "name": {}
+      }
+    },
+    "removeLocationNote": "从此位置发现的歌曲单元和音频条目将从曲库中移除。磁盘上的文件不会被删除。",
+    "removed": "已移除 \"{name}\"",
+    "@removed": {
+      "placeholders": {
+        "name": {}
+      }
+    },
+    "failedToRemove": "移除失败：{error}",
+    "@failedToRemove": {
+      "placeholders": {
+        "error": {}
+      }
+    },
+    "isNowDefault": "\"{name}\" 现在是默认位置",
+    "@isNowDefault": {
+      "placeholders": {
+        "name": {}
+      }
+    },
+    "failedToSetDefault": "设置默认位置失败：{error}",
+    "@failedToSetDefault": {
+      "placeholders": {
+        "error": {}
+      }
+    },
+    "accessible": "可访问",
+    "inaccessible": "不可访问",
+    "inPlace": "就地存储",
+    "centralized": "集中存储",
+    "setAsDefault": "设为默认"
+  },
+  "locationSetup": {
+    "title": "设置曲库位置",
+    "description": "添加存储音乐文件的文件夹。珠链将自动扫描这些位置并监控变化。",
+    "storagePermissionRequired": "需要存储权限",
+    "selectedLocations": "已选位置",
+    "addLocation": "添加曲库位置",
+    "firstLocationNote": "第一个位置将作为新歌曲单元的默认位置"
+  },
+  "configMode": {
+    "title": "欢迎使用珠链",
+    "subtitle": "选择曲库配置的存储方式",
+    "centralizedTitle": "集中存储",
+    "centralizedDesc": "将所有配置存储在应用数据目录中",
+    "centralizedPros": "数据集中管理\n易于备份和恢复\n标准应用行为",
+    "centralizedCons": "跨设备可移植性较差\n共享需手动导出",
+    "inPlaceTitle": "就地存储",
+    "inPlaceDesc": "将歌曲单元元数据与音乐文件存放在一起",
+    "inPlacePros": "跨设备可便携\n自动发现歌曲单元\n元数据与文件同在",
+    "inPlaceCons": "会在音乐文件夹中创建 beadline-*.json 文件\n需要设置存储位置",
+    "changeNote": "你可以稍后在 设置 > 存储 中更改此设置"
+  },
+  "onlineProviders": {
+    "title": "在线源提供商",
+    "noProviders": "未配置提供商",
+    "noProvidersHint": "添加提供商以搜索在线源",
+    "addProvider": "添加提供商",
+    "editProvider": "编辑提供商",
+    "providerIdLabel": "提供商 ID",
+    "providerIdHint": "bilibili、netease 等",
+    "displayNameLabel": "显示名称",
+    "displayNameHint": "哔哩哔哩、网易云音乐等",
+    "baseUrlLabel": "基础 URL",
+    "baseUrlHint": "http://localhost:3000",
+    "apiKeyOptional": "API 密钥（可选）",
+    "apiKeyHint": "不需要则留空",
+    "timeoutLabel": "超时（秒）",
+    "timeoutDefault": "10",
+    "timeoutError": "超时必须为正数"
+  },
+  "display": {
+    "noSource": "无画面源",
+    "loading": "加载中：{name}",
+    "@loading": {
+      "placeholders": {
+        "name": {}
+      }
+    },
+    "failedToLoad": "加载失败：{name}",
+    "@failedToLoad": {
+      "placeholders": {
+        "name": {}
+      }
+    }
+  },
+  "lyrics": {
+    "noLyrics": "暂无歌词"
+  },
+  "floatingLyrics": {
+    "noLyrics": "暂无歌词"
+  },
+  "songPicker": {
+    "selectSongs": "选择歌曲",
+    "selectSong": "选择歌曲",
+    "searchHint": "搜索歌曲...",
+    "noSongsFound": "未找到歌曲",
+    "noSongsInLibrary": "曲库中没有歌曲",
+    "addSongs": "添加歌曲"
+  },
+  "videoRemoval": {
+    "title": "移除画面源",
+    "message": "画面源\"{videoName}\"包含已提取的音频源\"{audioName}\"。是否也要删除音频源？",
+    "@message": {
+      "placeholders": {
+        "videoName": {},
+        "audioName": {}
+      }
+    },
+    "cancel": "取消",
+    "keepAudio": "保留音频",
+    "removeBoth": "全部删除"
+  },
+  "debug": {
+    "audioEntriesTitle": "音频条目调试",
+    "temporarySongUnitsFound": "找到临时歌曲单元：{count}",
+    "@temporarySongUnitsFound": {
+      "placeholders": {
+        "count": {}
+      }
+    },
+    "refresh": "刷新",
+    "temporarySongUnits": "临时歌曲单元",
+    "close": "关闭",
+    "showEntries": "显示条目"
+  },
+  "providers": {
+    "@id": {
+      "placeholders": {
+        "providerId": {}
+      }
+    },
+    "@url": {
+      "placeholders": {
+        "baseUrl": {}
+      }
+    }
+  },
+  "dialogs": {
+    "confirmModeChange": "确认模式更改",
+    "changeMode": "更改模式",
+    "discoveringAudioFiles": "正在发现音频文件",
+    "rescanningAudioFiles": "正在重新扫描音频文件",
+    "noLibraryLocationsConfigured": "未配置曲库位置",
+    "errorLoadingLocations": "加载位置出错",
+    "default": "默认",
+    "addLocationToStoreMusic": "添加位置以存储音乐库",
+    "noLocationsTitle": "未配置曲库位置",
+    "noLocationsMessage": "添加位置以存储音乐库",
+    "addNestedGroup": "添加嵌套分组",
+    "removeGroup": "移除分组",
+    "removeGroupQuestion": "如何移除 \"{groupName}\"？",
+    "@removeGroupQuestion": {
+      "placeholders": {
+        "groupName": {}
+      }
+    },
+    "ungroupKeepSongs": "取消分组（保留歌曲）",
+    "removeAll": "全部移除",
+    "renameGroup": "重命名分组",
+    "createNestedGroup": "创建嵌套分组",
+    "createGroup": "创建分组",
+    "selectThumbnail": "选择缩略图",
+    "errorAddingCustomThumbnail": "添加自定义缩略图出错：{error}",
+    "@errorAddingCustomThumbnail": {
+      "placeholders": {
+        "error": {}
+      }
+    },
+    "noResultsEnterSearch": "未找到结果。请输入搜索词并按搜索。",
+    "editProvider": "编辑",
+    "deleteProvider": "删除",
+    "providerId": "ID: {providerId}",
+    "@providerId": {
+      "placeholders": {
+        "providerId": {}
+      }
+    },
+    "providerUrl": "URL: {baseUrl}",
+    "@providerUrl": {
+      "placeholders": {
+        "baseUrl": {}
+      }
+    },
+    "providerApiKey": "API 密钥：•••••••- ",
+    "deleteSongUnit": "删除歌曲单元",
+    "alsoDeleteConfigFile": "同时删除配置文件",
+    "configFileNote": "删除 beadline-*.json 文件。源文件不受影响。",
+    "deleteOriginalAfterMerge": "合并后删除原始歌曲单元",
+    "deleteItemsConfirm": "确定要删除 {count} 项吗？",
+    "@deleteItemsConfirm": {
+      "placeholders": {
+        "count": {}
+      }
+    },
+    "deletedItems": "已删除 {count} 项",
+    "@deletedItems": {
+      "placeholders": {
+        "count": {}
+      }
+    },
+    "importComplete": "导入完成",
+    "imported": "已导入：{count}",
+    "@imported": {
+      "placeholders": {
+        "count": {}
+      }
+    },
+    "skippedDuplicates": "已跳过（重复）：{count}",
+    "@skippedDuplicates": {
+      "placeholders": {
+        "count": {}
+      }
+    },
+    "importMore": "... 还有 {count} 条",
+    "@importMore": {
+      "placeholders": {
+        "count": {}
+      }
+    },
+    "promotedToSongUnit": "已将 \"{name}\" 提升为歌曲单元",
+    "@promotedToSongUnit": {
+      "placeholders": {
+        "name": {}
+      }
+    },
+    "exportedTo": "已导出到 {path}",
+    "@exportedTo": {
+      "placeholders": {
+        "path": {}
+      }
+    },
+    "promoted": "已将 \"{displayName}\" 提升为歌曲单元",
+    "@promoted": {
+      "placeholders": {
+        "displayName": {}
+      }
+    },
+    "resetFailed": "重置失败：{error}",
+    "@resetFailed": {
+      "placeholders": {
+        "error": {}
+      }
+    },
+    "confirmTitle": "确认模式更改",
+    "changeModeButton": "更改模式",
+    "migratingConfig": "正在迁移配置",
+    "migratingEntryPoints": "正在迁移入口点文件...",
+    "scanningForSongUnits": "正在扫描歌曲单元...",
+    "errorScanning": "扫描出错：{error}",
+    "@errorScanning": {
+      "placeholders": {
+        "error": {}
+      }
+    },
+    "errorClearingAudio": "清除音频条目出错：{error}",
+    "@errorClearingAudio": {
+      "placeholders": {
+        "error": {}
+      }
+    },
+    "errorRescanning": "重新扫描出错：{error}",
+    "@errorRescanning": {
+      "placeholders": {
+        "error": {}
+      }
+    },
+    "failedToRename": "重命名失败：{error}",
+    "@failedToRename": {
+      "placeholders": {
+        "error": {}
+      }
+    },
+    "failedToRemove": "移除失败：{error}",
+    "@failedToRemove": {
+      "placeholders": {
+        "error": {}
+      }
+    },
+    "failedToSetDefault": "设置默认失败：{error}",
+    "@failedToSetDefault": {
+      "placeholders": {
+        "error": {}
+      }
+    },
+    "migrationError": "迁移出错：{error}",
+    "@migrationError": {
+      "placeholders": {
+        "error": {}
+      }
+    },
+    "home": {
+      "shuffle": "重新排序",
+      "rename": "重命名",
+      "addNestedGroup": "添加嵌套分组",
+      "remove": "移除",
+      "removeGroup": "移除分组",
+      "removeGroupQuestion": "如何移除 \"{groupName}\"？",
+      "@removeGroupQuestion": {
+        "placeholders": {
+          "groupName": {}
+        }
+      },
+      "ungroupKeepSongs": "取消分组（保留歌曲）",
+      "removeAll": "全部移除",
+      "renameGroup": "重命名分组",
+      "createNestedGroup": "创建嵌套分组",
+      "create": "创建",
+      "createGroup": "创建分组"
+    },
+    "progressDialogs": {
+      "discovering": "正在发现音频文件",
+      "rescanning": "正在重新扫描音频文件"
+    },
+    "libraryLocationsError": {
+      "noLocationsConfigured": "未配置曲库位置",
+      "errorLoading": "加载位置出错",
+      "retry": "重试"
+    }
+  },
+  "configModeChange": {
+    "title": "确认模式更改",
+    "description": "更改配置模式将迁移入口点文件。这可能需要一些时间。",
+    "inPlaceDescription": "这将在音乐文件旁边创建 beadline-*.json 文件。你的曲库将可以在不同设备间携带。",
+    "centralizedDescription": "这将把入口点文件移动到应用数据目录。你的曲库将不再可携带。",
+    "changeMode": "更改模式"
+  },
+  "app_routes": {
+    "routeNotFound": "未找到路由：{name}",
+    "@routeNotFound": {
+      "placeholders": {
+        "name": {}
+      }
+    }
+  },
+  "loading_indicator": {
+    "percentage": "{percentage}%"
+  },
+  "error_display": {},
+  "video_removal_prompt": {
+    "title": "移除画面源",
+    "message": "画面源\"{videoName}\"包含已提取的音频源\"{audioName}\"。是否也要删除音频源？",
+    "@message": {
+      "placeholders": {
+        "videoName": {},
+        "audioName": {}
+      }
+    },
+    "keepAudio": "保留音频",
+    "removeBoth": "全部删除"
+  },
+  "library_location_setup_dialog": {
+    "title": "选择音乐库位置"
+  },
+  "home_page": {
+    "renameGroup": "重命名分组"
+  },
+  "song_unit_editor": {
+    "addedToSources": "已将 {title} 添加到源",
+    "@addedToSources": {
+      "placeholders": {
+        "title": {}
+      }
+    },
+    "aliasHint": "title"
+  }
+}

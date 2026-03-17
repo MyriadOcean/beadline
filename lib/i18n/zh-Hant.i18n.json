@@ -1,0 +1,982 @@
+{
+  "common": {
+    "cancel": "取消",
+    "save": "儲存",
+    "delete": "刪除",
+    "add": "新增",
+    "edit": "編輯",
+    "rename": "重新命名",
+    "create": "建立",
+    "close": "關閉",
+    "retry": "重試",
+    "refresh": "重新整理",
+    "search": "搜尋",
+    "ok": "確定",
+    "yes": "是",
+    "no": "否",
+    "back": "返回",
+    "skip": "暫時略過",
+    "apply": "套用",
+    "remove": "移除",
+    "duplicate": "複製",
+    "export": "匯出",
+    "import": "匯入",
+    "migrate": "遷移",
+    "reset": "重設",
+    "grant": "授權",
+    "enabled": "已啟用",
+    "disabled": "已停用",
+    "on": "開",
+    "off": "關",
+    "error": "錯誤",
+    "loading": "載入中...",
+    "songs": "首歌曲",
+    "selected": "已選取",
+    "items": "項",
+    "ms": "毫秒",
+    "dismiss": "關閉",
+    "extract": "擷取",
+    "extractingThumbnails": "正在擷取縮圖...",
+    "noThumbnailsAvailable": "沒有可用縮圖",
+    "displayVideoImage": "顯示（影片/圖片）",
+    "id": "ID",
+    "url": "URL",
+    "apiKey": "API 金鑰",
+    "openParen": "(",
+    "closeParen": ")",
+    "routeNotFound": "未找到路由：{name}",
+    "@routeNotFound": {
+      "placeholders": {
+        "name": {}
+      }
+    },
+    "noResultsEnterSearch": "未找到結果。請輸入搜尋詞並按搜尋。",
+    "artistLabel": "藝人：",
+    "albumLabel": "專輯：",
+    "platformLabel": "平台：",
+    "percentage": "{percentage}%",
+    "testConnection": "測試連接",
+    "disabledInKtvMode": "KTV 模式下禁用",
+    "failedToRename": "重命名失敗：{error}",
+    "@failedToRename": {
+      "placeholders": {
+        "error": {}
+      }
+    },
+    "continueText": "繼續",
+    "artist": "藝人",
+    "album": "專輯",
+    "platform": "平台",
+    "addImage": "新增圖片",
+    "shuffle": "隨機排序",
+    "alreadyInPlaylist": "已在播放清單中",
+    "createAndAdd": "建立並加入"
+  },
+  "nav": {
+    "home": "主頁",
+    "library": "音樂庫",
+    "playlists": "播放清單",
+    "tags": "標籤",
+    "settings": "設定"
+  },
+  "app": {
+    "name": "珠鏈"
+  },
+  "library": {
+    "title": "音樂庫",
+    "loading": "正在載入音樂庫...",
+    "searchHint": "搜尋音樂庫...",
+    "noLocations": "未設定音樂庫位置",
+    "allLocations": "所有位置",
+    "filterByLocation": "依音樂庫位置篩選",
+    "listView": "清單檢視",
+    "gridView": "格狀檢視",
+    "noItems": "音樂庫為空",
+    "noResults": "找不到歌曲",
+    "tryDifferentSearch": "請嘗試其他搜尋詞",
+    "audioOnly": "僅音訊",
+    "noSong": "無歌曲",
+    "actions": {
+      "viewSongUnits": "檢視歌曲單元",
+      "convertToSongUnit": "轉換為歌曲單元",
+      "addToPlaylist": "加入播放清單",
+      "addToQueue": "加入佇列",
+      "promoteToSongUnits": "升級為完整歌曲單元",
+      "mergeSelected": "合併所選",
+      "exportSelected": "匯出所選",
+      "deleteSelected": "刪除所選",
+      "selectAll": "全選",
+      "addTagsToSelected": "新增標籤"
+    },
+    "processing": "處理中...",
+    "exportedTo": "已匯出到 {path}",
+    "@exportedTo": {
+      "placeholders": {
+        "path": {}
+      }
+    },
+    "importComplete": "匯入完成",
+    "imported": "已匯入：{count}",
+    "@imported": {
+      "placeholders": {
+        "count": {}
+      }
+    },
+    "skippedDuplicates": "已略過（重複）：{count}",
+    "@skippedDuplicates": {
+      "placeholders": {
+        "count": {}
+      }
+    },
+    "importMore": "... 還有 {count} 項",
+    "@importMore": {
+      "placeholders": {
+        "count": {}
+      }
+    },
+    "promotedToSongUnit": "已將 \"{name}\" 提升為歌曲單元",
+    "@promotedToSongUnit": {
+      "placeholders": {
+        "name": {}
+      }
+    },
+    "deleteItemsConfirm": "確定要刪除 {count} 項嗎？",
+    "@deleteItemsConfirm": {
+      "placeholders": {
+        "count": {}
+      }
+    },
+    "deletedItems": "已刪除 {count} 項",
+    "@deletedItems": {
+      "placeholders": {
+        "count": {}
+      }
+    },
+    "addedItemsToQueue": "已將 {count} 項加入佇列",
+    "@addedItemsToQueue": {
+      "placeholders": {
+        "count": {}
+      }
+    },
+    "noTemporaryEntriesSelected": "未選取臨時項目",
+    "addSongsToPlaylistTitle": "將 {count} 首歌曲加入播放清單",
+    "@addSongsToPlaylistTitle": {
+      "placeholders": {
+        "count": {}
+      }
+    },
+    "noPlaylistsCreateFirst": "尚無播放清單。請先建立一個。",
+    "sectionMetadata": "元數據",
+    "sectionSources": "源",
+    "sectionTags": "標籤",
+    "errorLoadingLibrary": "載入音樂庫出錯",
+    "deleteSongUnit": "刪除歌曲單元",
+    "alsoDeleteConfigFile": "同時刪除設定檔",
+    "configFileNote": "刪除 beadline-*.json 檔案。原始檔案不受影響。",
+    "deleteOriginalAfterMerge": "合併後刪除原始歌曲單元",
+    "selectedCount": "{count} 已選取",
+    "@selectedCount": {
+      "placeholders": {
+        "count": {}
+      }
+    },
+    "alreadyInPlaylist": "已在播放清單中",
+    "createAndAdd": "建立並加入",
+    "promoted": "已將 \"{displayName}\" 提升為歌曲單元",
+    "@promoted": {
+      "placeholders": {
+        "displayName": {}
+      }
+    }
+  },
+  "player": {
+    "noSongPlaying": "未在播放",
+    "source": "源",
+    "display": "畫面",
+    "audio": "音訊",
+    "playback": "播放",
+    "lyrics": "歌詞",
+    "fullscreen": "全螢幕",
+    "exitFullscreen": "退出全螢幕 (ESC)",
+    "selectSources": "選擇源",
+    "play": "播放",
+    "pause": "暫停",
+    "next": "下一首",
+    "displayMode": {
+      "label": "畫面模式",
+      "enabled": "啟用",
+      "imageOnly": "僅圖片",
+      "disabled": "停用",
+      "hidden": "隱藏"
+    },
+    "audioMode": {
+      "label": "音訊模式",
+      "original": "原聲",
+      "accompaniment": "伴奏"
+    },
+    "playbackMode": {
+      "label": "播放模式",
+      "sequential": "循序播放",
+      "repeatOne": "單曲循環",
+      "repeatAll": "清單循環",
+      "random": "隨機播放"
+    },
+    "lyricsMode": {
+      "label": "歌詞模式",
+      "off": "關閉",
+      "screen": "螢幕顯示",
+      "floating": "浮動視窗",
+      "rolling": "捲動顯示"
+    }
+  },
+  "queue": {
+    "title": "佇列",
+    "manage": "管理佇列",
+    "removeDuplicates": "移除重複",
+    "shuffle": "隨機排序",
+    "removeAfterPlayOn": "播完移除：開",
+    "removeAfterPlayOff": "播完移除：關",
+    "clearQueue": "清空佇列",
+    "removedDuplicates": "已移除 {count} 個重複項目",
+    "@removedDuplicates": {
+      "placeholders": {
+        "count": {}
+      }
+    },
+    "noDuplicates": "未發現重複項目",
+    "manageQueues": "管理佇列",
+    "queueContent": "佇列內容",
+    "backToQueues": "返回佇列清單",
+    "createQueue": "新建佇列",
+    "queueName": "佇列名稱",
+    "enterQueueName": "輸入佇列名稱",
+    "renameQueue": "重新命名佇列",
+    "enterNewName": "輸入新名稱",
+    "deleteQueue": "刪除佇列",
+    "deleteQueueConfirm": "確定要刪除",
+    "deleteQueueWillRemove": "這將從此佇列中移除",
+    "deleteQueueFromQueue": "首歌曲",
+    "switchToQueue": "切換到此佇列",
+    "empty": "佇列為空",
+    "songs": "{count} 首歌曲",
+    "@songs": {
+      "placeholders": {
+        "count": {}
+      }
+    },
+    "actions": "佇列操作",
+    "collapse": "折疊",
+    "expand": "展開",
+    "groupActions": "分組操作"
+  },
+  "search": {
+    "title": "搜尋",
+    "songUnits": "歌曲單元",
+    "sources": "源",
+    "hint": "搜尋...",
+    "textMode": "文字模式",
+    "queryBuilder": "條件建構器",
+    "tag": "標籤",
+    "tagExample": "例：artist:value",
+    "range": "範圍",
+    "rangeExample": "例：time:[2020-2024]",
+    "searching": "搜尋中...",
+    "searchError": "搜尋發生錯誤",
+    "noSongUnitsFound": "找不到歌曲單元",
+    "loadMore": "載入更多",
+    "play": "播放",
+    "addToQueue": "加入佇列",
+    "all": "全部",
+    "local": "本機",
+    "online": "線上",
+    "searchingSources": "正在搜尋源...",
+    "noOnlineSources": "找不到線上源",
+    "noLocalSources": "找不到本機源",
+    "noSources": "找不到源",
+    "addToSongUnit": "加入歌曲單元",
+    "or": "或",
+    "not": "非",
+    "addedToQueue": "已將\"{title}\"加入佇列",
+    "@addedToQueue": {
+      "placeholders": {
+        "title": {}
+      }
+    },
+    "addSource": "加入源：{title}",
+    "@addSource": {
+      "placeholders": {
+        "title": {}
+      }
+    }
+  },
+  "tags": {
+    "title": "標籤",
+    "noTags": "尚無標籤",
+    "noTagsHint": "建立標籤來整理你的音樂",
+    "loadError": "載入標籤失敗",
+    "createTag": "建立標籤",
+    "createChildTag": "建立子標籤",
+    "tagName": "標籤名稱",
+    "addAlias": "新增別名",
+    "addAliasFor": "為以下標籤新增別名",
+    "aliasName": "別名",
+    "enterAlias": "輸入別名",
+    "addChildTag": "新增子標籤",
+    "deleteTag": "刪除標籤",
+    "deleteTagTitle": "刪除標籤？",
+    "deleteTagConfirm": "此操作無法復原",
+    "deleteTagHasChildren": "此標籤有子標籤，它們將成為根標籤。",
+    "deleteTagAliases": "別名也將被刪除。",
+    "deletedTag": "已刪除標籤",
+    "removeFromSong": "從此歌曲移除標籤",
+    "removeAll": "全部移除",
+    "viewSongUnits": "檢視歌曲單元",
+    "item": "項",
+    "items": "項",
+    "songUnit": "個歌曲單元",
+    "songUnits": "個歌曲單元",
+    "lockedCollection": "已鎖定的集合",
+    "collection": "集合",
+    "locked": "已鎖定"
+  },
+  "playlists": {
+    "title": "播放清單",
+    "noPlaylists": "尚無播放清單",
+    "noPlaylistsHint": "右鍵或長按以建立播放清單",
+    "selectPlaylist": "選擇播放清單以檢視內容",
+    "createPlaylist": "建立播放清單",
+    "addSongs": "新增歌曲",
+    "createGroup": "建立群組",
+    "addCollectionRef": "新增合集參照",
+    "renamePlaylist": "重新命名播放清單",
+    "deletePlaylist": "刪除播放清單",
+    "deletePlaylistConfirm": "確定要刪除",
+    "deletePlaylistNote": "歌曲不會被刪除，僅刪除此播放清單",
+    "createGroupTitle": "建立群組",
+    "createGroupHint": "建立一個群組",
+    "groupName": "群組名稱",
+    "enterGroupName": "輸入群組名稱",
+    "addCollectionRefTitle": "新增合集參照",
+    "noOtherCollections": "沒有其他可用合集",
+    "addReferenceTo": "新增參照到",
+    "lock": "鎖定",
+    "unlock": "解鎖",
+    "viewContent": "檢視內容",
+    "toggleSelectionMode": "切換選擇模式",
+    "moveToGroup": "移動到群組",
+    "noGroupsAvailable": "沒有可用的群組。請先建立一個群組。",
+    "song": "首歌曲",
+    "songs": "首歌曲",
+    "locked": "已鎖定",
+    "clearSelection": "清除選擇",
+    "selected": "已選擇",
+    "removeFromGroup": "從群組中移除",
+    "alreadyInPlaylist": "已在播放清單中",
+    "addedToPlaylist": "已加入 \"{name}\"",
+    "@addedToPlaylist": {
+      "placeholders": {
+        "name": {}
+      }
+    },
+    "createdPlaylistAndAdded": "已建立播放清單 \"{name}\" 並加入歌曲",
+    "@createdPlaylistAndAdded": {
+      "placeholders": {
+        "name": {}
+      }
+    },
+    "createAndAdd": "建立並加入",
+    "songCount": "{count} 首歌曲",
+    "@songCount": {
+      "placeholders": {
+        "count": {}
+      }
+    },
+    "noSongsInGroup": "此群組中沒有歌曲",
+    "dropHere": "拖放到此處",
+    "groupCreated": "已建立群組 \"{name}\"",
+    "@groupCreated": {
+      "placeholders": {
+        "name": {}
+      }
+    },
+    "failedToCreateGroup": "建立群組失敗：{error}",
+    "@failedToCreateGroup": {
+      "placeholders": {
+        "error": {}
+      }
+    }
+  },
+  "songEditor": {
+    "titleEdit": "編輯歌曲單元",
+    "titleNew": "新建歌曲單元",
+    "reloadMetadata": "從源重新載入中繼資料",
+    "writeMetadata": "將中繼資料寫入源",
+    "sources": "源",
+    "display": "畫面",
+    "audio": "音訊",
+    "accompaniment": "伴奏",
+    "lyricsLabel": "歌詞",
+    "noDisplaySources": "無畫面源",
+    "noAudioSources": "無音訊源",
+    "noAccompanimentSources": "無伴奏源",
+    "noLyricsSources": "無歌詞源",
+    "addDisplaySource": "新增畫面源",
+    "addAudioSource": "新增音訊源",
+    "addAccompanimentSource": "新增伴奏源",
+    "addLyricsSource": "新增歌詞源",
+    "editDisplayName": "編輯顯示名稱",
+    "setOffset": "設定偏移",
+    "setOffsetTitle": "設定偏移量",
+    "offsetHint": "與音訊對齊的毫秒偏移量",
+    "offsetNote": "正值 = 延遲，負值 = 提前",
+    "offsetLabel": "偏移量（毫秒）",
+    "editDisplayNameTitle": "編輯顯示名稱",
+    "originalName": "原始",
+    "displayNameLabel": "顯示名稱",
+    "displayNameHint": "留空則使用原始名稱",
+    "addSource": "新增源",
+    "localFile": "本機檔案",
+    "enterUrl": "輸入 URL",
+    "urlLabel": "URL",
+    "urlHint": "https://...",
+    "selectSong": "選擇歌曲",
+    "selectSongs": "選擇歌曲",
+    "addSongs": "新增歌曲",
+    "artist": "藝人",
+    "thumbnail": "縮圖",
+    "addImage": "新增圖片",
+    "selectThumbnails": "選擇 ({count})",
+    "@selectThumbnails": {
+      "placeholders": {
+        "count": {}
+      }
+    },
+    "selectThumbnailTitle": "選擇縮圖",
+    "errorAddingCustomThumbnail": "新增自訂縮圖時發生錯誤：{error}",
+    "@errorAddingCustomThumbnail": {
+      "placeholders": {
+        "error": {}
+      }
+    },
+    "audioExtracted": "從 {name} 擷取的音訊軌道",
+    "@audioExtracted": {
+      "placeholders": {
+        "name": {}
+      }
+    },
+    "noAudioFound": "在 {name} 中找不到音訊軌道",
+    "@noAudioFound": {
+      "placeholders": {
+        "name": {}
+      }
+    },
+    "autoDiscovered": "自動發現：{types}",
+    "@autoDiscovered": {
+      "placeholders": {
+        "types": {}
+      }
+    },
+    "chooseMetadataValues": "為每個元數據欄位選擇值："
+  },
+  "settings": {
+    "title": "設定",
+    "user": "使用者",
+    "username": "使用者名稱",
+    "appearance": "外觀",
+    "theme": "主題",
+    "themeSystem": "跟隨系統",
+    "themeLight": "淺色",
+    "themeDark": "深色",
+    "accentColor": "強調色",
+    "accentColorHint": "自訂應用程式顏色",
+    "language": "語言",
+    "playback": "播放",
+    "lyricsMode": "歌詞模式",
+    "ktvMode": "KTV 模式",
+    "ktvModeHint": "強制螢幕歌詞，停用浮動視窗",
+    "hideDisplayPanel": "隱藏畫面面板",
+    "hideDisplayPanelHint": "僅顯示歌詞和控制列（純音樂模式）",
+    "thumbnailBgLibrary": "音樂庫使用縮圖背景",
+    "thumbnailBgLibraryHint": "在音樂庫檢視中將縮圖用作背景",
+    "thumbnailBgQueue": "佇列使用縮圖背景",
+    "thumbnailBgQueueHint": "在佇列中將縮圖用作背景",
+    "storage": "儲存",
+    "configMode": "設定模式",
+    "configModeCentralized": "集中儲存",
+    "configModeInPlace": "就地儲存",
+    "libraryLocations": "音樂庫位置",
+    "libraryLocationsHint": "管理音樂檔案的儲存位置",
+    "metadataWriteback": "中繼資料回寫",
+    "metadataWritebackHint": "將標籤變更同步到原始檔案",
+    "autoDiscoverAudio": "自動探索音訊檔案",
+    "autoDiscoverAudioHint": "自動從音樂庫位置新增音訊檔案",
+    "debug": "除錯",
+    "audioEntriesDebug": "音訊項目除錯",
+    "audioEntriesDebugHint": "檢視已探索的音訊項目",
+    "rescanAudio": "重新掃描音訊檔案",
+    "rescanAudioHint": "清除並重新探索所有音訊檔案（含更新的中繼資料）",
+    "about": "關於",
+    "version": "版本",
+    "license": "授權條款",
+    "licenseValue": "GNU Affero 通用公共授權條款 v3.0 (AGPL-3.0)",
+    "resetFactory": "恢復原廠設定",
+    "resetFactoryHint": "將所有設定重設為預設值",
+    "system": "系統",
+    "resetFactoryTitle": "恢復原廠設定？",
+    "resetFactoryBody": "這將把應用程式完全重設為初始狀態",
+    "resetFactoryItems": "所有設定和偏好\n歌曲單元庫和標籤\n播放清單、佇列和群組\n播放狀態",
+    "resetFactoryNote": "磁碟上的實際音樂檔案不會被刪除",
+    "resetFactoryRestart": "重設後應用程式將重新啟動",
+    "resetEverything": "全部重設",
+    "rescanTitle": "重新掃描音訊檔案",
+    "rescanBody": "這將清除所有已探索的音訊項目並重新掃描音樂庫位置",
+    "rescanNote": "大型音樂庫可能需要幾分鐘。是否繼續？",
+    "rescan": "重新掃描",
+    "migratingConfig": "正在遷移設定",
+    "migratingEntryPoints": "正在遷移進入點檔案...",
+    "scanningForSongUnits": "正在掃描歌曲單元...",
+    "storagePermissionTitle": "需要儲存權限",
+    "storagePermissionBody": "珠鏈需要存取你的音樂檔案以探索和播放音訊",
+    "storagePermissionNote": "請在下一個對話框中授予儲存權限，或前往系統設定手動開啟",
+    "openSettings": "開啟設定",
+    "foundAudioFiles": "找到 {count} 個音訊檔案",
+    "@foundAudioFiles": {
+      "placeholders": {
+        "count": {}
+      }
+    },
+    "errorScanning": "掃描發生錯誤：{error}",
+    "@errorScanning": {
+      "placeholders": {
+        "error": {}
+      }
+    },
+    "audioEntriesCleared": "音訊項目已清除",
+    "errorClearingAudio": "清除音訊項目發生錯誤：{error}",
+    "@errorClearingAudio": {
+      "placeholders": {
+        "error": {}
+      }
+    },
+    "audioRescanSuccess": "音訊檔案重新掃描成功",
+    "errorRescanning": "重新掃描發生錯誤：{error}",
+    "@errorRescanning": {
+      "placeholders": {
+        "error": {}
+      }
+    },
+    "testingConnection": "正在測試連線...",
+    "connectionSuccess": "連線成功！",
+    "connectionFailed": "連線失敗",
+    "onlineProviders": "線上源提供者"
+  },
+  "libraryLocations": {
+    "title": "音樂庫位置",
+    "selectLocation": "選擇音樂庫位置",
+    "nameLocation": "為此位置命名",
+    "enterLocationName": "輸入此位置的名稱",
+    "locationAdded": "音樂庫位置已新增",
+    "discoveredImported": "已探索並匯入 {count} 個歌曲單元",
+    "@discoveredImported": {
+      "placeholders": {
+        "count": {}
+      }
+    },
+    "switchToInPlace": "切換到就地儲存",
+    "switchToCentralized": "切換到集中儲存",
+    "migrateToInPlaceBody": "這將把所有進入點檔案從集中儲存移動到 {path}，與音訊源放在一起",
+    "@migrateToInPlaceBody": {
+      "placeholders": {
+        "path": {}
+      }
+    },
+    "migrateToCentralizedBody": "這將把所有進入點檔案從 {path} 移動到集中儲存",
+    "@migrateToCentralizedBody": {
+      "placeholders": {
+        "path": {}
+      }
+    },
+    "switchedToInPlace": "已切換到就地儲存模式",
+    "switchedToCentralized": "已切換到集中儲存模式",
+    "migrationFailed": "遷移失敗",
+    "migrationError": "遷移發生錯誤：{error}",
+    "@migrationError": {
+      "placeholders": {
+        "error": {}
+      }
+    },
+    "renameLocation": "重新命名位置",
+    "nameLabel": "名稱",
+    "removeLocation": "移除音樂庫位置",
+    "removeLocationConfirm": "確定要移除 \"{name}\"？",
+    "@removeLocationConfirm": {
+      "placeholders": {
+        "name": {}
+      }
+    },
+    "removeLocationNote": "從此位置探索的歌曲單元和音訊項目將從音樂庫中移除。磁碟上的檔案不會被刪除。",
+    "removed": "已移除 \"{name}\"",
+    "@removed": {
+      "placeholders": {
+        "name": {}
+      }
+    },
+    "failedToRemove": "移除失敗：{error}",
+    "@failedToRemove": {
+      "placeholders": {
+        "error": {}
+      }
+    },
+    "isNowDefault": "現在是預設位置",
+    "@isNowDefault": {
+      "placeholders": {
+        "name": {}
+      }
+    },
+    "failedToSetDefault": "設定預設位置失敗：{error}",
+    "@failedToSetDefault": {
+      "placeholders": {
+        "error": {}
+      }
+    },
+    "accessible": "可存取",
+    "inaccessible": "無法存取",
+    "inPlace": "就地儲存",
+    "centralized": "集中儲存",
+    "setAsDefault": "設為預設"
+  },
+  "locationSetup": {
+    "title": "設定音樂庫位置",
+    "description": "新增存放音樂檔案的資料夾。珠鏈將自動掃描這些位置並監控變更。",
+    "storagePermissionRequired": "需要儲存權限",
+    "selectedLocations": "已選位置",
+    "addLocation": "新增音樂庫位置",
+    "firstLocationNote": "第一個位置將作為新歌曲單元的預設位置"
+  },
+  "configMode": {
+    "title": "歡迎使用珠鏈",
+    "subtitle": "選擇音樂庫設定的儲存方式",
+    "centralizedTitle": "集中儲存",
+    "centralizedDesc": "將所有設定儲存在應用程式資料目錄中",
+    "centralizedPros": "資料集中管理\n易於備份和還原\n標準應用程式行為",
+    "centralizedCons": "跨裝置可攜性較差\n共享需手動匯出",
+    "inPlaceTitle": "就地儲存",
+    "inPlaceDesc": "將歌曲單元中繼資料與音樂檔案存放在一起",
+    "inPlacePros": "跨裝置可攜\n自動探索歌曲單元\n中繼資料與檔案同在",
+    "inPlaceCons": "會在音樂資料夾中建立 beadline-*.json 檔案\n需要設定儲存位置",
+    "changeNote": "你可以稍後在 設定 > 儲存 中變更此設定"
+  },
+  "onlineProviders": {
+    "title": "線上源提供者",
+    "noProviders": "未設定提供者",
+    "noProvidersHint": "新增提供者以搜尋線上源",
+    "addProvider": "新增提供者",
+    "editProvider": "編輯提供者",
+    "providerIdLabel": "提供者 ID",
+    "providerIdHint": "bilibili、netease 等",
+    "displayNameLabel": "顯示名稱",
+    "displayNameHint": "嗶哩嗶哩、網易雲音樂等",
+    "baseUrlLabel": "基礎 URL",
+    "baseUrlHint": "http://localhost:3000",
+    "apiKeyOptional": "API 金鑰（選填）",
+    "apiKeyHint": "不需要則留空",
+    "timeoutLabel": "逾時（秒）",
+    "timeoutDefault": "10",
+    "timeoutError": "逾時必須為正數"
+  },
+  "display": {
+    "noSource": "無畫面源",
+    "loading": "載入中：{name}",
+    "@loading": {
+      "placeholders": {
+        "name": {}
+      }
+    },
+    "failedToLoad": "載入失敗：{name}",
+    "@failedToLoad": {
+      "placeholders": {
+        "name": {}
+      }
+    }
+  },
+  "lyrics": {
+    "noLyrics": "尚無歌詞"
+  },
+  "floatingLyrics": {
+    "noLyrics": "尚無歌詞"
+  },
+  "songPicker": {
+    "selectSongs": "選擇歌曲",
+    "selectSong": "選擇歌曲",
+    "searchHint": "搜尋歌曲...",
+    "noSongsFound": "找不到歌曲",
+    "noSongsInLibrary": "音樂庫中沒有歌曲",
+    "addSongs": "新增歌曲"
+  },
+  "videoRemoval": {
+    "title": "移除畫面源",
+    "message": "畫面源\"{videoName}\"包含已擷取的音訊源\"{audioName}\"。是否也要刪除音訊源？",
+    "@message": {
+      "placeholders": {
+        "videoName": {},
+        "audioName": {}
+      }
+    },
+    "cancel": "取消",
+    "keepAudio": "保留音訊",
+    "removeBoth": "全部刪除"
+  },
+  "debug": {
+    "audioEntriesTitle": "音訊條目除錯",
+    "temporarySongUnitsFound": "找到臨時歌曲單元：{count}",
+    "@temporarySongUnitsFound": {
+      "placeholders": {
+        "count": {}
+      }
+    },
+    "refresh": "重新整理",
+    "temporarySongUnits": "臨時歌曲單元",
+    "close": "關閉",
+    "showEntries": "顯示條目"
+  },
+  "providers": {
+    "@id": {
+      "placeholders": {
+        "providerId": {}
+      }
+    },
+    "@url": {
+      "placeholders": {
+        "baseUrl": {}
+      }
+    }
+  },
+  "dialogs": {
+    "confirmModeChange": "確認模式更改",
+    "changeMode": "更改模式",
+    "discoveringAudioFiles": "正在探索音訊檔案",
+    "rescanningAudioFiles": "正在重新掃描音訊檔案",
+    "noLibraryLocationsConfigured": "未設定音樂庫位置",
+    "errorLoadingLocations": "載入位置出錯",
+    "default": "預設",
+    "addLocationToStoreMusic": "新增位置以儲存音樂庫",
+    "noLocationsTitle": "未設定音樂庫位置",
+    "noLocationsMessage": "新增位置以儲存音樂庫",
+    "addNestedGroup": "新增巢狀群組",
+    "removeGroup": "移除群組",
+    "removeGroupQuestion": "如何移除 \"{groupName}\"？",
+    "@removeGroupQuestion": {
+      "placeholders": {
+        "groupName": {}
+      }
+    },
+    "ungroupKeepSongs": "取消群組（保留歌曲）",
+    "removeAll": "全部移除",
+    "renameGroup": "重新命名群組",
+    "createNestedGroup": "建立巢狀群組",
+    "createGroup": "建立群組",
+    "selectThumbnail": "選擇縮圖",
+    "errorAddingCustomThumbnail": "新增自訂縮圖時發生錯誤：{error}",
+    "@errorAddingCustomThumbnail": {
+      "placeholders": {
+        "error": {}
+      }
+    },
+    "noResultsEnterSearch": "未找到結果。請輸入搜尋詞並按搜尋。",
+    "editProvider": "編輯",
+    "deleteProvider": "刪除",
+    "providerId": "ID: {providerId}",
+    "@providerId": {
+      "placeholders": {
+        "providerId": {}
+      }
+    },
+    "providerUrl": "URL: {baseUrl}",
+    "@providerUrl": {
+      "placeholders": {
+        "baseUrl": {}
+      }
+    },
+    "providerApiKey": "API 金鑰：•••••••- ",
+    "deleteSongUnit": "刪除歌曲單元",
+    "alsoDeleteConfigFile": "同時刪除設定檔",
+    "configFileNote": "刪除 beadline-*.json 檔案。原始檔案不受影響。",
+    "deleteOriginalAfterMerge": "合併後刪除原始歌曲單元",
+    "deleteItemsConfirm": "確定要刪除 {count} 項嗎？",
+    "@deleteItemsConfirm": {
+      "placeholders": {
+        "count": {}
+      }
+    },
+    "deletedItems": "已刪除 {count} 項",
+    "@deletedItems": {
+      "placeholders": {
+        "count": {}
+      }
+    },
+    "importComplete": "匯入完成",
+    "imported": "已匯入：{count}",
+    "@imported": {
+      "placeholders": {
+        "count": {}
+      }
+    },
+    "skippedDuplicates": "已略過（重複）：{count}",
+    "@skippedDuplicates": {
+      "placeholders": {
+        "count": {}
+      }
+    },
+    "importMore": "... 還有 {count} 項",
+    "@importMore": {
+      "placeholders": {
+        "count": {}
+      }
+    },
+    "promotedToSongUnit": "已將 \"{name}\" 提升為歌曲單元",
+    "@promotedToSongUnit": {
+      "placeholders": {
+        "name": {}
+      }
+    },
+    "exportedTo": "已匯出到 {path}",
+    "@exportedTo": {
+      "placeholders": {
+        "path": {}
+      }
+    },
+    "promoted": "已將 \"{displayName}\" 提升為歌曲單元",
+    "@promoted": {
+      "placeholders": {
+        "displayName": {}
+      }
+    },
+    "resetFailed": "重設失敗：{error}",
+    "@resetFailed": {
+      "placeholders": {
+        "error": {}
+      }
+    },
+    "confirmTitle": "確認模式更改",
+    "changeModeButton": "更改模式",
+    "migratingConfig": "正在遷移設定",
+    "migratingEntryPoints": "正在遷移進入點檔案...",
+    "scanningForSongUnits": "正在掃描歌曲單元...",
+    "errorScanning": "掃描發生錯誤：{error}",
+    "@errorScanning": {
+      "placeholders": {
+        "error": {}
+      }
+    },
+    "errorClearingAudio": "清除音訊項目發生錯誤：{error}",
+    "@errorClearingAudio": {
+      "placeholders": {
+        "error": {}
+      }
+    },
+    "errorRescanning": "重新掃描發生錯誤：{error}",
+    "@errorRescanning": {
+      "placeholders": {
+        "error": {}
+      }
+    },
+    "failedToRename": "重命名失敗：{error}",
+    "@failedToRename": {
+      "placeholders": {
+        "error": {}
+      }
+    },
+    "failedToRemove": "移除失敗：{error}",
+    "@failedToRemove": {
+      "placeholders": {
+        "error": {}
+      }
+    },
+    "failedToSetDefault": "設定預設失敗：{error}",
+    "@failedToSetDefault": {
+      "placeholders": {
+        "error": {}
+      }
+    },
+    "migrationError": "遷移發生錯誤：{error}",
+    "@migrationError": {
+      "placeholders": {
+        "error": {}
+      }
+    },
+    "home": {
+      "shuffle": "隨機排序",
+      "rename": "重新命名",
+      "addNestedGroup": "新增巢狀群組",
+      "remove": "移除",
+      "removeGroup": "移除群組",
+      "removeGroupQuestion": "如何移除 \"{groupName}\"？",
+      "@removeGroupQuestion": {
+        "placeholders": {
+          "groupName": {}
+        }
+      },
+      "ungroupKeepSongs": "取消群組（保留歌曲）",
+      "removeAll": "全部移除",
+      "renameGroup": "重新命名群組",
+      "createNestedGroup": "建立巢狀群組",
+      "create": "建立",
+      "createGroup": "建立群組"
+    },
+    "progressDialogs": {
+      "discovering": "正在探索音訊檔案",
+      "rescanning": "正在重新掃描音訊檔案"
+    },
+    "libraryLocationsError": {
+      "noLocationsConfigured": "未設定音樂庫位置",
+      "errorLoading": "載入位置出錯",
+      "retry": "重試"
+    }
+  },
+  "configModeChange": {
+    "title": "確認模式更改",
+    "description": "更改設定模式將遷移進入點檔案。這可能需要一些時間。",
+    "inPlaceDescription": "這將在音樂檔案旁邊建立 beadline-*.json 檔案。你的音樂庫將可以在不同裝置間攜帶。",
+    "centralizedDescription": "這將把進入點檔案移動到應用程式資料目錄。你的音樂庫將不再可攜帶。",
+    "changeMode": "更改模式"
+  },
+  "app_routes": {
+    "routeNotFound": "未找到路由：{name}",
+    "@routeNotFound": {
+      "placeholders": {
+        "name": {}
+      }
+    }
+  },
+  "loading_indicator": {
+    "percentage": "{percentage}%"
+  },
+  "error_display": {},
+  "video_removal_prompt": {
+    "title": "移除畫面源",
+    "message": "畫面源\"{videoName}\"包含已擷取的音訊源\"{audioName}\"。是否也要刪除音訊源？",
+    "@message": {
+      "placeholders": {
+        "videoName": {},
+        "audioName": {}
+      }
+    },
+    "keepAudio": "保留音訊",
+    "removeBoth": "全部刪除"
+  },
+  "library_location_setup_dialog": {
+    "title": "選擇音樂庫位置"
+  },
+  "home_page": {
+    "renameGroup": "重新命名群組"
+  },
+  "song_unit_editor": {
+    "addedToSources": "已將 {title} 加入到源",
+    "@addedToSources": {
+      "placeholders": {
+        "title": {}
+      }
+    },
+    "aliasHint": "title"
+  }
+}

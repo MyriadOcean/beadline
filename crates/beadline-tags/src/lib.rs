@@ -1,0 +1,9 @@
+pub mod model;
+pub mod entity;
+pub mod error;
+pub mod repository;
+pub mod collection_repository;
+pub mod parser;
+pub mod evaluator;
+pub mod suggestion;
+pub mod database;
