@@ -395,77 +395,102 @@ class _SongUnitEditorState extends State<SongUnitEditor> {
 
               final linkedVideoName = _getLinkedVideoName(item.source);
 
-              return ListTile(
+              return Card(
                 key: ValueKey(item.source.id),
-                leading: Text(
-                  '${index + 1}',
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-                title: Text(
-                  item.source.displayName ?? _getSourceName(item.source),
-                ),
-                subtitle: Column(
+                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      _getSourceName(item.source),
-                      style: Theme.of(context).textTheme.bodySmall,
+                    // drag handle index number
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2, right: 8),
+                      child: Text(
+                        '${index + 1}',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
                     ),
-                    if (linkedVideoName != null)
-                      Row(
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(
-                            Icons.videocam,
-                            size: 14,
-                            color: Theme.of(context).colorScheme.tertiary,
+                          // name — full width
+                          Text(
+                            item.source.displayName ?? _getSourceName(item.source),
+                            style: Theme.of(context).textTheme.bodyMedium,
                           ),
-                          const SizedBox(width: 4),
-                          Flexible(
-                            child: Text(
-                              'From: $linkedVideoName',
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: Theme.of(context).colorScheme.tertiary,
-                              ),
-                              overflow: TextOverflow.ellipsis,
+                          if (item.source.displayName != null)
+                            Text(
+                              _getSourceName(item.source),
+                              style: Theme.of(context).textTheme.bodySmall,
                             ),
+                          if (linkedVideoName != null)
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.videocam,
+                                  size: 14,
+                                  color: Theme.of(context).colorScheme.tertiary,
+                                ),
+                                const SizedBox(width: 4),
+                                Flexible(
+                                  child: Text(
+                                    'From: $linkedVideoName',
+                                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      color: Theme.of(context).colorScheme.tertiary,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          if (item.error != null)
+                            Text(
+                              item.error!,
+                              style: const TextStyle(color: Colors.red),
+                            ),
+                          if (showOffset && offset != Duration.zero)
+                            Text(
+                              'Offset: ${_formatOffsetMs(offset)}',
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: Theme.of(context).colorScheme.secondary,
+                              ),
+                            ),
+                          // buttons on second line, right-aligned
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.edit),
+                                iconSize: 20,
+                                visualDensity: VisualDensity.compact,
+                                onPressed: () =>
+                                    _showEditSourceNameDialog(sources, type, index),
+                                tooltip: 'Edit display name',
+                              ),
+                              if (showOffset)
+                                IconButton(
+                                  icon: const Icon(Icons.timer),
+                                  iconSize: 20,
+                                  visualDensity: VisualDensity.compact,
+                                  onPressed: () =>
+                                      _showOffsetDialog(sources, type, index),
+                                  tooltip: 'Set offset',
+                                ),
+                              IconButton(
+                                icon: const Icon(Icons.delete),
+                                iconSize: 20,
+                                visualDensity: VisualDensity.compact,
+                                onPressed: () => _removeSource(sources, type, index),
+                              ),
+                            ],
                           ),
                         ],
                       ),
-                    if (item.error != null)
-                      Text(
-                        item.error!,
-                        style: const TextStyle(color: Colors.red),
-                      ),
-                    if (showOffset && offset != Duration.zero)
-                      Text(
-                        'Offset: ${_formatOffsetMs(offset)}',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.secondary,
-                        ),
-                      ),
+                    ),
                   ],
                 ),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.edit),
-                      onPressed: () =>
-                          _showEditSourceNameDialog(sources, type, index),
-                      tooltip: 'Edit display name',
-                    ),
-                    if (showOffset)
-                      IconButton(
-                        icon: const Icon(Icons.timer),
-                        onPressed: () =>
-                            _showOffsetDialog(sources, type, index),
-                        tooltip: 'Set offset',
-                      ),
-                    IconButton(
-                      icon: const Icon(Icons.delete),
-                      onPressed: () => _removeSource(sources, type, index),
-                    ),
-                  ],
                 ),
               );
             },
