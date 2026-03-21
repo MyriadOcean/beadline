@@ -54,14 +54,9 @@ class PlaylistViewModel extends ChangeNotifier {
     try {
       _activeQueueId = await _settingsRepository.getActiveQueueId();
 
-      // Ensure default queue exists
-      final defaultQueue = await _tagRepository.getTag(_activeQueueId);
-      if (defaultQueue == null) {
-        // Create default collection
-        await _tagRepository.createCollection('Default');
-        _activeQueueId = 'default';
-        await _settingsRepository.setActiveQueueId(_activeQueueId);
-      }
+      // Queue may not exist yet on first launch (created after language selection)
+      final activeQueue = await _tagRepository.getTag(_activeQueueId);
+      if (activeQueue == null) return;
 
       await _loadCurrentQueueSongs();
       notifyListeners();

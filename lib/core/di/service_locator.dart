@@ -3,6 +3,7 @@ import 'package:get_it/get_it.dart';
 import '../../data/file_system_service.dart';
 import '../../data/playback_state_storage.dart';
 import '../../data/settings_storage.dart';
+import '../../i18n/translations.g.dart';
 import '../../repositories/library_repository.dart';
 import '../../repositories/search_repository.dart';
 import '../../repositories/settings_repository.dart';
@@ -14,7 +15,6 @@ import '../../services/entry_point_file_service.dart';
 import '../../services/file_system_watcher.dart';
 import '../../services/import_export_service.dart';
 import '../../services/library_location_manager.dart';
-
 import '../../services/notification_service.dart';
 import '../../services/online_source_provider.dart';
 import '../../services/path_resolver.dart';
@@ -168,15 +168,26 @@ Future<void> setupServiceLocator() async {
   // Initialize built-in tags (name, artist, album, time, duration, user)
   await getIt<TagRepository>().initializeBuiltInTags();
 
-  // Ensure default queue exists
+  // Ensure default queue exists (skipped on first launch — caller must invoke
+  // ensureDefaultQueue() after the user selects their language)
+  final settingsRepo = getIt<SettingsRepository>();
+  final savedSettings = await settingsRepo.loadSettings();
+  if (savedSettings.languageCode != null) {
+    // Language already chosen on a previous launch — safe to create now
+    await ensureDefaultQueue();
+  }
+}
+
+/// Create the default queue if it doesn't exist yet.
+/// Must be called after the locale is set to the user's chosen language.
+Future<void> ensureDefaultQueue() async {
   final settingsRepo = getIt<SettingsRepository>();
   final tagRepo = getIt<TagRepository>();
   final activeQueueId = await settingsRepo.getActiveQueueId();
   final activeQueue = await tagRepo.getTag(activeQueueId);
   if (activeQueue == null) {
-    // Create default collection
     final defaultQueue = await tagRepo.createCollection(
-      'Default',
+      t.queue.title,
       isQueue: true,
     );
     await settingsRepo.setActiveQueueId(defaultQueue.id);

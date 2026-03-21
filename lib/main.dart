@@ -10,6 +10,7 @@ import 'package:provider/provider.dart';
 
 import 'core/di/service_locator.dart';
 import 'core/keyboard_shortcuts.dart';
+import 'data/settings_storage.dart';
 import 'i18n/translations.g.dart';
 import 'repositories/library_repository.dart';
 import 'repositories/settings_repository.dart';
@@ -44,6 +45,18 @@ void main(List<String> args) async {
   // Must be async so deferred locale libraries are loaded before any widget
   // tries to read translations.
   await LocaleSettings.useDeviceLocale();
+
+  // Apply saved language preference early so localized strings (e.g. default
+  // queue name) are correct before setupServiceLocator runs.
+  try {
+    final savedSettings = await SettingsStorage().loadSettings();
+    final savedLang = savedSettings.languageCode;
+    if (savedLang != null && savedLang.isNotEmpty) {
+      await LocaleSettings.setLocaleRaw(savedLang);
+    }
+  } catch (_) {
+    // Silently fall back to device locale on any error
+  }
 
   // Check if this is a desktop sub-window (floating lyrics)
   final subWindowWidget = desktop.handleSubWindowArgs(args);
@@ -687,9 +700,14 @@ class _AppInitializerState extends State<_AppInitializer> {
     if (!widget.settingsViewModel.isConfigured && !_languageSelected) {
       return LanguageSelector(
         onLanguageSelected: (languageCode) async {
+          // Apply locale immediately so t.queue.title is correct
+          await LocaleSettings.setLocaleRaw(languageCode);
           // Save language preference
           await widget.settingsViewModel.setLanguageCode(languageCode);
-          
+          // Now create the default queue with the correct locale
+          await ensureDefaultQueue();
+          // Reload viewmodels so they pick up the newly created queue
+          await getIt<TagViewModel>().reloadActiveQueue();
           // Mark language as selected to show configuration mode selector
           setState(() {
             _languageSelected = true;

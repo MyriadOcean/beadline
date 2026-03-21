@@ -194,19 +194,17 @@ class TagViewModel extends ChangeNotifier {
     );
   }
 
+  /// Public entry point to reload the active queue (e.g. after first-launch queue creation).
+  Future<void> reloadActiveQueue() => _loadActiveQueue();
+
   /// Load active queue from settings and load its songs
   Future<void> _loadActiveQueue() async {
     try {
       _activeQueueId = await _settingsRepository.getActiveQueueId();
 
-      // Ensure default queue exists
-      final defaultQueue = await _tagRepository.getTag(_activeQueueId);
-      if (defaultQueue == null) {
-        // Create default collection
-        await _tagRepository.createCollection('Default', isQueue: true);
-        _activeQueueId = 'default';
-        await _settingsRepository.setActiveQueueId(_activeQueueId);
-      }
+      // Queue may not exist yet on first launch (created after language selection)
+      final activeQueue = await _tagRepository.getTag(_activeQueueId);
+      if (activeQueue == null) return;
 
       await _loadCurrentQueueSongs();
       await _updateCachedValues();
