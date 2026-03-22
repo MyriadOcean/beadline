@@ -122,12 +122,18 @@ class _PlaylistsManagementPageState extends State<PlaylistsManagementPage> {
         ),
         const Divider(height: 1),
         Expanded(
-          child: ReorderableListView.builder(
+          child: GestureDetector(
+            behavior: HitTestBehavior.translucent,
+            onSecondaryTapUp: (details) {
+              _showPlaylistListContextMenu(context, details.globalPosition);
+            },
+            onLongPressStart: (details) {
+              _showPlaylistListContextMenu(context, details.globalPosition);
+            },
+            child: ReorderableListView.builder(
             buildDefaultDragHandles: false,
-            itemCount: sorted.length + 1,
+            itemCount: sorted.length,
             onReorder: (oldIndex, newIndex) async {
-              // Ignore reorder involving the trailing spacer
-              if (oldIndex >= sorted.length || newIndex > sorted.length) return;
               if (newIndex > oldIndex) newIndex--;
               if (oldIndex == newIndex) return;
               final reordered = List<Tag>.from(sorted);
@@ -137,29 +143,6 @@ class _PlaylistsManagementPageState extends State<PlaylistsManagementPage> {
               await tagVM.reorderPlaylists(reordered.map((t) => t.id).toList());
             },
             itemBuilder: (context, index) {
-              // Trailing empty space for right-click/long-press context menu
-              if (index == sorted.length) {
-                return GestureDetector(
-                  key: const ValueKey('_playlist_list_trailing'),
-                  behavior: HitTestBehavior.opaque,
-                  onSecondaryTapUp: (details) {
-                    _showPlaylistListContextMenu(
-                      context,
-                      details.globalPosition,
-                    );
-                  },
-                  onLongPressStart: (details) {
-                    _showPlaylistListContextMenu(
-                      context,
-                      details.globalPosition,
-                    );
-                  },
-                  child: Container(
-                    height: 500,
-                    color: Colors.transparent,
-                  ),
-                );
-              }
               final tag = sorted[index];
               final isSelected = tag.id == _selectedPlaylistId;
               final metadata = tag.playlistMetadata;
@@ -226,8 +209,9 @@ class _PlaylistsManagementPageState extends State<PlaylistsManagementPage> {
                 ),
               );
             },
-          ),
-        ),
+          ),        // closes ReorderableListView.builder
+        ),          // closes GestureDetector
+        ),          // closes Expanded
       ],
     );
   }
@@ -1178,7 +1162,7 @@ class _PlaylistContentListState extends State<_PlaylistContentList> {
       },
       builder: (context, candidateData, rejectedData) {
         return ListView.builder(
-          padding: const EdgeInsets.symmetric(vertical: 4),
+          padding: const EdgeInsets.symmetric(vertical: 8),
           itemCount: widget.items.length + 1,
           itemBuilder: (context, index) {
             // Trailing empty space: accepts drops (move to end) and right-click context menu
@@ -1228,7 +1212,7 @@ class _PlaylistContentListState extends State<_PlaylistContentList> {
                       },
                       builder: (context, candidateData, rejectedData) {
                         return Container(
-                          height: 80,
+                          height: 200,
                           color: candidateData.isNotEmpty
                               ? theme.colorScheme.primaryContainer.withValues(
                                   alpha: 0.3,
@@ -1879,7 +1863,7 @@ class _PlaylistContentListState extends State<_PlaylistContentList> {
     }
 
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       elevation: isDropTarget ? 4 : 1,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
@@ -2023,7 +2007,7 @@ class _PlaylistContentListState extends State<_PlaylistContentList> {
 
     return Card(
       key: ValueKey('ref_${item.id}'),
-      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       elevation: 1,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
@@ -2620,7 +2604,7 @@ class _NestedSubGroupCard extends StatelessWidget {
     }
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       child: DragTarget<_PlaylistDragData>(
         onWillAcceptWithDetails: (details) {
           final data = details.data;

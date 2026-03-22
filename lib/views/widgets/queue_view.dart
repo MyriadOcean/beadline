@@ -426,7 +426,10 @@ class _QueueViewState extends State<QueueView> {
               theme,
               topLevelItems: topLevelItems,
             ),
-            child,
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 3),
+              child: child,
+            ),
           ],
         );
       },
