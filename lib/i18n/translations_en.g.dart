@@ -1067,6 +1067,21 @@ class TranslationsSettingsEn {
 	/// en: 'Language'
 	String get language => 'Language';
 
+	/// en: 'System Default'
+	String get languageSystemDefault => 'System Default';
+
+	/// en: 'Choose Your Language'
+	String get languageSelectorTitle => 'Choose Your Language';
+
+	/// en: 'Select your preferred language for the app'
+	String get languageSelectorSubtitle => 'Select your preferred language for the app';
+
+	/// en: 'You can change the language later in Settings'
+	String get languageSelectorHint => 'You can change the language later in Settings';
+
+	/// en: 'Continue'
+	String get languageSelectorContinue => 'Continue';
+
 	/// en: 'Playback'
 	String get playback => 'Playback';
 
@@ -2401,6 +2416,11 @@ extension on Translations {
 			'settings.accentColor' => 'Accent Color',
 			'settings.accentColorHint' => 'Customize app color',
 			'settings.language' => 'Language',
+			'settings.languageSystemDefault' => 'System Default',
+			'settings.languageSelectorTitle' => 'Choose Your Language',
+			'settings.languageSelectorSubtitle' => 'Select your preferred language for the app',
+			'settings.languageSelectorHint' => 'You can change the language later in Settings',
+			'settings.languageSelectorContinue' => 'Continue',
 			'settings.playback' => 'Playback',
 			'settings.lyricsMode' => 'Lyrics Mode',
 			'settings.ktvMode' => 'KTV Mode',
@@ -2583,13 +2603,13 @@ extension on Translations {
 			'dialogs.exportedTo' => 'Exported to {path}',
 			'dialogs.promoted' => 'Promoted "{displayName}" to Song Unit',
 			'dialogs.resetFailed' => 'Reset failed: {error}',
+			_ => null,
+		} ?? switch (path) {
 			'dialogs.confirmTitle' => 'Confirm Mode Change',
 			'dialogs.changeModeButton' => 'Change Mode',
 			'dialogs.migratingConfig' => 'Migrating Configuration',
 			'dialogs.migratingEntryPoints' => 'Migrating entry point files...',
 			'dialogs.scanningForSongUnits' => 'Scanning for Song Units...',
-			_ => null,
-		} ?? switch (path) {
 			'dialogs.errorScanning' => 'Error scanning: {error}',
 			'dialogs.errorClearingAudio' => 'Error clearing audio entries: {error}',
 			'dialogs.errorRescanning' => 'Error re-scanning: {error}',

@@ -313,8 +313,8 @@ class _BeadlineAppState extends State<BeadlineApp> with WidgetsBindingObserver {
         ChangeNotifierProvider<TagViewModel>.value(
           value: getIt<TagViewModel>(),
         ),
-        ChangeNotifierProvider<SettingsViewModel>(
-          create: (_) => getIt<SettingsViewModel>(),
+        ChangeNotifierProvider<SettingsViewModel>.value(
+          value: getIt<SettingsViewModel>(),
         ),
       ],
       child: Consumer<SettingsViewModel>(

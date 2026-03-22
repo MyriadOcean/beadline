@@ -469,6 +469,11 @@ class _TranslationsSettingsZhHant extends TranslationsSettingsEn {
 	@override String get accentColor => '強調色';
 	@override String get accentColorHint => '自訂應用程式顏色';
 	@override String get language => '語言';
+	@override String get languageSystemDefault => '跟隨系統';
+	@override String get languageSelectorTitle => '選擇語言';
+	@override String get languageSelectorSubtitle => '選擇您偏好的應用程式語言';
+	@override String get languageSelectorHint => '您可以稍後在設定中更改語言';
+	@override String get languageSelectorContinue => '繼續';
 	@override String get playback => '播放';
 	@override String get lyricsMode => '歌詞模式';
 	@override String get ktvMode => 'KTV 模式';
@@ -1295,6 +1300,11 @@ extension on TranslationsZhHant {
 			'settings.accentColor' => '強調色',
 			'settings.accentColorHint' => '自訂應用程式顏色',
 			'settings.language' => '語言',
+			'settings.languageSystemDefault' => '跟隨系統',
+			'settings.languageSelectorTitle' => '選擇語言',
+			'settings.languageSelectorSubtitle' => '選擇您偏好的應用程式語言',
+			'settings.languageSelectorHint' => '您可以稍後在設定中更改語言',
+			'settings.languageSelectorContinue' => '繼續',
 			'settings.playback' => '播放',
 			'settings.lyricsMode' => '歌詞模式',
 			'settings.ktvMode' => 'KTV 模式',
@@ -1477,13 +1487,13 @@ extension on TranslationsZhHant {
 			'dialogs.exportedTo' => '已匯出到 {path}',
 			'dialogs.promoted' => '已將 "{displayName}" 提升為歌曲單元',
 			'dialogs.resetFailed' => '重設失敗：{error}',
+			_ => null,
+		} ?? switch (path) {
 			'dialogs.confirmTitle' => '確認模式更改',
 			'dialogs.changeModeButton' => '更改模式',
 			'dialogs.migratingConfig' => '正在遷移設定',
 			'dialogs.migratingEntryPoints' => '正在遷移進入點檔案...',
 			'dialogs.scanningForSongUnits' => '正在掃描歌曲單元...',
-			_ => null,
-		} ?? switch (path) {
 			'dialogs.errorScanning' => '掃描發生錯誤：{error}',
 			'dialogs.errorClearingAudio' => '清除音訊項目發生錯誤：{error}',
 			'dialogs.errorRescanning' => '重新掃描發生錯誤：{error}',

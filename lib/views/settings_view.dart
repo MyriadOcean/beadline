@@ -900,39 +900,43 @@ class _SettingsViewState extends State<SettingsView> {
     );
   }
 
-    void _showLanguageDialog(BuildContext context, SettingsViewModel viewModel) {
-    final languages = [
-      (null, 'System default', Icons.settings),
-      ('en', 'English', Icons.language),
-      ('zh-Hans', '简体中文', Icons.language),
-      ('zh-Hant', '繁體中文', Icons.language),
-    ];
-
+  void _showLanguageDialog(BuildContext context, SettingsViewModel viewModel) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(context.t.settings.language),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: languages.map((lang) {
-            final isSelected = viewModel.languageCode == lang.$1;
-            return ListTile(
-              leading: Icon(lang.$3),
-              title: Text(lang.$2),
-              trailing: isSelected ? const Icon(Icons.check) : null,
-              selected: isSelected,
-              onTap: () async {
-                await viewModel.setLanguageCode(lang.$1);
-                if (lang.$1 != null) {
-                  await LocaleSettings.setLocaleRaw(lang.$1!);
-                } else {
-                  await LocaleSettings.useDeviceLocale();
-                }
-                if (context.mounted) Navigator.of(context).pop();
-              },
-            );
-          }).toList(),
-        ),
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (ctx, setDialogState) {
+          final current = viewModel.languageCode;
+          final languages = [
+            (null, ctx.t.settings.languageSystemDefault, ''),
+            ('en', 'English', ''),
+            ('zh-Hans', '简体中文', ''),
+            ('zh-Hant', '繁體中文', ''),
+          ];
+          return AlertDialog(
+            title: Text(ctx.t.settings.language),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: languages.map((lang) {
+                final isSelected = current == lang.$1;
+                return ListTile(
+                  title: Text(lang.$2),
+                  trailing: isSelected ? const Icon(Icons.check) : null,
+                  selected: isSelected,
+                  onTap: () async {
+                    await viewModel.setLanguageCode(lang.$1);
+                    if (lang.$1 != null) {
+                      await LocaleSettings.setLocaleRaw(lang.$1!);
+                    } else {
+                      await LocaleSettings.useDeviceLocale();
+                    }
+                    setDialogState(() {});
+                    if (ctx.mounted) Navigator.of(ctx).pop();
+                  },
+                );
+              }).toList(),
+            ),
+          );
+        },
       ),
     );
   }
@@ -1016,7 +1020,7 @@ class _SettingsViewState extends State<SettingsView> {
       case 'zh-Hant':
         return '繁體中文';
       default:
-        return 'System default';
+        return context.t.settings.languageSystemDefault;
     }
   }
 

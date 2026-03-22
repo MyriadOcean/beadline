@@ -157,7 +157,7 @@ Future<void> setupServiceLocator() async {
         playbackStateStorage: getIt<PlaybackStateStorage>(),
       ),
     )
-    ..registerFactory<SettingsViewModel>(
+    ..registerLazySingleton<SettingsViewModel>(
       () => SettingsViewModel(
         settingsRepository: getIt<SettingsRepository>(),
         migrationService: getIt<ConfigurationMigrationService>(),

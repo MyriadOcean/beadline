@@ -329,6 +329,8 @@ class SettingsViewModel extends ChangeNotifier {
     try {
       _error = null;
       await _settingsRepository.setLanguageCode(code);
+      _settings = _settings.copyWith(languageCode: code);
+      notifyListeners();
     } catch (e) {
       _error = e.toString();
       notifyListeners();
