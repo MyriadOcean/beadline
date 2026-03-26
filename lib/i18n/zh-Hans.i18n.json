@@ -68,7 +68,7 @@
     "album": "专辑",
     "platform": "平台",
     "addImage": "添加图片",
-    "shuffle": "重新排序",
+    "shuffle": "随机排序",
     "alreadyInPlaylist": "已在播放列表中",
     "createAndAdd": "创建并添加"
   },
@@ -910,7 +910,7 @@
       }
     },
     "home": {
-      "shuffle": "重新排序",
+      "shuffle": "随机排序",
       "rename": "重命名",
       "addNestedGroup": "添加嵌套分组",
       "remove": "移除",

@@ -135,7 +135,7 @@ class _TranslationsCommonZhHans extends TranslationsCommonEn {
 	@override String get album => '专辑';
 	@override String get platform => '平台';
 	@override String get addImage => '添加图片';
-	@override String get shuffle => '重新排序';
+	@override String get shuffle => '随机排序';
 	@override String get alreadyInPlaylist => '已在播放列表中';
 	@override String get createAndAdd => '创建并添加';
 }
@@ -930,7 +930,7 @@ class _TranslationsDialogsHomeZhHans extends TranslationsDialogsHomeEn {
 	final TranslationsZhHans _root; // ignore: unused_field
 
 	// Translations
-	@override String get shuffle => '重新排序';
+	@override String get shuffle => '随机排序';
 	@override String get rename => '重命名';
 	@override String get addNestedGroup => '添加嵌套分组';
 	@override String get remove => '移除';
@@ -1033,7 +1033,7 @@ extension on TranslationsZhHans {
 			'common.album' => '专辑',
 			'common.platform' => '平台',
 			'common.addImage' => '添加图片',
-			'common.shuffle' => '重新排序',
+			'common.shuffle' => '随机排序',
 			'common.alreadyInPlaylist' => '已在播放列表中',
 			'common.createAndAdd' => '创建并添加',
 			'nav.home' => '主页',
@@ -1501,7 +1501,7 @@ extension on TranslationsZhHans {
 			'dialogs.failedToRemove' => '移除失败：{error}',
 			'dialogs.failedToSetDefault' => '设置默认失败：{error}',
 			'dialogs.migrationError' => '迁移出错：{error}',
-			'dialogs.home.shuffle' => '重新排序',
+			'dialogs.home.shuffle' => '随机排序',
 			'dialogs.home.rename' => '重命名',
 			'dialogs.home.addNestedGroup' => '添加嵌套分组',
 			'dialogs.home.remove' => '移除',
