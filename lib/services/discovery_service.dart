@@ -590,10 +590,16 @@ class DiscoveryService {
       }).toList();
 
       if (needsReExtraction.isNotEmpty) {
+        if (needsReExtraction.length > 50) {
+          debugPrint(
+            'DiscoveryService.syncAll: Deferring thumbnail re-extraction for ${needsReExtraction.length} units (too many for startup)',
+          );
+        } else {
         debugPrint(
           'DiscoveryService.syncAll: Re-extracting thumbnails for ${needsReExtraction.length} units',
         );
-        for (final unit in needsReExtraction) {
+        for (var i = 0; i < needsReExtraction.length; i++) {
+          final unit = needsReExtraction[i];
           try {
             final updated = await _extractThumbnailForSongUnit(unit);
             if (updated.metadata.thumbnailSourceId != unit.metadata.thumbnailSourceId) {
@@ -602,6 +608,11 @@ class DiscoveryService {
           } catch (e) {
             debugPrint('DiscoveryService.syncAll: thumbnail re-extraction failed for ${unit.metadata.title}: $e');
           }
+          // Yield to the event loop every 5 units so the UI stays responsive
+          if (i % 5 == 4) {
+            await Future<void>.delayed(Duration.zero);
+          }
+        }
         }
       }
     } catch (e) {

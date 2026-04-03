@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -12,6 +13,7 @@ import 'core/di/service_locator.dart';
 import 'core/keyboard_shortcuts.dart';
 import 'data/settings_storage.dart';
 import 'i18n/translations.g.dart';
+import 'models/app_settings.dart';
 import 'repositories/library_repository.dart';
 import 'repositories/settings_repository.dart';
 import 'services/audio_discovery_service.dart';
@@ -548,9 +550,7 @@ class _AppInitializerState extends State<_AppInitializer> {
       // Perform initial scan FIRST so entry point files are imported
       // before audio discovery runs. This ensures audio files referenced
       // by beadline-*.json entry points are not created as temporary entries.
-      await libraryViewModel.loadAndSync();
-
-      // Library is ready — dismiss splash screen
+      // Dismiss splash early so the UI is responsive while sync runs.
       if (mounted) {
         FlutterNativeSplash.remove();
         setState(() {
@@ -558,18 +558,10 @@ class _AppInitializerState extends State<_AppInitializer> {
         });
       }
 
-      // Run audio discovery AFTER sync so _isFileReferencedBySongUnit()
-      // can see the imported song units and skip their source files.
-      if (settings.autoDiscoverAudioFiles) {
-        debugPrint('main.dart: Running initial audio discovery');
-        await _runAudioDiscovery();
-
-        // Clean up any temporary entries that were created for files
-        // already referenced by imported song units. This handles edge
-        // cases where path comparison in _isFileReferencedBySongUnit
-        // didn't match (e.g. different path normalization).
-        await libraryViewModel.cleanupTemporaryEntries();
-      }
+      // Run sync and audio discovery without blocking the UI.
+      // These are heavy operations (thumbnail extraction for 371+ units)
+      // that would starve the event loop if awaited here.
+      unawaited(_runBackgroundSync(libraryViewModel, settings));
     } catch (e) {
       debugPrint('Failed to initialize library monitoring: $e');
       // Even on error, dismiss splash so the app isn't stuck
@@ -579,6 +571,26 @@ class _AppInitializerState extends State<_AppInitializer> {
           _libraryReady = true;
         });
       }
+    }
+  }
+
+  /// Run library sync and audio discovery in the background.
+  /// This is intentionally not awaited in _initializeLibraryMonitoring
+  /// so the UI stays responsive during heavy thumbnail extraction.
+  Future<void> _runBackgroundSync(
+    LibraryViewModel libraryViewModel,
+    AppSettings settings,
+  ) async {
+    try {
+      await libraryViewModel.loadAndSync();
+
+      if (settings.autoDiscoverAudioFiles) {
+        debugPrint('main.dart: Running initial audio discovery');
+        await _runAudioDiscovery();
+        await libraryViewModel.cleanupTemporaryEntries();
+      }
+    } catch (e) {
+      debugPrint('Background sync failed: $e');
     }
   }
 

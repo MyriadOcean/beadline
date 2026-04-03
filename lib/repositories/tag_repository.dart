@@ -801,10 +801,11 @@ class TagRepository {
   /// This bridges the Rust domain model back to the existing Dart model
   /// so that the UI layer continues to work without changes.
   Tag _collectionToTag(rust_collection.DartCollection collection) {
-    // Convert DartCollectionItems to Dart PlaylistItems
+    // Convert DartCollectionItems to Dart PlaylistItems, sorted by order field
     final dartItems = collection.items
         .map(_collectionItemToPlaylistItem)
-        .toList();
+        .toList()
+      ..sort((a, b) => a.order.compareTo(b.order));
 
     // Parse timestamps — Rust stores ISO 8601 strings
     final createdAt = DateTime.tryParse(collection.createdAt) ?? DateTime.now();

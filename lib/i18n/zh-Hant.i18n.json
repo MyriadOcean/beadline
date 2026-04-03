@@ -347,6 +347,7 @@
     "createPlaylist": "建立播放清單",
     "addSongs": "新增歌曲",
     "createGroup": "建立群組",
+    "moveToGroup": "移動到群組",
     "addCollectionRef": "新增合集參照",
     "renamePlaylist": "重新命名播放清單",
     "deletePlaylist": "刪除播放清單",

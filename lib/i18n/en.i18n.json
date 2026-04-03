@@ -347,6 +347,7 @@
     "createPlaylist": "Create Playlist",
     "addSongs": "Add Songs",
     "createGroup": "Create Group",
+    "moveToGroup": "Move to Group",
     "addCollectionRef": "Add Collection Reference",
     "renamePlaylist": "Rename Playlist",
     "deletePlaylist": "Delete Playlist",

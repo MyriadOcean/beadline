@@ -399,6 +399,43 @@ class TagViewModel extends ChangeNotifier {
     return _tagRepository.getCollectionTag(_activeQueueId);
   }
 
+  /// Build display items for any collection (public, for use by playlists page).
+  /// Returns a list of QueueDisplayItem (songs + groups) for the given collection.
+  Future<List<QueueDisplayItem>> buildDisplayItemsForCollection(
+    String collectionId,
+  ) async {
+    final collection = await _tagRepository.getCollectionTag(collectionId);
+    if (collection == null || collection.playlistMetadata == null) return [];
+
+    final metadata = collection.playlistMetadata!;
+    final songUnits = <SongUnit>[];
+    final displayItems = <QueueDisplayItem>[];
+
+    for (final item in metadata.items) {
+      if (item.type == PlaylistItemType.songUnit) {
+        final songUnit = await _libraryRepository.getSongUnit(item.targetId);
+        if (songUnit != null) {
+          displayItems.add(QueueDisplayItem.song(
+            songUnit: songUnit,
+            flatIndex: songUnits.length,
+            playlistItemId: item.id,
+          ));
+          songUnits.add(songUnit);
+        }
+      } else if (item.type == PlaylistItemType.collectionReference) {
+        final groupDisplayItem = await _buildGroupDisplayItem(
+          item.targetId,
+          songUnits,
+          temporarySongUnits: metadata.temporarySongUnits,
+        );
+        if (groupDisplayItem != null) {
+          displayItems.add(groupDisplayItem);
+        }
+      }
+    }
+    return displayItems;
+  }
+
   /// Update the active queue's metadata
   Future<void> _updateActiveQueue(PlaylistMetadata updatedMetadata) async {
     final updated = updatedMetadata.copyWith(updatedAt: DateTime.now());
@@ -419,12 +456,15 @@ class TagViewModel extends ChangeNotifier {
 
   void _onTagEvent(TagEvent event) {
     if (_suppressEvents) return;
+    debugPrint('TagViewModel._onTagEvent: $event');
     switch (event) {
       case TagCreated(tag: final tag):
+        debugPrint('Tag created: ${tag.id} ${tag.name}');
         _allTags = [..._allTags, tag];
         _categorizeTag(tag);
         notifyListeners();
       case TagUpdated(tag: final tag):
+        debugPrint('Tag updated: ${tag.id} ${tag.name}');
         final index = _allTags.indexWhere((t) => t.id == tag.id);
         if (index != -1) {
           _allTags = [
@@ -436,13 +476,16 @@ class TagViewModel extends ChangeNotifier {
           notifyListeners();
         }
       case TagDeleted(tagId: final id):
+        debugPrint('Tag deleted: $id');
         _allTags = _allTags.where((t) => t.id != id).toList();
         _recategorizeTags();
         notifyListeners();
       case AliasAdded():
+        debugPrint('AliasAdded event');
         // Refresh tags to get updated alias info
         loadTags();
       case AliasRemoved():
+        debugPrint('AliasRemoved event');
         // Refresh tags to get updated alias info
         loadTags();
     }
@@ -611,7 +654,16 @@ class TagViewModel extends ChangeNotifier {
       }
       _error = null;
 
-      _allTags = await _tagRepository.getAllTags();
+      final pureTags = await _tagRepository.getAllTags();
+      final collections = await _tagRepository.getCollections(
+        includeGroups: true,
+        includeQueues: true,
+      );
+      final collectionIds = {for (final c in collections) c.id};
+      _allTags = [
+        ...pureTags.where((t) => !collectionIds.contains(t.id)),
+        ...collections,
+      ];
       _recategorizeTags();
 
       _isLoading = false;
@@ -627,7 +679,16 @@ class TagViewModel extends ChangeNotifier {
   /// triggering intermediate notifyListeners. Used by move/reorder methods
   /// that call notifyListeners once at the end to avoid UI blinking.
   Future<void> _loadTagsSilent() async {
-    _allTags = await _tagRepository.getAllTags();
+    final pureTags = await _tagRepository.getAllTags();
+    final collections = await _tagRepository.getCollections(
+      includeGroups: true,
+      includeQueues: true,
+    );
+    final collectionIds = {for (final c in collections) c.id};
+    _allTags = [
+      ...pureTags.where((t) => !collectionIds.contains(t.id)),
+      ...collections,
+    ];
     _recategorizeTags();
   }
 
@@ -1177,6 +1238,138 @@ class TagViewModel extends ChangeNotifier {
         await _updateCachedValues();
       }
 
+      notifyListeners();
+      await Future<void>.delayed(Duration.zero);
+      _suppressEvents = false;
+    } catch (e) {
+      _suppressEvents = false;
+      _error = e.toString();
+      notifyListeners();
+    }
+  }
+
+  /// Reorder an item within a collection by song unit ID.
+  /// Finds the item by [songUnitId] (targetId), removes it, and inserts at [newIndex].
+  /// Handles index adjustment automatically when moving down.
+  /// This avoids stale-index bugs since it never relies on a pre-computed index.
+  Future<void> reorderWithinCollection(
+    String collectionId,
+    String songUnitId,
+    int newIndex,
+  ) async {
+    try {
+      _error = null;
+      _suppressEvents = true;
+
+      final collection = await _tagRepository.getCollectionTag(collectionId);
+      if (collection == null || !collection.isCollection) {
+        _error = 'Collection not found';
+        _suppressEvents = false;
+        notifyListeners();
+        return;
+      }
+
+      final metadata = collection.playlistMetadata!;
+      final items = List<PlaylistItem>.from(metadata.items);
+
+      final oldIndex = items.indexWhere(
+        (item) => item.type == PlaylistItemType.songUnit && item.targetId == songUnitId,
+      );
+      if (oldIndex < 0) {
+        debugPrint('reorderWithinCollection: song "$songUnitId" not found in "$collectionId"');
+        _suppressEvents = false;
+        return;
+      }
+      debugPrint('reorderWithinCollection: oldIndex=$oldIndex, newIndex=$newIndex, itemCount=${items.length}');
+      if (oldIndex == newIndex) {
+        debugPrint('reorderWithinCollection: same index, skipping');
+        _suppressEvents = false;
+        return;
+      }
+
+      final item = items.removeAt(oldIndex);
+      final adjustedIndex = newIndex > oldIndex ? newIndex - 1 : newIndex;
+      items.insert(adjustedIndex.clamp(0, items.length), item);
+
+      // Use reorderCollectionItems which actually persists the new order
+      final orderedIds = items.map((i) => i.id).toList();
+      await _tagRepository.reorderCollectionItems(collectionId, orderedIds);
+      await _loadTagsSilent();
+
+      if (collectionId == _activeQueueId) {
+        await _loadCurrentQueueSongs();
+        await _updateCachedValues();
+        debugPrint('reorderWithinCollection: queue reloaded, ${_queueDisplayItems.length} display items');
+      }
+
+      debugPrint('reorderWithinCollection: done, calling notifyListeners');
+      notifyListeners();
+      await Future<void>.delayed(Duration.zero);
+      _suppressEvents = false;
+    } catch (e) {
+      _suppressEvents = false;
+      _error = e.toString();
+      notifyListeners();
+    }
+  }
+
+  /// Reorder items in any collection by providing the new ordered list of item IDs.
+  /// Safer than index-based reorder since it avoids stale-index mismatches.
+  Future<void> reorderCollectionByIds(
+    String collectionId,
+    List<String> orderedItemIds,
+  ) async {
+    try {
+      _error = null;
+      _suppressEvents = true;
+      await _tagRepository.reorderCollectionItems(collectionId, orderedItemIds);
+      final freshTag = await _tagRepository.getCollectionTag(collectionId);
+      if (freshTag != null) {
+        final idx = _allTags.indexWhere((t) => t.id == collectionId);
+        if (idx != -1) {
+          _allTags = [
+            ..._allTags.sublist(0, idx),
+            freshTag,
+            ..._allTags.sublist(idx + 1),
+          ];
+          _recategorizeTags();
+        }
+      }
+      if (collectionId == _activeQueueId) {
+        await _loadCurrentQueueSongs();
+        await _updateCachedValues();
+      }
+      _suppressEvents = false;
+      notifyListeners();
+    } catch (e) {
+      _suppressEvents = false;
+      _error = e.toString();
+      notifyListeners();
+    }
+  }
+
+  /// Reorder items within a group (nested collection).
+  /// Same optimistic pattern as reorderCollectionByIds but updates the group tag.
+  Future<void> reorderGroupItems(
+    String groupId,
+    List<String> orderedItemIds,
+  ) async {
+    try {
+      _error = null;
+      _suppressEvents = true;
+      await _tagRepository.reorderCollectionItems(groupId, orderedItemIds);
+      final freshTag = await _tagRepository.getCollectionTag(groupId);
+      if (freshTag != null) {
+        final idx = _allTags.indexWhere((t) => t.id == groupId);
+        if (idx != -1) {
+          _allTags = [
+            ..._allTags.sublist(0, idx),
+            freshTag,
+            ..._allTags.sublist(idx + 1),
+          ];
+          _recategorizeTags();
+        }
+      }
       _suppressEvents = false;
       notifyListeners();
     } catch (e) {
@@ -1673,50 +1866,23 @@ class TagViewModel extends ChangeNotifier {
       _error = null;
       _suppressEvents = true;
 
-      // 1. Find the item and its targetId BEFORE removing it
-      var sourceCollectionId = await _findContainingCollection(
+      // Find the item by targetId (song unit ID) — more robust than PlaylistItem ID
+      // since PlaylistItem IDs can change after reorder operations.
+      final result = await _findPlaylistItemByTargetId(
         collectionId,
         songUnitItemId,
       );
-      PlaylistItem? item;
 
-      if (sourceCollectionId != null) {
-        item = await _findPlaylistItem(sourceCollectionId, songUnitItemId);
-      }
-
-      // Fallback: if the playlistItemId wasn't found (possibly stale after a
-      // previous move that rebuilt the queue), scan all items in the collection
-      // tree to find a matching songUnit PlaylistItem by its targetId.
-      if (item == null) {
-        debugPrint(
-          'moveSongUnitToGroup: item "$songUnitItemId" not found by PlaylistItem ID — '
-          'scanning by targetId as fallback',
-        );
-        final result = await _findPlaylistItemByTargetId(
-          collectionId,
-          songUnitItemId,
-        );
-        if (result != null) {
-          sourceCollectionId = result.$1;
-          item = result.$2;
-          debugPrint(
-            'moveSongUnitToGroup: found item by targetId in "$sourceCollectionId"',
-          );
-        }
-      }
-
-      if (sourceCollectionId == null ||
-          item == null ||
-          item.type != PlaylistItemType.songUnit) {
-        debugPrint(
-          'moveSongUnitToGroup: item "$songUnitItemId" not found in "$collectionId" or child groups',
-        );
+      if (result == null) {
+        debugPrint('moveSongUnitToGroup: song "$songUnitItemId" not found in "$collectionId"');
         _error = 'Item not found in collection';
         _suppressEvents = false;
         notifyListeners();
         return;
       }
 
+      final sourceCollectionId = result.$1;
+      final item = result.$2;
       final targetId = item.targetId;
       final actualItemId = item.id;
 
@@ -1738,20 +1904,34 @@ class TagViewModel extends ChangeNotifier {
         order = groupItems.length;
       }
 
-      // 4. Add to target group at specified position
+      // 4. Add to target group (appends at end)
       await _tagRepository.addItemToCollection(
         targetGroupId,
         PlaylistItem(
           id: _uuid.v4(),
           type: PlaylistItemType.songUnit,
           targetId: targetId,
-          order: order,
+          order: 0,
         ),
       );
 
-      // 5. Recompute display orders for both affected collections
+      // 5. Reorder to put the new item at the desired position
+      final freshGroup = await _tagRepository.getCollectionTag(targetGroupId);
+      if (freshGroup?.playlistMetadata != null && order < (freshGroup!.playlistMetadata!.items.length - 1)) {
+        final freshItems = List<PlaylistItem>.from(freshGroup.playlistMetadata!.items);
+        if (freshItems.isNotEmpty) {
+          final newItem = freshItems.removeLast();
+          final clampedIdx = order.clamp(0, freshItems.length);
+          freshItems.insert(clampedIdx, newItem);
+          await _tagRepository.reorderCollectionItems(
+            targetGroupId,
+            freshItems.map((i) => i.id).toList(),
+          );
+        }
+      }
+
+      // 6. Recompute display orders for source collection
       await _recomputeDisplayOrders(sourceCollectionId);
-      await _recomputeDisplayOrders(targetGroupId);
 
       // 6. Refresh in-memory tag cache so UI reads fresh data
       await _loadTagsSilent();
@@ -1762,6 +1942,9 @@ class TagViewModel extends ChangeNotifier {
         await _updateCachedValues();
       }
 
+      // Drain any TagUpdated events queued during suppression before releasing,
+      // so they don't overwrite the freshly-loaded _allTags with stale data.
+      await Future<void>.delayed(Duration.zero);
       _suppressEvents = false;
       notifyListeners();
     } catch (e) {
@@ -1830,44 +2013,20 @@ class TagViewModel extends ChangeNotifier {
       _error = null;
       _suppressEvents = true;
 
-      // 1. Find the item and its targetId BEFORE removing it
-      var item = await _findPlaylistItem(groupId, songUnitItemId);
-      var actualGroupId = groupId;
+      // Find by targetId (song unit ID) — consistent with moveSongUnitToGroup
+      final result = await _findPlaylistItemByTargetId(groupId, songUnitItemId);
+      // Also search from parent in case it's in a nested sub-group
+      final resolved = result ?? await _findPlaylistItemByTargetId(parentCollectionId, songUnitItemId);
 
-      // Fallback: if not found by playlistItemId, try scanning by targetId
-      if (item == null || item.type != PlaylistItemType.songUnit) {
-        debugPrint(
-          'moveSongUnitOutOfGroup: item "$songUnitItemId" not found in group "$groupId" — '
-          'trying fallback by targetId',
-        );
-        final result = await _findPlaylistItemByTargetId(
-          groupId,
-          songUnitItemId,
-        );
-        if (result != null) {
-          actualGroupId = result.$1;
-          item = result.$2;
-        }
-        // Also try searching from the parent collection
-        if (item == null || item.type != PlaylistItemType.songUnit) {
-          final parentResult = await _findPlaylistItemByTargetId(
-            parentCollectionId,
-            songUnitItemId,
-          );
-          if (parentResult != null) {
-            actualGroupId = parentResult.$1;
-            item = parentResult.$2;
-          }
-        }
-      }
-
-      if (item == null || item.type != PlaylistItemType.songUnit) {
+      if (resolved == null) {
         _error = 'Item not found in group or not a song unit';
         _suppressEvents = false;
         notifyListeners();
         return;
       }
 
+      final actualGroupId = resolved.$1;
+      final item = resolved.$2;
       final targetId = item.targetId;
       final actualItemId = item.id;
 
@@ -1877,20 +2036,35 @@ class TagViewModel extends ChangeNotifier {
         actualItemId,
       );
 
-      // 3. Add to parent collection at drop position
+      // 3. Add to parent collection (appends at end)
       await _tagRepository.addItemToCollection(
         parentCollectionId,
         PlaylistItem(
           id: _uuid.v4(),
           type: PlaylistItemType.songUnit,
           targetId: targetId,
-          order: insertIndex,
+          order: 0, // will be reordered below
         ),
       );
 
-      // 4. Recompute display orders
+      // 4. Reorder to put the new item at the desired insertIndex
+      final freshParent = await _tagRepository.getCollectionTag(parentCollectionId);
+      if (freshParent?.playlistMetadata != null) {
+        final freshItems = List<PlaylistItem>.from(freshParent!.playlistMetadata!.items);
+        // The newly added item is at the end
+        if (freshItems.isNotEmpty) {
+          final newItem = freshItems.removeLast();
+          final clampedIdx = insertIndex.clamp(0, freshItems.length);
+          freshItems.insert(clampedIdx, newItem);
+          await _tagRepository.reorderCollectionItems(
+            parentCollectionId,
+            freshItems.map((i) => i.id).toList(),
+          );
+        }
+      }
+
+      // 5. Recompute display orders for the source group
       await _recomputeDisplayOrders(actualGroupId);
-      await _recomputeDisplayOrders(parentCollectionId);
 
       // 5. Refresh in-memory tag cache so UI reads fresh data
       await _loadTagsSilent();
@@ -1901,6 +2075,7 @@ class TagViewModel extends ChangeNotifier {
         await _updateCachedValues();
       }
 
+      await Future<void>.delayed(Duration.zero);
       _suppressEvents = false;
       notifyListeners();
     } catch (e) {
@@ -2056,6 +2231,8 @@ class TagViewModel extends ChangeNotifier {
         await _updateCachedValues();
       }
 
+      // Drain queued TagUpdated events before releasing suppression.
+      await Future<void>.delayed(Duration.zero);
       _suppressEvents = false;
       notifyListeners();
     } catch (e) {
@@ -3433,8 +3610,13 @@ class TagViewModel extends ChangeNotifier {
     if (newIndex < 0 || newIndex >= _currentQueueSongs.length) return;
     if (oldIndex == newIndex) return;
 
+    _suppressEvents = true;
+
     final activeQueue = await _getActiveQueue();
-    if (activeQueue?.playlistMetadata == null) return;
+    if (activeQueue?.playlistMetadata == null) {
+      _suppressEvents = false;
+      return;
+    }
 
     final metadata = activeQueue!.playlistMetadata!;
 
@@ -3453,6 +3635,7 @@ class TagViewModel extends ChangeNotifier {
       // Indices out of range for top-level songs — fall back to full reload
       await _loadCurrentQueueSongs();
       await _updateCachedValues();
+      _suppressEvents = false;
       notifyListeners();
       return;
     }
@@ -3464,7 +3647,12 @@ class TagViewModel extends ChangeNotifier {
     final allItems = List<PlaylistItem>.from(metadata.items)..remove(movedItem);
 
     // Find where to insert: locate the top-level songUnit item that is now
-    // at newIndex (after removal) and insert before/after it.
+    // at newIndex (after removal) and insert before it.
+    // newIndex is the final destination in the original list (caller already
+    // applied the Flutter onReorder correction). After removing movedItem,
+    // items at indices > oldIndex shift down by 1, so:
+    //   - moving up (newIndex < oldIndex): target is still at newIndex
+    //   - moving down (newIndex > oldIndex): target shifted to newIndex-1
     final remainingSongItems = allItems
         .where((i) => i.type == PlaylistItemType.songUnit)
         .toList();
@@ -3474,14 +3662,14 @@ class TagViewModel extends ChangeNotifier {
       // Moving to end
       insertPos = allItems.length;
     } else {
-      final targetItem = remainingSongItems[newIndex];
+      final adjustedIndex = oldIndex < newIndex ? newIndex - 1 : newIndex;
+      final targetItem = remainingSongItems[adjustedIndex];
       insertPos = allItems.indexOf(targetItem);
-      if (oldIndex > newIndex) {
-        // Moving up — insert before the target
-      } else {
-        // Moving down — insert after the target
+      if (oldIndex < newIndex) {
+        // Moving down — insert after the target (target is now one before destination)
         insertPos++;
       }
+      // Moving up — insert before the target (already correct)
     }
 
     allItems.insert(insertPos, movedItem);
@@ -3510,9 +3698,57 @@ class TagViewModel extends ChangeNotifier {
       metadata.copyWith(items: allItems, currentIndex: newCurrentIndex),
     );
 
-    await _loadCurrentQueueSongs();
-    await _updateCachedValues();
+    // Reorder _queueDisplayItems in-memory — no need to re-fetch from DB.
+    // Only top-level song items (groupId == null) are reordered here;
+    // group items are unaffected by a flat-song reorder.
+    final topLevelDisplaySongs = _queueDisplayItems
+        .where((e) => e.isSong && e.groupId == null)
+        .toList();
+    if (oldIndex < topLevelDisplaySongs.length &&
+        newIndex < topLevelDisplaySongs.length) {
+      final movedDisplay = topLevelDisplaySongs.removeAt(oldIndex);
+      topLevelDisplaySongs.insert(newIndex, movedDisplay);
+
+      // Rebuild _queueDisplayItems: replace top-level songs in their new order,
+      // keeping group items and nested songs in place, and fix flatIndex values.
+      final rebuilt = <QueueDisplayItem>[];
+      int songCursor = 0;
+      int flatIdx = 0;
+      for (final item in _queueDisplayItems) {
+        if (item.isSong && item.groupId == null) {
+          // Replace with reordered entry, updating flatIndex
+          rebuilt.add(QueueDisplayItem.song(
+            songUnit: topLevelDisplaySongs[songCursor].songUnit!,
+            flatIndex: flatIdx,
+            playlistItemId: topLevelDisplaySongs[songCursor].playlistItemId,
+            groupId: null,
+          ));
+          songCursor++;
+          flatIdx++;
+        } else if (item.isSong) {
+          // Nested song — update flatIndex only
+          rebuilt.add(QueueDisplayItem.song(
+            songUnit: item.songUnit!,
+            flatIndex: flatIdx,
+            playlistItemId: item.playlistItemId,
+            groupId: item.groupId,
+          ));
+          flatIdx++;
+        } else {
+          // Group header — keep as-is (flatIndex not used for groups)
+          rebuilt.add(item);
+        }
+      }
+      _queueDisplayItems = rebuilt;
+    }
+
+    _cachedCurrentIndex = newCurrentIndex;
     notifyListeners();
+    // Keep suppress active through the current event loop tick so the
+    // TagUpdated stream event fired by updateCollectionMetadata is consumed
+    // while still suppressed, preventing a second spurious notifyListeners.
+    await Future<void>.delayed(Duration.zero);
+    _suppressEvents = false;
   }
 
   /// Clear the active queue
@@ -3570,6 +3806,7 @@ class TagViewModel extends ChangeNotifier {
         metadata.copyWith(items: newItems, currentIndex: newIndex),
       );
 
+      await _loadCurrentQueueSongs();
       await _updateCachedValues();
       notifyListeners();
     }

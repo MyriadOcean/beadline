@@ -386,6 +386,7 @@ class _SongUnitEditorState extends State<SongUnitEditor> {
           ReorderableListView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
+            buildDefaultDragHandles: false,
             itemCount: sources.length,
             onReorder: (oldIndex, newIndex) =>
                 _reorderSources(sources, type, oldIndex, newIndex),
@@ -395,8 +396,10 @@ class _SongUnitEditorState extends State<SongUnitEditor> {
 
               final linkedVideoName = _getLinkedVideoName(item.source);
 
-              return Card(
+              return ReorderableDragStartListener(
                 key: ValueKey(item.source.id),
+                index: index,
+                child: Card(
                 margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                 child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -491,8 +494,9 @@ class _SongUnitEditorState extends State<SongUnitEditor> {
                     ),
                   ],
                 ),
-                ),
-              );
+              ),
+            ),
+            );
             },
           ),
       ],
@@ -747,7 +751,7 @@ class _SongUnitEditorState extends State<SongUnitEditor> {
               setState(() {
                 sources.removeAt(index);
                 _updateSourcePriorities(sources, type);
-                // Clear the link �?copyWith uses ?? so passing null keeps old
+                // Clear the link → copyWith uses ?? so passing null keeps old
                 // value; construct a new AudioSource directly instead.
                 final la = linkedAudio!;
                 final updated = AudioSource(
@@ -820,7 +824,7 @@ class _SongUnitEditorState extends State<SongUnitEditor> {
         return item.source.displayName ?? _getSourceName(item.source);
       }
     }
-    // Video source not found (may have been removed) �?show truncated ID
+    // Video source not found (may have been removed) → show truncated ID
     return videoId.substring(0, 8);
   }
 

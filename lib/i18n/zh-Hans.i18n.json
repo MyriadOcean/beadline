@@ -347,6 +347,7 @@
     "createPlaylist": "创建播放列表",
     "addSongs": "添加歌曲",
     "createGroup": "创建分组",
+    "moveToGroup": "移动到分组",
     "addCollectionRef": "添加合集引用",
     "renamePlaylist": "重命名播放列表",
     "deletePlaylist": "删除播放列表",
