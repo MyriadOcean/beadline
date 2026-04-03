@@ -362,6 +362,7 @@ class _TranslationsPlaylistsZhHant extends TranslationsPlaylistsEn {
 	@override String get createPlaylist => '建立播放清單';
 	@override String get addSongs => '新增歌曲';
 	@override String get createGroup => '建立群組';
+	@override String get moveToGroup => '移動到群組';
 	@override String get addCollectionRef => '新增合集參照';
 	@override String get renamePlaylist => '重新命名播放清單';
 	@override String get deletePlaylist => '刪除播放清單';
@@ -378,7 +379,6 @@ class _TranslationsPlaylistsZhHant extends TranslationsPlaylistsEn {
 	@override String get unlock => '解鎖';
 	@override String get viewContent => '檢視內容';
 	@override String get toggleSelectionMode => '切換選擇模式';
-	@override String get moveToGroup => '移動到群組';
 	@override String get noGroupsAvailable => '沒有可用的群組。請先建立一個群組。';
 	@override String get song => '首歌曲';
 	@override String get songs => '首歌曲';
@@ -449,6 +449,32 @@ class _TranslationsSongEditorZhHant extends TranslationsSongEditorEn {
 	@override String get noAudioFound => '在 {name} 中找不到音訊軌道';
 	@override String get autoDiscovered => '自動發現：{types}';
 	@override String get chooseMetadataValues => '為每個元數據欄位選擇值：';
+	@override String get builtInTagsMetadata => '內建標籤（元數據）';
+	@override String get userTags => '使用者標籤';
+	@override String get noUserTags => '尚無使用者標籤。請在標籤管理中建立。';
+	@override String get tagNameName => '名稱';
+	@override String get tagNameAlbum => '專輯';
+	@override String get tagNameTime => '年份';
+	@override String get aliasHintTitle => '標題';
+	@override String get addImageOrExtract => '新增圖片或從音訊檔案擷取';
+	@override String get thumbnailsAvailable => '有 {count} 個縮圖可用';
+	@override String get removeFromCollection => '從集合中移除';
+	@override String get metadataWriteNotImplemented => '元數據寫入功能尚未實作，需要外部函式庫支援。';
+	@override String get linkedVideoFrom => '來自：{name}';
+	@override String get offsetDisplay => '偏移：{value}';
+	@override String get searchOnlineSources => '搜尋線上來源';
+	@override String get providerLabel => '提供者';
+	@override String get sourceTypeLabel => '來源類型';
+	@override String get searchQueryLabel => '搜尋關鍵字';
+	@override String get durationDisplay => '時長：{value}';
+	@override String get addToSongUnit => '新增至曲目單元';
+	@override String get cannotSaveInPlaceNoLocations => '就地模式下無法儲存曲目單元，請先在設定中配置至少一個音樂庫位置。';
+	@override String get failedToLoadUrl => '無法從 URL 載入媒體，URL 可能無效或無法連線。';
+	@override String get urlNotDirectMedia => '警告：URL 似乎不是直接媒體檔案。請使用音訊/視訊檔案的直接連結（如 .mp3、.mp4），而非網頁連結。';
+	@override String get noAudioSourcesForMetadata => '沒有可擷取元數據的音訊來源';
+	@override String get cannotExtractFromApi => '無法從 API 來源擷取元數據';
+	@override String get metadataReloaded => '元數據已重新載入';
+	@override String get addedSource => '已新增 {title}';
 }
 
 // Path: settings
@@ -1211,6 +1237,7 @@ extension on TranslationsZhHant {
 			'playlists.createPlaylist' => '建立播放清單',
 			'playlists.addSongs' => '新增歌曲',
 			'playlists.createGroup' => '建立群組',
+			'playlists.moveToGroup' => '移動到群組',
 			'playlists.addCollectionRef' => '新增合集參照',
 			'playlists.renamePlaylist' => '重新命名播放清單',
 			'playlists.deletePlaylist' => '刪除播放清單',
@@ -1227,7 +1254,6 @@ extension on TranslationsZhHant {
 			'playlists.unlock' => '解鎖',
 			'playlists.viewContent' => '檢視內容',
 			'playlists.toggleSelectionMode' => '切換選擇模式',
-			'playlists.moveToGroup' => '移動到群組',
 			'playlists.noGroupsAvailable' => '沒有可用的群組。請先建立一個群組。',
 			'playlists.song' => '首歌曲',
 			'playlists.songs' => '首歌曲',
@@ -1289,6 +1315,32 @@ extension on TranslationsZhHant {
 			'songEditor.noAudioFound' => '在 {name} 中找不到音訊軌道',
 			'songEditor.autoDiscovered' => '自動發現：{types}',
 			'songEditor.chooseMetadataValues' => '為每個元數據欄位選擇值：',
+			'songEditor.builtInTagsMetadata' => '內建標籤（元數據）',
+			'songEditor.userTags' => '使用者標籤',
+			'songEditor.noUserTags' => '尚無使用者標籤。請在標籤管理中建立。',
+			'songEditor.tagNameName' => '名稱',
+			'songEditor.tagNameAlbum' => '專輯',
+			'songEditor.tagNameTime' => '年份',
+			'songEditor.aliasHintTitle' => '標題',
+			'songEditor.addImageOrExtract' => '新增圖片或從音訊檔案擷取',
+			'songEditor.thumbnailsAvailable' => '有 {count} 個縮圖可用',
+			'songEditor.removeFromCollection' => '從集合中移除',
+			'songEditor.metadataWriteNotImplemented' => '元數據寫入功能尚未實作，需要外部函式庫支援。',
+			'songEditor.linkedVideoFrom' => '來自：{name}',
+			'songEditor.offsetDisplay' => '偏移：{value}',
+			'songEditor.searchOnlineSources' => '搜尋線上來源',
+			'songEditor.providerLabel' => '提供者',
+			'songEditor.sourceTypeLabel' => '來源類型',
+			'songEditor.searchQueryLabel' => '搜尋關鍵字',
+			'songEditor.durationDisplay' => '時長：{value}',
+			'songEditor.addToSongUnit' => '新增至曲目單元',
+			'songEditor.cannotSaveInPlaceNoLocations' => '就地模式下無法儲存曲目單元，請先在設定中配置至少一個音樂庫位置。',
+			'songEditor.failedToLoadUrl' => '無法從 URL 載入媒體，URL 可能無效或無法連線。',
+			'songEditor.urlNotDirectMedia' => '警告：URL 似乎不是直接媒體檔案。請使用音訊/視訊檔案的直接連結（如 .mp3、.mp4），而非網頁連結。',
+			'songEditor.noAudioSourcesForMetadata' => '沒有可擷取元數據的音訊來源',
+			'songEditor.cannotExtractFromApi' => '無法從 API 來源擷取元數據',
+			'songEditor.metadataReloaded' => '元數據已重新載入',
+			'songEditor.addedSource' => '已新增 {title}',
 			'settings.title' => '設定',
 			'settings.user' => '使用者',
 			'settings.username' => '使用者名稱',
@@ -1461,6 +1513,8 @@ extension on TranslationsZhHant {
 			'dialogs.removeGroup' => '移除群組',
 			'dialogs.removeGroupQuestion' => '如何移除 "{groupName}"？',
 			'dialogs.ungroupKeepSongs' => '取消群組（保留歌曲）',
+			_ => null,
+		} ?? switch (path) {
 			'dialogs.removeAll' => '全部移除',
 			'dialogs.renameGroup' => '重新命名群組',
 			'dialogs.createNestedGroup' => '建立巢狀群組',
@@ -1487,8 +1541,6 @@ extension on TranslationsZhHant {
 			'dialogs.exportedTo' => '已匯出到 {path}',
 			'dialogs.promoted' => '已將 "{displayName}" 提升為歌曲單元',
 			'dialogs.resetFailed' => '重設失敗：{error}',
-			_ => null,
-		} ?? switch (path) {
 			'dialogs.confirmTitle' => '確認模式更改',
 			'dialogs.changeModeButton' => '更改模式',
 			'dialogs.migratingConfig' => '正在遷移設定',

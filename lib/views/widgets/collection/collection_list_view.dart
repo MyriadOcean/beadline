@@ -35,18 +35,19 @@ class CollectionListConfig {
   final int currentPlayingIndex;
   final void Function(SongUnit songUnit, int flatIndex)? onSongTap;
   final void Function(String songUnitId, String? groupId)? onSongRemove;
-
-  /// Right-click context menu for a song. Receives (songUnit, position, groupId).
-  final void Function(SongUnit songUnit, Offset position, String? groupId)? onSongContextMenu;
-
+  final void Function(SongUnit songUnit, Offset position, String? groupId)?
+      onSongContextMenu;
   final bool Function(String playlistItemId)? isSelected;
   final void Function(String playlistItemId)? onToggleSelect;
   final List<PopupMenuEntry<String>>? extraGroupMenuItems;
 }
 
 /// Shared collection list view used by both queue view and playlists page.
-/// Each item is wrapped in a DragTarget that detects whether the cursor is
-/// in the top or bottom half, showing an insertion indicator accordingly.
+///
+/// The root collection is conceptually a group. Right-clicking empty space
+/// at any level (root or inside a nested group) shows a "Create Group"
+/// context menu scoped to that level. Both songs and groups are draggable
+/// and can be rearranged by drag-and-drop at any nesting level.
 class CollectionListView extends StatefulWidget {
   const CollectionListView({
     required this.collectionId,
@@ -69,10 +70,38 @@ class CollectionListView extends StatefulWidget {
 
 class _CollectionListViewState extends State<CollectionListView> {
   final Set<String> _collapsedGroups = {};
+  final ScrollController _scrollController = ScrollController();
 
-  // Which item index has the insertion indicator, and whether it's above or below
   int? _hoverIndex;
   bool _hoverAbove = true;
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  /// Estimate the insert index from a global tap Y position.
+  /// Uses the scroll offset and rendered item positions to find the closest gap.
+  int _estimateInsertIndex(Offset globalPosition, int itemCount) {
+    final listBox = context.findRenderObject() as RenderBox?;
+    if (listBox == null || itemCount == 0) return itemCount;
+    final localY = listBox.globalToLocal(globalPosition).dy;
+    final scrollOffset = _scrollController.hasClients
+        ? _scrollController.offset
+        : 0.0;
+    final absoluteY = localY + scrollOffset;
+    // Estimate item height from total content vs item count.
+    // If the scroll extent is known, use it; otherwise fall back to a guess.
+    final maxExtent = _scrollController.hasClients
+        ? _scrollController.position.maxScrollExtent +
+            _scrollController.position.viewportDimension
+        : itemCount * 60.0; // rough fallback
+    final estimatedItemHeight =
+        itemCount > 0 ? (maxExtent - 80) / itemCount : 60.0; // subtract bottom padding
+    final idx = (absoluteY / estimatedItemHeight).round();
+    return idx.clamp(0, itemCount);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -82,86 +111,142 @@ class _CollectionListViewState extends State<CollectionListView> {
     final tagVM = widget.tagViewModel;
     final theme = Theme.of(context);
 
-    // itemCount + 1 for trailing empty space that accepts right-click
-    return ListView.builder(
-      padding: const EdgeInsets.only(bottom: 80),
-      itemCount: topLevel.length + 1,
-      itemBuilder: (context, index) {
-        // Trailing empty space — right-click here creates a group at root
-        if (index == topLevel.length) {
-          return _EmptySpaceTarget(
-            onContextMenu: (pos) => _showCreateGroupMenu(context, pos, widget.collectionId),
-          );
-        }
-
-        final item = topLevel[index];
-        final child = item.isGroup
-            ? _buildGroupCard(context, item)
-            : _buildSongTile(context, item);
-
-        return _DragTargetItem(
-          key: ValueKey('cl_${item.isGroup ? item.groupId : item.songUnit?.id}'),
-          index: index,
-          hoverIndex: _hoverIndex,
-          hoverAbove: _hoverAbove,
-          indicatorColor: theme.colorScheme.primary,
-          onWillAccept: (data, above) {
-            setState(() { _hoverIndex = index; _hoverAbove = above; });
-            return true;
-          },
-          onLeave: () {
-            if (_hoverIndex == index) setState(() => _hoverIndex = null);
-          },
-          onAccept: (data) {
-            final insertIdx = _hoverAbove ? index : index + 1;
-            setState(() => _hoverIndex = null);
-            _handleDrop(data, insertIdx, topLevel, tagVM);
-          },
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 2),
-            child: child,
-          ),
-        );
+    return GestureDetector(
+      behavior: HitTestBehavior.translucent,
+      onSecondaryTapUp: (details) {
+        final idx = _estimateInsertIndex(details.globalPosition, topLevel.length);
+        _showCreateGroupMenu(
+            context, details.globalPosition, widget.collectionId, idx);
       },
+      onLongPressStart: (details) {
+        final idx = _estimateInsertIndex(details.globalPosition, topLevel.length);
+        _showCreateGroupMenu(
+            context, details.globalPosition, widget.collectionId, idx);
+      },
+      child: ListView.builder(
+        controller: _scrollController,
+        padding: const EdgeInsets.only(bottom: 80),
+        itemCount: topLevel.length,
+        itemBuilder: (context, index) {
+          final item = topLevel[index];
+          final child = item.isGroup
+              ? _buildGroupCard(context, item)
+              : _buildSongTile(context, item);
+
+          return _DragTargetItem(
+            key: ValueKey(
+                'cl_${item.isGroup ? item.groupId : item.songUnit?.id}'),
+            index: index,
+            hoverIndex: _hoverIndex,
+            hoverAbove: _hoverAbove,
+            indicatorColor: theme.colorScheme.primary,
+            onWillAccept: (data, {required bool above}) {
+              setState(() {
+                _hoverIndex = index;
+                _hoverAbove = above;
+              });
+              return true;
+            },
+            onLeave: () {
+              if (_hoverIndex == index) setState(() => _hoverIndex = null);
+            },
+            onAccept: (data) {
+              final insertIdx = _hoverAbove ? index : index + 1;
+              setState(() => _hoverIndex = null);
+              _handleRootDrop(data, insertIdx, topLevel, tagVM);
+            },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 2),
+              child: child,
+            ),
+          );
+        },
+      ),
     );
   }
 
-  void _handleDrop(CollectionDragData data, int insertIdx,
+  // ---------------------------------------------------------------------------
+  // Drop handling
+  // ---------------------------------------------------------------------------
+
+  /// Handle a drop at root level.
+  void _handleRootDrop(CollectionDragData data, int insertIdx,
       List<QueueDisplayItem> topLevel, TagViewModel tagVM) {
-    debugPrint('_handleDrop: insertIdx=$insertIdx, songId=${data.songUnitId}, groupId=${data.groupId}, sourceGroup=${data.sourceGroupId}');
     if (data.isSong && data.songUnitId != null) {
       if (data.sourceGroupId != null) {
-        // Moving OUT of a group to root level
         unawaited(tagVM.moveSongUnitOutOfGroup(
-          data.sourceGroupId!, data.songUnitId!, widget.collectionId,
+          data.sourceGroupId!,
+          data.songUnitId!,
+          widget.collectionId,
           insertIndex: insertIdx,
         ));
       } else {
-        // Reordering within root level
         unawaited(tagVM.reorderWithinCollection(
-          widget.collectionId, data.songUnitId!, insertIdx,
+          widget.collectionId,
+          data.songUnitId!,
+          insertIdx,
         ));
       }
     } else if (data.isGroup && data.groupId != null) {
+      // Group reorder at root level
       final oldIdx =
           topLevel.indexWhere((e) => e.isGroup && e.groupId == data.groupId);
       if (oldIdx >= 0 && oldIdx != insertIdx) {
         unawaited(tagVM.reorderCollection(
-          widget.collectionId, oldIdx, insertIdx,
+          widget.collectionId,
+          oldIdx,
+          insertIdx,
         ));
       }
     }
   }
 
-  Widget _buildSongTile(BuildContext context, QueueDisplayItem item, {String? groupId}) {
+  /// Handle a drop inside a group card (songs or groups moving in/reordering).
+  void _handleGroupDrop(
+      CollectionDragData data, int insertIndex, String groupId) {
+    final tagVM = widget.tagViewModel;
+    if (data.isSong && data.songUnitId != null) {
+      if (data.sourceGroupId == groupId) {
+        // Reorder within the same group
+        unawaited(
+            tagVM.reorderWithinCollection(groupId, data.songUnitId!, insertIndex));
+      } else {
+        // Move song into this group from outside
+        unawaited(tagVM.moveSongUnitToGroup(
+          widget.collectionId,
+          data.songUnitId!,
+          groupId,
+          insertIndex: insertIndex,
+        ));
+      }
+    } else if (data.isGroup && data.groupId != null) {
+      if (data.groupId == groupId) return; // Can't drop group into itself
+      // Move a group into this group
+      unawaited(tagVM.moveGroupIntoGroup(
+        widget.collectionId,
+        data.groupId!,
+        groupId,
+      ));
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Song tile
+  // ---------------------------------------------------------------------------
+
+  Widget _buildSongTile(BuildContext context, QueueDisplayItem item,
+      {String? groupId}) {
     final config = widget.config;
     final song = item.songUnit!;
     final isPlaying = item.flatIndex == config.currentPlayingIndex;
-    final isSelected = config.isSelected?.call(item.playlistItemId ?? '') ?? false;
+    final isSelected =
+        config.isSelected?.call(item.playlistItemId ?? '') ?? false;
 
     return SongUnitListTile(
       songUnit: song,
-      index: config.showIndex && item.flatIndex >= 0 ? item.flatIndex + 1 : null,
+      index: config.showIndex && item.flatIndex >= 0
+          ? item.flatIndex + 1
+          : null,
       isPlaying: isPlaying,
       isSelected: isSelected,
       showCheckbox: config.showCheckbox,
@@ -173,15 +258,25 @@ class _CollectionListViewState extends State<CollectionListView> {
         sourceCollectionId: widget.collectionId,
         sourceGroupId: groupId,
       ),
-      onTap: config.onSongTap != null ? () => config.onSongTap!(song, item.flatIndex) : null,
-      onRemove: config.onSongRemove != null ? () => config.onSongRemove!(song.id, groupId) : null,
+      onTap: config.onSongTap != null
+          ? () => config.onSongTap!(song, item.flatIndex)
+          : null,
+      onRemove: config.onSongRemove != null
+          ? () => config.onSongRemove!(song.id, groupId)
+          : null,
       onSecondaryTap: config.onSongContextMenu != null
           ? (pos) => config.onSongContextMenu!(song, pos, groupId)
           : null,
-      onToggleSelect: config.onToggleSelect != null && item.playlistItemId != null
-          ? () => config.onToggleSelect!(item.playlistItemId!) : null,
+      onToggleSelect:
+          config.onToggleSelect != null && item.playlistItemId != null
+              ? () => config.onToggleSelect!(item.playlistItemId!)
+              : null,
     );
   }
+
+  // ---------------------------------------------------------------------------
+  // Group card
+  // ---------------------------------------------------------------------------
 
   Widget _buildGroupCard(BuildContext context, QueueDisplayItem groupItem) {
     final tagVM = widget.tagViewModel;
@@ -193,7 +288,9 @@ class _CollectionListViewState extends State<CollectionListView> {
     return CollectionGroupCard(
       groupTag: groupTag,
       collectionId: widget.collectionId,
-      childCount: _collapsedGroups.contains(groupItem.groupId) ? 0 : subItems.length,
+      childCount: _collapsedGroups.contains(groupItem.groupId)
+          ? 0
+          : subItems.length,
       isCollapsed: _collapsedGroups.contains(groupItem.groupId),
       onToggleCollapse: () {
         setState(() {
@@ -206,33 +303,41 @@ class _CollectionListViewState extends State<CollectionListView> {
       },
       childBuilder: (context, i) {
         final sub = subItems[i];
-        if (sub.isSong) return _buildSongTile(context, sub, groupId: groupItem.groupId);
+        if (sub.isSong) {
+          return _buildSongTile(context, sub, groupId: groupItem.groupId);
+        }
         if (sub.isGroup) return _buildGroupCard(context, sub);
         return const SizedBox.shrink();
       },
       onReorder: (songUnitId, newIndex) {
-        unawaited(tagVM.reorderWithinCollection(groupItem.groupId!, songUnitId, newIndex));
+        unawaited(tagVM.reorderWithinCollection(
+            groupItem.groupId!, songUnitId, newIndex));
       },
       onMoveIn: (data, insertIndex) {
-        if (data.isSong && data.songUnitId != null) {
-          unawaited(tagVM.moveSongUnitToGroup(
-            widget.collectionId, data.songUnitId!, groupItem.groupId!,
-            insertIndex: insertIndex,
-          ));
-        }
+        _handleGroupDrop(data, insertIndex, groupItem.groupId!);
       },
       onRename: () => _showRenameDialog(context, groupTag),
       onToggleLock: () => unawaited(tagVM.toggleLock(groupTag.id)),
-      onAddNestedGroup: () => _showCreateNestedGroupDialog(context, groupTag.id),
-      onRemoveGroup: () => _showRemoveGroupDialog(context, groupTag, groupItem),
+      onCreateNestedGroup: (parentId) =>
+          _showCreateGroupDialog(context, parentId, null),
+      onRemoveGroup: () =>
+          _showRemoveGroupDialog(context, groupTag, groupItem),
+      onEmptySpaceRightClick: (position, groupId, insertIndex) =>
+          _showCreateGroupMenu(context, position, groupId, insertIndex),
       extraMenuItems: config.extraGroupMenuItems,
     );
   }
 
-  void _showCreateGroupMenu(BuildContext context, Offset position, String parentCollectionId) {
+  // ---------------------------------------------------------------------------
+  // Context menu & dialogs (unified for all levels)
+  // ---------------------------------------------------------------------------
+
+  void _showCreateGroupMenu(
+      BuildContext context, Offset position, String parentId, int? insertIndex) {
     showMenu<String>(
       context: context,
-      position: RelativeRect.fromLTRB(position.dx, position.dy, position.dx, position.dy),
+      position: RelativeRect.fromLTRB(
+          position.dx, position.dy, position.dx, position.dy),
       items: [
         PopupMenuItem(
           value: 'create_group',
@@ -246,59 +351,120 @@ class _CollectionListViewState extends State<CollectionListView> {
       ],
     ).then((value) {
       if (value == 'create_group' && context.mounted) {
-        _showCreateNestedGroupDialog(context, parentCollectionId);
+        _showCreateGroupDialog(context, parentId, insertIndex);
       }
     });
   }
 
+  void _showCreateGroupDialog(BuildContext context, String parentId, int? insertIndex) {
+    final ctrl = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (dc) => AlertDialog(
+        title: Text(context.t.playlists.createGroupTitle),
+        content: TextField(
+          controller: ctrl,
+          autofocus: true,
+          decoration: InputDecoration(
+            labelText: context.t.playlists.groupName,
+            hintText: context.t.playlists.enterGroupName,
+          ),
+          onSubmitted: (_) async {
+            final n = ctrl.text.trim();
+            if (n.isNotEmpty) {
+              await widget.tagViewModel.createNestedGroup(parentId, n, insertIndex: insertIndex);
+              if (dc.mounted) Navigator.of(dc).pop();
+            }
+          },
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dc).pop(),
+            child: Text(context.t.common.cancel),
+          ),
+          FilledButton(
+            onPressed: () async {
+              final n = ctrl.text.trim();
+              if (n.isNotEmpty) {
+                await widget.tagViewModel.createNestedGroup(parentId, n, insertIndex: insertIndex);
+                if (dc.mounted) Navigator.of(dc).pop();
+              }
+            },
+            child: Text(context.t.common.create),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _showRenameDialog(BuildContext context, Tag groupTag) {
     final ctrl = TextEditingController(text: groupTag.name);
-    showDialog(context: context, builder: (dc) => AlertDialog(
-      title: Text(context.t.common.rename),
-      content: TextField(controller: ctrl, autofocus: true,
-        decoration: InputDecoration(labelText: context.t.playlists.groupName),
-        onSubmitted: (_) async { final n = ctrl.text.trim(); if (n.isNotEmpty) { await widget.tagViewModel.renameTag(groupTag.id, n); if (dc.mounted) Navigator.of(dc).pop(); } }),
-      actions: [
-        TextButton(onPressed: () => Navigator.of(dc).pop(), child: Text(context.t.common.cancel)),
-        FilledButton(onPressed: () async { final n = ctrl.text.trim(); if (n.isNotEmpty) { await widget.tagViewModel.renameTag(groupTag.id, n); if (dc.mounted) Navigator.of(dc).pop(); } }, child: Text(context.t.common.rename)),
-      ],
-    ));
-  }
-
-  void _showCreateNestedGroupDialog(BuildContext context, String parentGroupId) {
-    final ctrl = TextEditingController();
-    showDialog(context: context, builder: (dc) => AlertDialog(
-      title: Text(context.t.playlists.createGroupTitle),
-      content: TextField(controller: ctrl, autofocus: true,
-        decoration: InputDecoration(labelText: context.t.playlists.groupName, hintText: context.t.playlists.enterGroupName),
-        onSubmitted: (_) async { final n = ctrl.text.trim(); if (n.isNotEmpty) { await widget.tagViewModel.createNestedGroup(parentGroupId, n); if (dc.mounted) Navigator.of(dc).pop(); } }),
-      actions: [
-        TextButton(onPressed: () => Navigator.of(dc).pop(), child: Text(context.t.common.cancel)),
-        FilledButton(onPressed: () async { final n = ctrl.text.trim(); if (n.isNotEmpty) { await widget.tagViewModel.createNestedGroup(parentGroupId, n); if (dc.mounted) Navigator.of(dc).pop(); } }, child: Text(context.t.common.create)),
-      ],
-    ));
-  }
-
-  void _showRemoveGroupDialog(BuildContext context, Tag groupTag, QueueDisplayItem groupItem) {
-    showDialog(context: context, builder: (dc) => AlertDialog(
-      title: Text(context.t.common.remove),
-      content: Text(context.t.dialogs.home.removeGroupQuestion.replaceAll('{groupName}', groupTag.name)),
-      actions: [
-        TextButton(onPressed: () => Navigator.of(dc).pop(), child: Text(context.t.common.cancel)),
-        TextButton(
-          onPressed: () async { await widget.tagViewModel.removeGroupFromQueue(widget.collectionId, groupTag.id); if (dc.mounted) Navigator.of(dc).pop(); },
-          style: TextButton.styleFrom(foregroundColor: Colors.red),
-          child: Text(context.t.common.remove),
+    showDialog(
+      context: context,
+      builder: (dc) => AlertDialog(
+        title: Text(context.t.common.rename),
+        content: TextField(
+          controller: ctrl,
+          autofocus: true,
+          decoration:
+              InputDecoration(labelText: context.t.playlists.groupName),
+          onSubmitted: (_) async {
+            final n = ctrl.text.trim();
+            if (n.isNotEmpty) {
+              await widget.tagViewModel.renameTag(groupTag.id, n);
+              if (dc.mounted) Navigator.of(dc).pop();
+            }
+          },
         ),
-      ],
-    ));
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dc).pop(),
+            child: Text(context.t.common.cancel),
+          ),
+          FilledButton(
+            onPressed: () async {
+              final n = ctrl.text.trim();
+              if (n.isNotEmpty) {
+                await widget.tagViewModel.renameTag(groupTag.id, n);
+                if (dc.mounted) Navigator.of(dc).pop();
+              }
+            },
+            child: Text(context.t.common.rename),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showRemoveGroupDialog(
+      BuildContext context, Tag groupTag, QueueDisplayItem groupItem) {
+    showDialog(
+      context: context,
+      builder: (dc) => AlertDialog(
+        title: Text(context.t.common.remove),
+        content: Text(context.t.dialogs.home.removeGroupQuestion
+            .replaceAll('{groupName}', groupTag.name)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dc).pop(),
+            child: Text(context.t.common.cancel),
+          ),
+          TextButton(
+            onPressed: () async {
+              await widget.tagViewModel
+                  .removeGroupFromQueue(widget.collectionId, groupTag.id);
+              if (dc.mounted) Navigator.of(dc).pop();
+            },
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: Text(context.t.common.remove),
+          ),
+        ],
+      ),
+    );
   }
 }
 
-
-/// Wraps a list item in a [DragTarget] that covers the full tile height.
-/// Detects whether the drag cursor is in the top or bottom half and shows
-/// a thin insertion indicator line accordingly.
+/// Wraps a list item in a [DragTarget] that detects top/bottom half hover.
 class _DragTargetItem extends StatelessWidget {
   const _DragTargetItem({
     required this.index,
@@ -314,7 +480,8 @@ class _DragTargetItem extends StatelessWidget {
 
   final int index;
   final Widget child;
-  final bool Function(CollectionDragData data, bool above) onWillAccept;
+  final bool Function(CollectionDragData data, {required bool above})
+      onWillAccept;
   final VoidCallback onLeave;
   final void Function(CollectionDragData data) onAccept;
   final Color indicatorColor;
@@ -333,7 +500,7 @@ class _DragTargetItem extends StatelessWidget {
         if (renderBox == null) return;
         final localY = renderBox.globalToLocal(details.offset).dy;
         final above = localY < renderBox.size.height / 2;
-        onWillAccept(details.data, above);
+        onWillAccept(details.data, above: above);
       },
       onLeave: (_) => onLeave(),
       onAcceptWithDetails: (details) => onAccept(details.data),
@@ -341,56 +508,28 @@ class _DragTargetItem extends StatelessWidget {
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Top indicator
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 100),
-              height: showAbove ? 3 : 0,
-              margin: showAbove
-                  ? const EdgeInsets.symmetric(horizontal: 8)
-                  : EdgeInsets.zero,
-              decoration: showAbove
-                  ? BoxDecoration(
-                      color: indicatorColor,
-                      borderRadius: BorderRadius.circular(2),
-                    )
-                  : null,
-            ),
+            _indicator(showAbove),
             child,
-            // Bottom indicator
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 100),
-              height: showBelow ? 3 : 0,
-              margin: showBelow
-                  ? const EdgeInsets.symmetric(horizontal: 8)
-                  : EdgeInsets.zero,
-              decoration: showBelow
-                  ? BoxDecoration(
-                      color: indicatorColor,
-                      borderRadius: BorderRadius.circular(2),
-                    )
-                  : null,
-            ),
+            _indicator(showBelow),
           ],
         );
       },
     );
   }
-}
 
-/// Trailing empty space in the list that accepts right-click / long-press
-/// to show a "Create Group" context menu.
-class _EmptySpaceTarget extends StatelessWidget {
-  const _EmptySpaceTarget({required this.onContextMenu});
-
-  final void Function(Offset position) onContextMenu;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onSecondaryTapUp: (details) => onContextMenu(details.globalPosition),
-      onLongPressStart: (details) => onContextMenu(details.globalPosition),
-      child: const SizedBox(height: 60),
+  Widget _indicator(bool visible) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 100),
+      height: visible ? 3 : 0,
+      margin: visible
+          ? const EdgeInsets.symmetric(horizontal: 8)
+          : EdgeInsets.zero,
+      decoration: visible
+          ? BoxDecoration(
+              color: indicatorColor,
+              borderRadius: BorderRadius.circular(2),
+            )
+          : null,
     );
   }
 }

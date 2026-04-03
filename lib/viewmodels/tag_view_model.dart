@@ -981,7 +981,7 @@ class TagViewModel extends ChangeNotifier {
 
   /// Create a nested group inside an existing group/collection and add a reference to it.
   /// Returns the created group tag.
-  Future<Tag?> createNestedGroup(String parentCollectionId, String name) async {
+  Future<Tag?> createNestedGroup(String parentCollectionId, String name, {int? insertIndex}) async {
     try {
       _error = null;
       final parentTag = await _tagRepository.getCollectionTag(parentCollectionId);
@@ -1003,15 +1003,36 @@ class TagViewModel extends ChangeNotifier {
           : metadata.items.map((i) => i.order).reduce((a, b) => a > b ? a : b) +
                 1;
 
-      await _tagRepository.addItemToCollection(
-        parentCollectionId,
-        PlaylistItem(
-          id: _uuid.v4(),
-          type: PlaylistItemType.collectionReference,
-          targetId: group.id,
-          order: nextOrder,
-        ),
+      final newItem = PlaylistItem(
+        id: _uuid.v4(),
+        type: PlaylistItemType.collectionReference,
+        targetId: group.id,
+        order: nextOrder,
       );
+
+      await _tagRepository.addItemToCollection(parentCollectionId, newItem);
+
+      // If an insert index was specified, reorder to place the new item there
+      if (insertIndex != null) {
+        final freshParent = await _tagRepository.getCollectionTag(parentCollectionId);
+        if (freshParent?.playlistMetadata != null) {
+          final items = List<PlaylistItem>.from(freshParent!.playlistMetadata!.items)
+            ..sort((a, b) => a.order.compareTo(b.order));
+          // Find the newly added item by targetId (the Rust side generates its own item ID)
+          final addedIndex = items.lastIndexWhere(
+            (i) => i.targetId == group.id && i.type == PlaylistItemType.collectionReference,
+          );
+          if (addedIndex >= 0) {
+            final addedItem = items.removeAt(addedIndex);
+            final clampedIdx = insertIndex.clamp(0, items.length);
+            items.insert(clampedIdx, addedItem);
+            await _tagRepository.reorderCollectionItems(
+              parentCollectionId,
+              items.map((i) => i.id).toList(),
+            );
+          }
+        }
+      }
 
       // Refresh in-memory tag cache so playlist panel sees the new group
       await loadTags();

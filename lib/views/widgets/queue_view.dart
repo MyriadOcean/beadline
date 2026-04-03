@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../i18n/translations.g.dart';
-import '../../models/song_unit.dart';
 import '../../viewmodels/player_view_model.dart';
 import '../../viewmodels/settings_view_model.dart';
 import '../../viewmodels/tag_view_model.dart';
@@ -76,9 +75,6 @@ class _QueueViewState extends State<QueueView> {
                           final next = tagVM.currentSongUnit;
                           if (next != null) await playerVM.play(next);
                         }
-                      },
-                      onSongContextMenu: (song, position, groupId) {
-                        _showSongContextMenu(context, position, song, displayItems);
                       },
                     ),
                   ),
@@ -166,44 +162,6 @@ class _QueueViewState extends State<QueueView> {
   // ===========================================================================
   // Context menu & empty state
   // ===========================================================================
-
-  void _showSongContextMenu(BuildContext context, Offset position, SongUnit song, List<QueueDisplayItem> displayItems) {
-    final tagVM = widget.tagViewModel;
-    final playerVM = widget.playerViewModel;
-
-    showMenu<String>(
-      context: context,
-      position: RelativeRect.fromLTRB(position.dx, position.dy, position.dx, position.dy),
-      items: [
-        PopupMenuItem(value: 'play', child: ListTile(leading: const Icon(Icons.play_arrow), title: Text(context.t.player.play), dense: true, contentPadding: EdgeInsets.zero)),
-        PopupMenuItem(value: 'remove', child: ListTile(leading: const Icon(Icons.remove_circle_outline), title: Text(context.t.common.remove), dense: true, contentPadding: EdgeInsets.zero)),
-      ],
-    ).then((value) async {
-      if (value == null || !context.mounted) return;
-      switch (value) {
-        case 'play':
-          final flatIdx = displayItems
-              .where((d) => d.isSong && d.songUnit?.id == song.id)
-              .firstOrNull?.flatIndex ?? -1;
-          if (flatIdx >= 0) {
-            await tagVM.jumpTo(flatIdx);
-            await playerVM.play(song);
-          }
-        case 'remove':
-          final flatIdx = displayItems
-              .where((d) => d.isSong && d.songUnit?.id == song.id)
-              .firstOrNull?.flatIndex ?? -1;
-          if (flatIdx >= 0) {
-            final wasPlaying = await tagVM.removeFromQueue(flatIdx);
-            if (wasPlaying) {
-              await playerVM.stop();
-              final next = tagVM.currentSongUnit;
-              if (next != null) await playerVM.play(next);
-            }
-          }
-      }
-    });
-  }
 
   void _showQueueContextMenu(BuildContext context, Offset position) {
     final tagVM = widget.tagViewModel;

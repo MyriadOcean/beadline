@@ -7,6 +7,7 @@ import '../models/configuration_mode.dart';
 import '../models/library_item.dart';
 import '../models/library_location.dart';
 import '../models/song_unit.dart';
+import '../models/source_collection.dart';
 import '../models/source_origin.dart';
 import '../repositories/library_repository.dart';
 import '../repositories/tag_repository.dart';
@@ -17,6 +18,8 @@ import '../services/entry_point_file_service.dart';
 import '../services/file_system_watcher.dart';
 import '../services/import_export_service.dart';
 import '../services/library_location_manager.dart';
+import '../services/source_auto_matcher.dart';
+import '../src/rust/api/evaluator_api.dart' as rust_evaluator;
 
 /// Progress state for import/export operations
 class OperationProgress {
@@ -30,6 +33,18 @@ class OperationProgress {
   final String message;
 
   double get progress => total > 0 ? current / total : 0;
+}
+
+/// Result of promoting a temporary Song Unit
+class PromoteResult {
+  const PromoteResult({
+    required this.promoted,
+    required this.success,
+    this.discovered,
+  });
+  final SongUnit promoted;
+  final bool success;
+  final DiscoveredSources? discovered;
 }
 
 /// ViewModel for library management
@@ -1218,6 +1233,97 @@ class LibraryViewModel extends ChangeNotifier {
       _isOperationInProgress = false;
       _operationProgress = null;
       notifyListeners();
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Promote temporary Song Unit
+  // ---------------------------------------------------------------------------
+
+  /// Promote a temporary Song Unit to a full one with auto-discovery.
+  /// Returns a [PromoteResult] with the promoted song unit and discovery info.
+  Future<PromoteResult> promoteSongUnit(
+    SongUnit tempSongUnit, {
+    required ConfigurationMode configMode,
+    required List<LibraryLocation> libraryLocations,
+  }) async {
+    final filePath = tempSongUnit.originalFilePath;
+
+    DiscoveredSources? discovered;
+    if (filePath != null) {
+      final autoMatcher = SourceAutoMatcher();
+      discovered = await autoMatcher.discoverAndCreateSources(filePath);
+    }
+
+    final promoted = tempSongUnit.copyWith(
+      isTemporary: false,
+      sources: discovered != null && discovered.hasAnySources
+          ? SourceCollection(
+              displaySources: [
+                ...tempSongUnit.sources.displaySources,
+                ...discovered.videoSources,
+                ...discovered.imageSources,
+              ],
+              audioSources: [
+                ...tempSongUnit.sources.audioSources,
+                ...discovered.audioSources,
+              ],
+              accompanimentSources: [
+                ...tempSongUnit.sources.accompanimentSources,
+                ...discovered.accompanimentSources,
+              ],
+              hoverSources: [
+                ...tempSongUnit.sources.hoverSources,
+                ...discovered.lyricsSources,
+              ],
+            )
+          : null,
+    );
+
+    final success = await updateSongUnitWithConfig(
+      songUnit: promoted,
+      configMode: configMode,
+      libraryLocations: libraryLocations,
+    );
+
+    return PromoteResult(
+      promoted: promoted,
+      success: success,
+      discovered: discovered,
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Search (Rust FFI)
+  // ---------------------------------------------------------------------------
+
+  /// Search song units using the Rust query evaluator.
+  /// Returns a set of matching song unit IDs, or null if parsing fails
+  /// (caller should fall back to simple text search).
+  Future<Set<String>?> searchSongUnits(String queryText) async {
+    try {
+      final matchingIds = await rust_evaluator.searchSongUnits(
+        queryText: queryText,
+        nameAutoSearch: true,
+      );
+      return matchingIds.toSet();
+    } catch (_) {
+      return null; // Parsing failed → caller uses fallback
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Library locations
+  // ---------------------------------------------------------------------------
+
+  /// Load library locations from the location manager.
+  Future<Map<String, LibraryLocation>> loadLibraryLocations() async {
+    try {
+      final manager = getIt<LibraryLocationManager>();
+      final locations = await manager.getLocations();
+      return {for (final loc in locations) loc.id: loc};
+    } catch (e) {
+      return {};
     }
   }
 

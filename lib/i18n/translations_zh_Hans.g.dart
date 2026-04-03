@@ -362,6 +362,7 @@ class _TranslationsPlaylistsZhHans extends TranslationsPlaylistsEn {
 	@override String get createPlaylist => '创建播放列表';
 	@override String get addSongs => '添加歌曲';
 	@override String get createGroup => '创建分组';
+	@override String get moveToGroup => '移动到分组';
 	@override String get addCollectionRef => '添加合集引用';
 	@override String get renamePlaylist => '重命名播放列表';
 	@override String get deletePlaylist => '删除播放列表';
@@ -378,7 +379,6 @@ class _TranslationsPlaylistsZhHans extends TranslationsPlaylistsEn {
 	@override String get unlock => '解锁';
 	@override String get viewContent => '查看内容';
 	@override String get toggleSelectionMode => '切换选择模式';
-	@override String get moveToGroup => '移动到分组';
 	@override String get noGroupsAvailable => '没有可用的分组。请先创建一个分组。';
 	@override String get song => '首歌曲';
 	@override String get songs => '首歌曲';
@@ -449,6 +449,32 @@ class _TranslationsSongEditorZhHans extends TranslationsSongEditorEn {
 	@override String get noAudioFound => '在 {name} 中未找到音频轨道';
 	@override String get autoDiscovered => '自动发现：{types}';
 	@override String get chooseMetadataValues => '为每个元数据字段选择值：';
+	@override String get builtInTagsMetadata => '内置标签（元数据）';
+	@override String get userTags => '用户标签';
+	@override String get noUserTags => '暂无用户标签。请在标签管理中创建。';
+	@override String get tagNameName => '名称';
+	@override String get tagNameAlbum => '专辑';
+	@override String get tagNameTime => '年份';
+	@override String get aliasHintTitle => '标题';
+	@override String get addImageOrExtract => '添加图片或从音频文件提取';
+	@override String get thumbnailsAvailable => '有 {count} 个缩略图可用';
+	@override String get removeFromCollection => '从集合中移除';
+	@override String get metadataWriteNotImplemented => '元数据写入功能尚未实现，需要外部库支持。';
+	@override String get linkedVideoFrom => '来自：{name}';
+	@override String get offsetDisplay => '偏移：{value}';
+	@override String get searchOnlineSources => '搜索在线源';
+	@override String get providerLabel => '提供商';
+	@override String get sourceTypeLabel => '源类型';
+	@override String get searchQueryLabel => '搜索关键词';
+	@override String get durationDisplay => '时长：{value}';
+	@override String get addToSongUnit => '添加到曲目单元';
+	@override String get cannotSaveInPlaceNoLocations => '就地模式下无法保存曲目单元，请先在设置中配置至少一个音乐库位置。';
+	@override String get failedToLoadUrl => '无法从 URL 加载媒体，URL 可能无效或不可达。';
+	@override String get urlNotDirectMedia => '警告：URL 似乎不是直接媒体文件。请使用音频/视频文件的直接链接（如 .mp3、.mp4），而非网页链接。';
+	@override String get noAudioSourcesForMetadata => '没有可提取元数据的音频源';
+	@override String get cannotExtractFromApi => '无法从 API 源提取元数据';
+	@override String get metadataReloaded => '元数据已重新加载';
+	@override String get addedSource => '已添加 {title}';
 }
 
 // Path: settings
@@ -1211,6 +1237,7 @@ extension on TranslationsZhHans {
 			'playlists.createPlaylist' => '创建播放列表',
 			'playlists.addSongs' => '添加歌曲',
 			'playlists.createGroup' => '创建分组',
+			'playlists.moveToGroup' => '移动到分组',
 			'playlists.addCollectionRef' => '添加合集引用',
 			'playlists.renamePlaylist' => '重命名播放列表',
 			'playlists.deletePlaylist' => '删除播放列表',
@@ -1227,7 +1254,6 @@ extension on TranslationsZhHans {
 			'playlists.unlock' => '解锁',
 			'playlists.viewContent' => '查看内容',
 			'playlists.toggleSelectionMode' => '切换选择模式',
-			'playlists.moveToGroup' => '移动到分组',
 			'playlists.noGroupsAvailable' => '没有可用的分组。请先创建一个分组。',
 			'playlists.song' => '首歌曲',
 			'playlists.songs' => '首歌曲',
@@ -1289,6 +1315,32 @@ extension on TranslationsZhHans {
 			'songEditor.noAudioFound' => '在 {name} 中未找到音频轨道',
 			'songEditor.autoDiscovered' => '自动发现：{types}',
 			'songEditor.chooseMetadataValues' => '为每个元数据字段选择值：',
+			'songEditor.builtInTagsMetadata' => '内置标签（元数据）',
+			'songEditor.userTags' => '用户标签',
+			'songEditor.noUserTags' => '暂无用户标签。请在标签管理中创建。',
+			'songEditor.tagNameName' => '名称',
+			'songEditor.tagNameAlbum' => '专辑',
+			'songEditor.tagNameTime' => '年份',
+			'songEditor.aliasHintTitle' => '标题',
+			'songEditor.addImageOrExtract' => '添加图片或从音频文件提取',
+			'songEditor.thumbnailsAvailable' => '有 {count} 个缩略图可用',
+			'songEditor.removeFromCollection' => '从集合中移除',
+			'songEditor.metadataWriteNotImplemented' => '元数据写入功能尚未实现，需要外部库支持。',
+			'songEditor.linkedVideoFrom' => '来自：{name}',
+			'songEditor.offsetDisplay' => '偏移：{value}',
+			'songEditor.searchOnlineSources' => '搜索在线源',
+			'songEditor.providerLabel' => '提供商',
+			'songEditor.sourceTypeLabel' => '源类型',
+			'songEditor.searchQueryLabel' => '搜索关键词',
+			'songEditor.durationDisplay' => '时长：{value}',
+			'songEditor.addToSongUnit' => '添加到曲目单元',
+			'songEditor.cannotSaveInPlaceNoLocations' => '就地模式下无法保存曲目单元，请先在设置中配置至少一个音乐库位置。',
+			'songEditor.failedToLoadUrl' => '无法从 URL 加载媒体，URL 可能无效或不可达。',
+			'songEditor.urlNotDirectMedia' => '警告：URL 似乎不是直接媒体文件。请使用音频/视频文件的直接链接（如 .mp3、.mp4），而非网页链接。',
+			'songEditor.noAudioSourcesForMetadata' => '没有可提取元数据的音频源',
+			'songEditor.cannotExtractFromApi' => '无法从 API 源提取元数据',
+			'songEditor.metadataReloaded' => '元数据已重新加载',
+			'songEditor.addedSource' => '已添加 {title}',
 			'settings.title' => '设置',
 			'settings.user' => '用户',
 			'settings.username' => '用户名',
@@ -1461,6 +1513,8 @@ extension on TranslationsZhHans {
 			'dialogs.removeGroup' => '移除分组',
 			'dialogs.removeGroupQuestion' => '如何移除 "{groupName}"？',
 			'dialogs.ungroupKeepSongs' => '取消分组（保留歌曲）',
+			_ => null,
+		} ?? switch (path) {
 			'dialogs.removeAll' => '全部移除',
 			'dialogs.renameGroup' => '重命名分组',
 			'dialogs.createNestedGroup' => '创建嵌套分组',
@@ -1487,8 +1541,6 @@ extension on TranslationsZhHans {
 			'dialogs.exportedTo' => '已导出到 {path}',
 			'dialogs.promoted' => '已将 "{displayName}" 提升为歌曲单元',
 			'dialogs.resetFailed' => '重置失败：{error}',
-			_ => null,
-		} ?? switch (path) {
 			'dialogs.confirmTitle' => '确认模式更改',
 			'dialogs.changeModeButton' => '更改模式',
 			'dialogs.migratingConfig' => '正在迁移配置',

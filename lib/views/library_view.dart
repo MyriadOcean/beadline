@@ -5,18 +5,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
-import '../core/di/service_locator.dart';
 import '../i18n/translations.g.dart';
 import '../models/configuration_mode.dart';
 import '../models/library_item.dart';
 import '../models/library_location.dart';
 import '../models/song_unit.dart';
-import '../models/source.dart';
-import '../models/source_collection.dart';
 import '../models/tag.dart';
-import '../services/library_location_manager.dart';
-import '../services/source_auto_matcher.dart';
-import '../src/rust/api/evaluator_api.dart' as rust_evaluator;
 import '../viewmodels/library_view_model.dart';
 import '../viewmodels/player_view_model.dart';
 import '../viewmodels/search_view_model.dart';
@@ -124,9 +118,10 @@ class _LibraryViewState extends State<LibraryView> {
     super.dispose();
   }
 
-  /// Execute search: save to history and apply filter via Rust FFI
+  /// Execute search: save to history and apply filter via ViewModel
   Future<void> _executeSearch() async {
     final searchVM = context.read<SearchViewModel>();
+    final libraryVM = context.read<LibraryViewModel>();
     final text = _searchController.text;
     if (text.isNotEmpty) {
       searchVM.addToHistory(text);
@@ -143,28 +138,14 @@ class _LibraryViewState extends State<LibraryView> {
       return;
     }
 
-    // Delegate to Rust - it fetches everything from DB itself
-    try {
-      final matchingIds = await rust_evaluator.searchSongUnits(
-        queryText: text.trim(),
-        nameAutoSearch: true,
-      );
-      if (mounted) {
-        setState(() {
-          _searchQuery = text.toLowerCase();
-          _matchingSearchIds = matchingIds.toSet();
-          _showSuggestions = false;
-        });
-      }
-    } catch (_) {
-      // If Rust parsing fails, fall back to simple text search
-      if (mounted) {
-        setState(() {
-          _searchQuery = text.toLowerCase();
-          _matchingSearchIds = null; // null = use fallback text search
-          _showSuggestions = false;
-        });
-      }
+    // Delegate to ViewModel (which calls Rust FFI)
+    final matchingIds = await libraryVM.searchSongUnits(text.trim());
+    if (mounted) {
+      setState(() {
+        _searchQuery = text.toLowerCase();
+        _matchingSearchIds = matchingIds; // null means fallback to text search
+        _showSuggestions = false;
+      });
     }
   }
 
@@ -188,15 +169,10 @@ class _LibraryViewState extends State<LibraryView> {
   }
 
   Future<void> _loadLibraryLocations() async {
-    try {
-      final manager = getIt<LibraryLocationManager>();
-      final locations = await manager.getLocations();
-      setState(() {
-        _libraryLocations = {for (final loc in locations) loc.id: loc};
-      });
-    } catch (e) {
-      // Ignore errors - library locations are optional
-    }
+    final locations = await context.read<LibraryViewModel>().loadLibraryLocations();
+    setState(() {
+      _libraryLocations = locations;
+    });
   }
 
   /// Get the library location name for a song unit
@@ -1479,120 +1455,42 @@ class _LibraryViewState extends State<LibraryView> {
     Navigator.pushNamed(context, '/song-unit-editor');
   }
 
-  String _formatDuration(Duration duration) {
-    final minutes = duration.inMinutes;
-    final seconds = duration.inSeconds % 60;
-    return '$minutes:${seconds.toString().padLeft(2, '0')}';
-  }
-
-  /// Get the duration from the song unit's audio sources
-  /// Audio source duration is authoritative per the design
-  Duration _getAudioDuration(SongUnit songUnit) {
-    // Try audio sources first (authoritative)
-    for (final source in songUnit.sources.audioSources) {
-      final duration = source.getDuration();
-      if (duration != null && duration != Duration.zero) {
-        return duration;
-      }
-    }
-    // Fallback to accompaniment sources
-    for (final source in songUnit.sources.accompanimentSources) {
-      final duration = source.getDuration();
-      if (duration != null && duration != Duration.zero) {
-        return duration;
-      }
-    }
-    // Fallback to display sources (video)
-    for (final source in songUnit.sources.displaySources) {
-      final duration = source.getDuration();
-      if (duration != null && duration != Duration.zero) {
-        return duration;
-      }
-    }
-    // Fallback to metadata duration
-    if (songUnit.metadata.duration != Duration.zero) {
-      return songUnit.metadata.duration;
-    }
-    return Duration.zero;
-  }
-
   /// Promote a temporary Song Unit to a full one with auto-discovery
   Future<void> _promoteSongUnit(
     BuildContext context,
     SongUnit tempSongUnit,
   ) async {
-    final filePath = tempSongUnit.originalFilePath;
-
-    // Auto-discover related sources (lyrics, videos, images, accompaniment)
-    DiscoveredSources? discovered;
-    if (filePath != null) {
-      final autoMatcher = SourceAutoMatcher();
-      discovered = await autoMatcher.discoverAndCreateSources(filePath);
-
-      // Show discovery results if any sources were found
-      if (discovered.hasAnySources && context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Auto-discovered ${discovered.totalCount} related source(s): '
-              '${discovered.videoSources.length} video, '
-              '${discovered.imageSources.length} image, '
-              '${discovered.lyricsSources.length} lyrics, '
-              '${discovered.accompanimentSources.length} accompaniment',
-            ),
-            duration: const Duration(seconds: 3),
-          ),
-        );
-      }
-    }
-
-    // Build promoted song unit with discovered sources merged in
-    final promoted = tempSongUnit.copyWith(
-      isTemporary: false,
-      sources: discovered != null && discovered.hasAnySources
-          ? SourceCollection(
-              displaySources: [
-                ...tempSongUnit.sources.displaySources,
-                ...discovered.videoSources,
-                ...discovered.imageSources,
-              ],
-              audioSources: [
-                ...tempSongUnit.sources.audioSources,
-                ...discovered.audioSources,
-              ],
-              accompanimentSources: [
-                ...tempSongUnit.sources.accompanimentSources,
-                ...discovered.accompanimentSources,
-              ],
-              hoverSources: [
-                ...tempSongUnit.sources.hoverSources,
-                ...discovered.lyricsSources,
-              ],
-            )
-          : null,
-    );
-
-    // Update in library
     final libraryViewModel = context.read<LibraryViewModel>();
     final settingsViewModel = context.read<SettingsViewModel>();
 
-    final success = await libraryViewModel.updateSongUnitWithConfig(
-      songUnit: promoted,
+    final result = await libraryViewModel.promoteSongUnit(
+      tempSongUnit,
       configMode: settingsViewModel.configMode,
       libraryLocations: settingsViewModel.settings.libraryLocations,
     );
 
-    if (!success) {
+    if (!result.success) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              'Failed to promote: ${libraryViewModel.error}',
-            ),
+            content: Text('Failed to promote: ${libraryViewModel.error}'),
           ),
         );
       }
       return;
+    }
+
+    // Show discovery results
+    final discovered = result.discovered;
+    if (discovered != null && discovered.hasAnySources && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Auto-discovered ${discovered.totalCount} related source(s)',
+          ),
+          duration: const Duration(seconds: 3),
+        ),
+      );
     }
 
     // Navigate to song unit editor
@@ -1600,40 +1498,20 @@ class _LibraryViewState extends State<LibraryView> {
       await Navigator.pushNamed(
         context,
         '/song-unit-editor',
-        arguments: promoted.id,
+        arguments: result.promoted.id,
       );
 
-      // Refresh library after editing
       await libraryViewModel.refresh();
 
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(context.t.library.promoted.replaceAll('{displayName}', promoted.displayName)),
+            content: Text(context.t.library.promoted.replaceAll(
+              '{displayName}', result.promoted.displayName,
+            )),
           ),
         );
       }
     }
   }
-
-  /// Get audio format from file extension
-  AudioFormat _getAudioFormat(String extension) {
-    switch (extension) {
-      case 'mp3':
-        return AudioFormat.mp3;
-      case 'flac':
-        return AudioFormat.flac;
-      case 'wav':
-        return AudioFormat.wav;
-      case 'aac':
-        return AudioFormat.aac;
-      case 'ogg':
-        return AudioFormat.ogg;
-      case 'm4a':
-        return AudioFormat.m4a;
-      default:
-        return AudioFormat.other;
-    }
-  }
-
 }

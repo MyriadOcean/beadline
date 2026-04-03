@@ -782,6 +782,9 @@ class TranslationsPlaylistsEn {
 	/// en: 'Create Group'
 	String get createGroup => 'Create Group';
 
+	/// en: 'Move to Group'
+	String get moveToGroup => 'Move to Group';
+
 	/// en: 'Add Collection Reference'
 	String get addCollectionRef => 'Add Collection Reference';
 
@@ -829,9 +832,6 @@ class TranslationsPlaylistsEn {
 
 	/// en: 'Toggle selection mode'
 	String get toggleSelectionMode => 'Toggle selection mode';
-
-	/// en: 'Move to Group'
-	String get moveToGroup => 'Move to Group';
 
 	/// en: 'No groups available. Create a group first.'
 	String get noGroupsAvailable => 'No groups available. Create a group first.';
@@ -1024,6 +1024,84 @@ class TranslationsSongEditorEn {
 
 	/// en: 'Choose values for each metadata field:'
 	String get chooseMetadataValues => 'Choose values for each metadata field:';
+
+	/// en: 'Built-in Tags (Metadata)'
+	String get builtInTagsMetadata => 'Built-in Tags (Metadata)';
+
+	/// en: 'User Tags'
+	String get userTags => 'User Tags';
+
+	/// en: 'No user tags available. Create tags in the Tags section.'
+	String get noUserTags => 'No user tags available. Create tags in the Tags section.';
+
+	/// en: 'name'
+	String get tagNameName => 'name';
+
+	/// en: 'album'
+	String get tagNameAlbum => 'album';
+
+	/// en: 'time'
+	String get tagNameTime => 'time';
+
+	/// en: 'title'
+	String get aliasHintTitle => 'title';
+
+	/// en: 'Add an image or extract from audio files'
+	String get addImageOrExtract => 'Add an image or extract from audio files';
+
+	/// en: '{count} thumbnail(s) available'
+	String get thumbnailsAvailable => '{count} thumbnail(s) available';
+
+	/// en: 'Remove from collection'
+	String get removeFromCollection => 'Remove from collection';
+
+	/// en: 'Metadata writing is not yet implemented. Requires external library integration.'
+	String get metadataWriteNotImplemented => 'Metadata writing is not yet implemented. Requires external library integration.';
+
+	/// en: 'From: {name}'
+	String get linkedVideoFrom => 'From: {name}';
+
+	/// en: 'Offset: {value}'
+	String get offsetDisplay => 'Offset: {value}';
+
+	/// en: 'Search Online Sources'
+	String get searchOnlineSources => 'Search Online Sources';
+
+	/// en: 'Provider'
+	String get providerLabel => 'Provider';
+
+	/// en: 'Source Type'
+	String get sourceTypeLabel => 'Source Type';
+
+	/// en: 'Search Query'
+	String get searchQueryLabel => 'Search Query';
+
+	/// en: 'Duration: {value}'
+	String get durationDisplay => 'Duration: {value}';
+
+	/// en: 'Add to Song Unit'
+	String get addToSongUnit => 'Add to Song Unit';
+
+	/// en: 'Cannot save Song Unit in in-place mode without library locations. Please configure at least one library location in Settings.'
+	String get cannotSaveInPlaceNoLocations => 'Cannot save Song Unit in in-place mode without library locations. Please configure at least one library location in Settings.';
+
+	/// en: 'Failed to load media from URL. The URL may be invalid or unreachable.'
+	String get failedToLoadUrl => 'Failed to load media from URL. The URL may be invalid or unreachable.';
+
+	/// en: 'Warning: URL does not appear to be a direct media file. Use direct links to audio/video files (e.g., .mp3, .mp4), not web pages.'
+	String get urlNotDirectMedia => 'Warning: URL does not appear to be a direct media file. Use direct links to audio/video files (e.g., .mp3, .mp4), not web pages.';
+
+	/// en: 'No audio sources to extract metadata from'
+	String get noAudioSourcesForMetadata => 'No audio sources to extract metadata from';
+
+	/// en: 'Cannot extract metadata from API source'
+	String get cannotExtractFromApi => 'Cannot extract metadata from API source';
+
+	/// en: 'Metadata reloaded'
+	String get metadataReloaded => 'Metadata reloaded';
+
+	/// en: 'Added {title}'
+	String get addedSource => 'Added {title}';
 }
 
 // Path: settings
@@ -2327,6 +2405,7 @@ extension on Translations {
 			'playlists.createPlaylist' => 'Create Playlist',
 			'playlists.addSongs' => 'Add Songs',
 			'playlists.createGroup' => 'Create Group',
+			'playlists.moveToGroup' => 'Move to Group',
 			'playlists.addCollectionRef' => 'Add Collection Reference',
 			'playlists.renamePlaylist' => 'Rename Playlist',
 			'playlists.deletePlaylist' => 'Delete Playlist',
@@ -2343,7 +2422,6 @@ extension on Translations {
 			'playlists.unlock' => 'Unlock',
 			'playlists.viewContent' => 'View content',
 			'playlists.toggleSelectionMode' => 'Toggle selection mode',
-			'playlists.moveToGroup' => 'Move to Group',
 			'playlists.noGroupsAvailable' => 'No groups available. Create a group first.',
 			'playlists.song' => 'song',
 			'playlists.songs' => 'songs',
@@ -2405,6 +2483,32 @@ extension on Translations {
 			'songEditor.noAudioFound' => 'No audio track found in {name}',
 			'songEditor.autoDiscovered' => 'Auto-discovered: {types}',
 			'songEditor.chooseMetadataValues' => 'Choose values for each metadata field:',
+			'songEditor.builtInTagsMetadata' => 'Built-in Tags (Metadata)',
+			'songEditor.userTags' => 'User Tags',
+			'songEditor.noUserTags' => 'No user tags available. Create tags in the Tags section.',
+			'songEditor.tagNameName' => 'name',
+			'songEditor.tagNameAlbum' => 'album',
+			'songEditor.tagNameTime' => 'time',
+			'songEditor.aliasHintTitle' => 'title',
+			'songEditor.addImageOrExtract' => 'Add an image or extract from audio files',
+			'songEditor.thumbnailsAvailable' => '{count} thumbnail(s) available',
+			'songEditor.removeFromCollection' => 'Remove from collection',
+			'songEditor.metadataWriteNotImplemented' => 'Metadata writing is not yet implemented. Requires external library integration.',
+			'songEditor.linkedVideoFrom' => 'From: {name}',
+			'songEditor.offsetDisplay' => 'Offset: {value}',
+			'songEditor.searchOnlineSources' => 'Search Online Sources',
+			'songEditor.providerLabel' => 'Provider',
+			'songEditor.sourceTypeLabel' => 'Source Type',
+			'songEditor.searchQueryLabel' => 'Search Query',
+			'songEditor.durationDisplay' => 'Duration: {value}',
+			'songEditor.addToSongUnit' => 'Add to Song Unit',
+			'songEditor.cannotSaveInPlaceNoLocations' => 'Cannot save Song Unit in in-place mode without library locations. Please configure at least one library location in Settings.',
+			'songEditor.failedToLoadUrl' => 'Failed to load media from URL. The URL may be invalid or unreachable.',
+			'songEditor.urlNotDirectMedia' => 'Warning: URL does not appear to be a direct media file. Use direct links to audio/video files (e.g., .mp3, .mp4), not web pages.',
+			'songEditor.noAudioSourcesForMetadata' => 'No audio sources to extract metadata from',
+			'songEditor.cannotExtractFromApi' => 'Cannot extract metadata from API source',
+			'songEditor.metadataReloaded' => 'Metadata reloaded',
+			'songEditor.addedSource' => 'Added {title}',
 			'settings.title' => 'Settings',
 			'settings.user' => 'User',
 			'settings.username' => 'Username',
@@ -2577,6 +2681,8 @@ extension on Translations {
 			'dialogs.removeGroup' => 'Remove Group',
 			'dialogs.removeGroupQuestion' => 'How would you like to remove "{groupName}"?',
 			'dialogs.ungroupKeepSongs' => 'Ungroup (keep songs)',
+			_ => null,
+		} ?? switch (path) {
 			'dialogs.removeAll' => 'Remove all',
 			'dialogs.renameGroup' => 'Rename Group',
 			'dialogs.createNestedGroup' => 'Create Nested Group',
@@ -2603,8 +2709,6 @@ extension on Translations {
 			'dialogs.exportedTo' => 'Exported to {path}',
 			'dialogs.promoted' => 'Promoted "{displayName}" to Song Unit',
 			'dialogs.resetFailed' => 'Reset failed: {error}',
-			_ => null,
-		} ?? switch (path) {
 			'dialogs.confirmTitle' => 'Confirm Mode Change',
 			'dialogs.changeModeButton' => 'Change Mode',
 			'dialogs.migratingConfig' => 'Migrating Configuration',

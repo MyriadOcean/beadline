@@ -477,7 +477,58 @@
         "types": {}
       }
     },
-    "chooseMetadataValues": "Choose values for each metadata field:"
+    "chooseMetadataValues": "Choose values for each metadata field:",
+    "builtInTagsMetadata": "Built-in Tags (Metadata)",
+    "userTags": "User Tags",
+    "noUserTags": "No user tags available. Create tags in the Tags section.",
+    "tagNameName": "name",
+    "tagNameAlbum": "album",
+    "tagNameTime": "time",
+    "aliasHintTitle": "title",
+    "addImageOrExtract": "Add an image or extract from audio files",
+    "thumbnailsAvailable": "{count} thumbnail(s) available",
+    "@thumbnailsAvailable": {
+      "placeholders": {
+        "count": {}
+      }
+    },
+    "removeFromCollection": "Remove from collection",
+    "metadataWriteNotImplemented": "Metadata writing is not yet implemented. Requires external library integration.",
+    "linkedVideoFrom": "From: {name}",
+    "@linkedVideoFrom": {
+      "placeholders": {
+        "name": {}
+      }
+    },
+    "offsetDisplay": "Offset: {value}",
+    "@offsetDisplay": {
+      "placeholders": {
+        "value": {}
+      }
+    },
+    "searchOnlineSources": "Search Online Sources",
+    "providerLabel": "Provider",
+    "sourceTypeLabel": "Source Type",
+    "searchQueryLabel": "Search Query",
+    "durationDisplay": "Duration: {value}",
+    "@durationDisplay": {
+      "placeholders": {
+        "value": {}
+      }
+    },
+    "addToSongUnit": "Add to Song Unit",
+    "cannotSaveInPlaceNoLocations": "Cannot save Song Unit in in-place mode without library locations. Please configure at least one library location in Settings.",
+    "failedToLoadUrl": "Failed to load media from URL. The URL may be invalid or unreachable.",
+    "urlNotDirectMedia": "Warning: URL does not appear to be a direct media file. Use direct links to audio/video files (e.g., .mp3, .mp4), not web pages.",
+    "noAudioSourcesForMetadata": "No audio sources to extract metadata from",
+    "cannotExtractFromApi": "Cannot extract metadata from API source",
+    "metadataReloaded": "Metadata reloaded",
+    "addedSource": "Added {title}",
+    "@addedSource": {
+      "placeholders": {
+        "title": {}
+      }
+    }
   },
   "settings": {
     "title": "Settings",
