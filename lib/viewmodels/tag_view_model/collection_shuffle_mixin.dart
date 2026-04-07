@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import '../../models/playlist_metadata.dart';
+import '../../models/tag_extensions.dart';
 import '../../models/song_unit.dart';
 import 'tag_view_model_base.dart';
 
@@ -14,9 +14,9 @@ mixin CollectionShuffleMixin on TagViewModelBase {
     if (index < 0 || index >= currentQueueSongsList.length) return false;
 
     final aq = await getActiveQueue();
-    if (aq?.playlistMetadata == null) return false;
+    if (aq?.metadata == null) return false;
 
-    final metadata = aq!.playlistMetadata!;
+    final metadata = aq!.metadata!;
     final wasCurrentlyPlaying = index == metadata.currentIndex;
 
     final displayItem = queueDisplayItemsList
@@ -38,7 +38,7 @@ mixin CollectionShuffleMixin on TagViewModelBase {
     } else {
       final su = currentQueueSongsList[index];
       final topLevelItem = metadata.items.firstWhere(
-        (i) => i.type == PlaylistItemType.songUnit && i.targetId == su.id,
+        (i) => i.itemType == TagItemType.songUnit && i.targetId == su.id,
         orElse: () => throw StateError('Song not found in queue metadata'),
       );
       await tagRepository.removeItemFromCollection(
@@ -58,9 +58,9 @@ mixin CollectionShuffleMixin on TagViewModelBase {
     if (newIndex < -1) newIndex = -1;
 
     final refreshedQueue = await getActiveQueue();
-    if (refreshedQueue?.playlistMetadata != null) {
+    if (refreshedQueue?.metadata != null) {
       await updateActiveQueue(
-        refreshedQueue!.playlistMetadata!.copyWith(currentIndex: newIndex),
+        refreshedQueue!.metadata!.copyWith(currentIndex: newIndex),
       );
     }
 
@@ -80,9 +80,9 @@ mixin CollectionShuffleMixin on TagViewModelBase {
     if (currentQueueSongsList.length <= 1) return 0;
 
     final aq = await getActiveQueue();
-    if (aq?.playlistMetadata == null) return 0;
+    if (aq?.metadata == null) return 0;
 
-    final metadata = aq!.playlistMetadata!;
+    final metadata = aq!.metadata!;
     final currentSong = currentSongUnit;
     final originalLength = currentQueueSongsList.length;
 
@@ -110,12 +110,13 @@ mixin CollectionShuffleMixin on TagViewModelBase {
     if (removedCount > 0) {
       final newItems =
           currentQueueSongsList.asMap().entries.map((entry) {
-        return PlaylistItem(
+        return TagItem(
           id: uuid.v4(),
-          type: PlaylistItemType.songUnit,
+          itemType: TagItemType.songUnit,
           targetId: entry.value.id,
           order: entry.key,
-        );
+          inheritLock: true,
+          );
       }).toList();
 
       await updateActiveQueue(
@@ -133,69 +134,15 @@ mixin CollectionShuffleMixin on TagViewModelBase {
   // Shuffle
   // ==========================================================================
 
-  /// Shuffle any collection (respects locked sub-collections)
+  /// Shuffle any collection (respects locked sub-collections).
+  /// Delegates to Rust which handles lock-aware shuffling in a single call.
   Future<void> shuffle(String collectionId) async {
     try {
       errorValue = null;
-      final collection =
-          await tagRepository.getCollectionTag(collectionId);
-      if (collection == null || !collection.isCollection) {
-        errorValue = 'Collection not found';
-        notifyListeners();
-        return;
-      }
-
-      final metadata = collection.playlistMetadata!;
-      if (metadata.items.length <= 1) return;
-
-      final unlockedItems = <PlaylistItem>[];
-      final lockedGroups = <List<PlaylistItem>>[];
-
-      for (final item in metadata.items) {
-        if (item.type == PlaylistItemType.collectionReference) {
-          final refTag =
-              await tagRepository.getCollectionTag(item.targetId);
-          if (refTag != null && refTag.isCollection) {
-            if (refTag.isLocked) {
-              lockedGroups.add([item]);
-              await _shuffleGroupInternal(item.targetId, parentLocked: true);
-            } else {
-              await _shuffleGroupInternal(item.targetId);
-              unlockedItems.add(item);
-            }
-            continue;
-          }
-        }
-        unlockedItems.add(item);
-      }
-
-      unlockedItems.shuffle(random);
-      lockedGroups.shuffle(random);
-
-      final shuffledItems = <PlaylistItem>[];
-      var unlockedIndex = 0;
-      var lockedGroupIndex = 0;
-
-      while (unlockedIndex < unlockedItems.length ||
-          lockedGroupIndex < lockedGroups.length) {
-        final unlockedBatch = random.nextInt(3) + 1;
-        for (var i = 0;
-            i < unlockedBatch && unlockedIndex < unlockedItems.length;
-            i++) {
-          shuffledItems.add(unlockedItems[unlockedIndex++]);
-        }
-        if (lockedGroupIndex < lockedGroups.length) {
-          shuffledItems.addAll(lockedGroups[lockedGroupIndex++]);
-        }
-      }
-
-      for (var i = 0; i < shuffledItems.length; i++) {
-        shuffledItems[i] = shuffledItems[i].copyWith(order: i);
-      }
-
-      await tagRepository.updateCollectionMetadata(
+      final currentSong = currentSongUnit;
+      await tagRepository.shuffleCollection(
         collectionId,
-        metadata.copyWith(items: shuffledItems),
+        currentSongId: currentSong?.id,
       );
 
       if (collectionId == activeQueueIdValue) {
@@ -205,131 +152,23 @@ mixin CollectionShuffleMixin on TagViewModelBase {
       notifyListeners();
     } catch (e, stackTrace) {
       debugPrint('TagViewModel: shuffle() - caught exception: $e');
-      debugPrint(
-          'TagViewModel: shuffle() - exception stack trace: $stackTrace');
+      debugPrint('TagViewModel: shuffle() - stack trace: $stackTrace');
       errorValue = e.toString();
       notifyListeners();
     }
-  }
-
-  Future<void> _shuffleGroupInternal(
-    String groupId, {
-    bool parentLocked = false,
-  }) async {
-    final groupTag = await tagRepository.getCollectionTag(groupId);
-    if (groupTag == null || !groupTag.isCollection) return;
-    final meta = groupTag.playlistMetadata;
-    if (meta == null || meta.items.length <= 1) {
-      if (meta != null) {
-        for (final item in meta.items) {
-          if (item.type == PlaylistItemType.collectionReference) {
-            await _shuffleGroupInternal(
-              item.targetId,
-              parentLocked: parentLocked || groupTag.isLocked,
-            );
-          }
-        }
-      }
-      return;
-    }
-
-    if (parentLocked || groupTag.isLocked) {
-      for (final item in meta.items) {
-        if (item.type == PlaylistItemType.collectionReference) {
-          await _shuffleGroupInternal(item.targetId, parentLocked: true);
-        }
-      }
-      return;
-    }
-
-    final unlockedItems = <PlaylistItem>[];
-    final lockedGroups = <List<PlaylistItem>>[];
-
-    for (final item in meta.items) {
-      if (item.type == PlaylistItemType.collectionReference) {
-        final refTag =
-            await tagRepository.getCollectionTag(item.targetId);
-        if (refTag != null && refTag.isCollection) {
-          if (refTag.isLocked) {
-            lockedGroups.add([item]);
-            await _shuffleGroupInternal(item.targetId, parentLocked: true);
-          } else {
-            await _shuffleGroupInternal(item.targetId);
-            unlockedItems.add(item);
-          }
-          continue;
-        }
-      }
-      unlockedItems.add(item);
-    }
-
-    unlockedItems.shuffle(random);
-    lockedGroups.shuffle(random);
-
-    final shuffled = <PlaylistItem>[];
-    var ui = 0;
-    var li = 0;
-    while (ui < unlockedItems.length || li < lockedGroups.length) {
-      final batch = random.nextInt(3) + 1;
-      for (var i = 0; i < batch && ui < unlockedItems.length; i++) {
-        shuffled.add(unlockedItems[ui++]);
-      }
-      if (li < lockedGroups.length) {
-        shuffled.addAll(lockedGroups[li++]);
-      }
-    }
-
-    for (var i = 0; i < shuffled.length; i++) {
-      shuffled[i] = shuffled[i].copyWith(order: i);
-    }
-
-    await tagRepository.updateCollectionMetadata(
-      groupId,
-      meta.copyWith(items: shuffled),
-    );
   }
 
   // ==========================================================================
   // Deduplicate & Clear
   // ==========================================================================
 
-  /// Deduplicate any collection
+  /// Deduplicate any collection — delegates to Rust.
   Future<int> deduplicate(String collectionId) async {
     try {
       errorValue = null;
-      final collection =
-          await tagRepository.getCollectionTag(collectionId);
-      if (collection == null || !collection.isCollection) {
-        errorValue = 'Collection not found';
-        notifyListeners();
-        return 0;
-      }
-
-      final metadata = collection.playlistMetadata!;
-      if (metadata.items.length <= 1) return 0;
-
-      final originalLength = metadata.items.length;
-      final seenTargetIds = <String>{};
-      final deduped = <PlaylistItem>[];
-
-      for (final item in metadata.items) {
-        if (!seenTargetIds.contains(item.targetId)) {
-          seenTargetIds.add(item.targetId);
-          deduped.add(item);
-        }
-      }
-
-      final removedCount = originalLength - deduped.length;
+      final removedCount = await tagRepository.deduplicateCollection(collectionId);
 
       if (removedCount > 0) {
-        for (var i = 0; i < deduped.length; i++) {
-          deduped[i] = deduped[i].copyWith(order: i);
-        }
-        final updatedTag = collection.copyWith(
-          playlistMetadata: metadata.copyWith(items: deduped),
-        );
-        await tagRepository.updateTag(updatedTag);
-
         if (collectionId == activeQueueIdValue) {
           await loadCurrentQueueSongs();
           await updateCachedValues();
@@ -357,7 +196,7 @@ mixin CollectionShuffleMixin on TagViewModelBase {
         return;
       }
 
-      final metadata = collection.playlistMetadata!;
+      final metadata = collection.metadata!;
 
       if (metadata.isQueue) {
         await _recursivelyDeleteQueueOnlyGroups(collectionId, metadata.items);
@@ -382,14 +221,14 @@ mixin CollectionShuffleMixin on TagViewModelBase {
 
   Future<void> _recursivelyDeleteQueueOnlyGroups(
     String queueId,
-    List<PlaylistItem> items,
+    List<TagItem> items,
   ) async {
     for (final item in items) {
-      if (item.type == PlaylistItemType.collectionReference) {
+      if (item.itemType == TagItemType.tagReference) {
         final groupId = item.targetId;
         final groupTag = await tagRepository.getCollectionTag(groupId);
         if (groupTag != null && groupTag.isGroup) {
-          final groupMetadata = groupTag.playlistMetadata;
+          final groupMetadata = groupTag.metadata;
           if (groupMetadata != null && groupMetadata.items.isNotEmpty) {
             await _recursivelyDeleteQueueOnlyGroups(
                 groupId, groupMetadata.items);
@@ -414,11 +253,11 @@ mixin CollectionShuffleMixin on TagViewModelBase {
         allTagsList.where((t) => t.isCollection).toList();
     var referenceCount = 0;
     for (final collection in allCollections) {
-      if (collection.playlistMetadata == null) continue;
+      if (collection.metadata == null) continue;
       final hasReference = await _collectionReferencesGroup(
         collection.id,
         groupId,
-        collection.playlistMetadata!.items,
+        collection.metadata!.items,
       );
       if (hasReference) {
         referenceCount++;
@@ -431,18 +270,18 @@ mixin CollectionShuffleMixin on TagViewModelBase {
   Future<bool> _collectionReferencesGroup(
     String collectionId,
     String groupId,
-    List<PlaylistItem> items,
+    List<TagItem> items,
   ) async {
     for (final item in items) {
-      if (item.type == PlaylistItemType.collectionReference) {
+      if (item.itemType == TagItemType.tagReference) {
         if (item.targetId == groupId) return true;
         final nestedGroup =
             await tagRepository.getCollectionTag(item.targetId);
-        if (nestedGroup?.playlistMetadata != null) {
+        if (nestedGroup?.metadata != null) {
           final hasReference = await _collectionReferencesGroup(
             item.targetId,
             groupId,
-            nestedGroup!.playlistMetadata!.items,
+            nestedGroup!.metadata!.items,
           );
           if (hasReference) return true;
         }

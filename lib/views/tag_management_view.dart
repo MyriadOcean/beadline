@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../i18n/translations.g.dart';
 
-import '../models/tag.dart';
+import '../models/tag_extensions.dart';
 import '../viewmodels/library_view_model.dart';
 import '../viewmodels/tag_view_model.dart';
 import 'app_theme.dart';
@@ -134,7 +134,7 @@ class _TagManagementViewState extends State<TagManagementView> {
         .where((t) => !t.isGroup)
         .isNotEmpty;
     final isExpanded = _expandedTagId == tag.id;
-    final tagColor = _getTagColor(tag.type);
+    final tagColor = _getTagColor(tag.tagType);
 
     // Get song unit count for this tag
     final libraryViewModel = context.watch<LibraryViewModel>();
@@ -222,7 +222,7 @@ class _TagManagementViewState extends State<TagManagementView> {
               color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
-          trailing: tag.type != TagType.builtIn
+          trailing: tag.tagType != TagType.builtIn
               ? PopupMenuButton<String>(
                   onSelected: (value) => _handleTagAction(context, tag, value),
                   itemBuilder: (context) => [
@@ -287,7 +287,7 @@ class _TagManagementViewState extends State<TagManagementView> {
                 return Chip(
                   label: Text(alias, style: theme.textTheme.bodySmall),
                   deleteIcon: const Icon(Icons.close, size: 14),
-                  onDeleted: tag.type != TagType.builtIn
+                  onDeleted: tag.tagType != TagType.builtIn
                       ? () => _removeAlias(context, tag, alias)
                       : null,
                   visualDensity: VisualDensity.compact,

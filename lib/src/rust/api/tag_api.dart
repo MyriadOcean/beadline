@@ -7,42 +7,31 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 import '../frb_generated.dart';
 
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `fmt`
+// These functions are ignored because they are not marked as `pub`: `domain_to_ffi`, `ffi_to_domain`
 
-/// Convert a Rust Tag to a DartTag for FFI transport.
-Future<DartTag> toDartTag({required Tag tag}) =>
-    RustLib.instance.api.crateApiTagApiToDartTag(tag: tag);
-
-/// Convert a DartTag back to a Rust Tag (used by update_tag).
-Future<Tag> fromDartTag({required DartTag dt}) =>
-    RustLib.instance.api.crateApiTagApiFromDartTag(dt: dt);
-
-Future<DartTag> createTag({
-  String? key,
-  required String value,
-  String? parentId,
-}) => RustLib.instance.api.crateApiTagApiCreateTag(
-  key: key,
-  value: value,
-  parentId: parentId,
-);
+Future<Tag> createTag({String? key, required String value, String? parentId}) =>
+    RustLib.instance.api.crateApiTagApiCreateTag(
+      key: key,
+      value: value,
+      parentId: parentId,
+    );
 
 Future<void> deleteTag({required String id}) =>
     RustLib.instance.api.crateApiTagApiDeleteTag(id: id);
 
-Future<DartTag> updateTag({required DartTag tag}) =>
+Future<Tag> updateTag({required Tag tag}) =>
     RustLib.instance.api.crateApiTagApiUpdateTag(tag: tag);
 
-Future<DartTag?> getTag({required String id}) =>
+Future<Tag?> getTag({required String id}) =>
     RustLib.instance.api.crateApiTagApiGetTag(id: id);
 
-Future<List<DartTag>> getAllTags() =>
+Future<List<Tag>> getAllTags() =>
     RustLib.instance.api.crateApiTagApiGetAllTags();
 
-Future<List<DartTag>> getChildren({required String parentId}) =>
+Future<List<Tag>> getChildren({required String parentId}) =>
     RustLib.instance.api.crateApiTagApiGetChildren(parentId: parentId);
 
-Future<List<DartTag>> getDescendants({required String tagId}) =>
+Future<List<Tag>> getDescendants({required String tagId}) =>
     RustLib.instance.api.crateApiTagApiGetDescendants(tagId: tagId);
 
 Future<void> addAlias({required String tagId, required String alias}) =>
@@ -51,22 +40,19 @@ Future<void> addAlias({required String tagId, required String alias}) =>
 Future<void> removeAlias({required String alias}) =>
     RustLib.instance.api.crateApiTagApiRemoveAlias(alias: alias);
 
-Future<DartTag?> resolveTag({required String nameOrAlias}) =>
+Future<Tag?> resolveTag({required String nameOrAlias}) =>
     RustLib.instance.api.crateApiTagApiResolveTag(nameOrAlias: nameOrAlias);
 
 Future<String> getTagPath({required String tagId}) =>
     RustLib.instance.api.crateApiTagApiGetTagPath(tagId: tagId);
 
-Future<List<DartTag>> getTagsByType({required String tagType}) =>
+Future<List<Tag>> getTagsByType({required String tagType}) =>
     RustLib.instance.api.crateApiTagApiGetTagsByType(tagType: tagType);
 
-// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Tag>>
-abstract class Tag implements RustOpaqueInterface {}
-
-/// FRB-transparent tag representation.
-/// All fields are simple types so FRB generates a non-opaque Dart class.
-class DartTag {
-  const DartTag({
+/// A tag — the unified model for tags, playlists, queues, and groups.
+/// When `metadata` is `Some`, this tag contains songs.
+class Tag {
+  const Tag({
     required this.id,
     required this.name,
     this.key,
@@ -77,19 +63,19 @@ class DartTag {
     required this.isGroup,
     required this.isLocked,
     required this.displayOrder,
-    required this.hasCollectionMetadata,
+    this.metadata,
   });
   final String id;
   final String name;
   final String? key;
-  final String tagType;
+  final TagType tagType;
   final String? parentId;
   final List<String> aliasNames;
   final bool includeChildren;
   final bool isGroup;
   final bool isLocked;
   final int displayOrder;
-  final bool hasCollectionMetadata;
+  final TagMetadata? metadata;
 
   @override
   int get hashCode =>
@@ -103,12 +89,12 @@ class DartTag {
       isGroup.hashCode ^
       isLocked.hashCode ^
       displayOrder.hashCode ^
-      hasCollectionMetadata.hashCode;
+      metadata.hashCode;
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is DartTag &&
+      other is Tag &&
           runtimeType == other.runtimeType &&
           id == other.id &&
           name == other.name &&
@@ -120,5 +106,101 @@ class DartTag {
           isGroup == other.isGroup &&
           isLocked == other.isLocked &&
           displayOrder == other.displayOrder &&
-          hasCollectionMetadata == other.hasCollectionMetadata;
+          metadata == other.metadata;
 }
+
+/// A single item entry in a tag's metadata.
+class TagItem {
+  const TagItem({
+    required this.id,
+    required this.itemType,
+    required this.targetId,
+    required this.order,
+    required this.inheritLock,
+  });
+  final String id;
+  final TagItemType itemType;
+  final String targetId;
+  final int order;
+  final bool inheritLock;
+
+  @override
+  int get hashCode =>
+      id.hashCode ^
+      itemType.hashCode ^
+      targetId.hashCode ^
+      order.hashCode ^
+      inheritLock.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is TagItem &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          itemType == other.itemType &&
+          targetId == other.targetId &&
+          order == other.order &&
+          inheritLock == other.inheritLock;
+}
+
+/// Item type within a tag's metadata.
+enum TagItemType { songUnit, tagReference }
+
+/// Metadata for tags that contain songs (playlists/queues/groups).
+class TagMetadata {
+  const TagMetadata({
+    required this.isLocked,
+    required this.displayOrder,
+    required this.items,
+    required this.currentIndex,
+    required this.playbackPositionMs,
+    required this.wasPlaying,
+    required this.removeAfterPlay,
+    required this.isQueue,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+  final bool isLocked;
+  final int displayOrder;
+  final List<TagItem> items;
+  final int currentIndex;
+  final PlatformInt64 playbackPositionMs;
+  final bool wasPlaying;
+  final bool removeAfterPlay;
+  final bool isQueue;
+  final String createdAt;
+  final String updatedAt;
+
+  @override
+  int get hashCode =>
+      isLocked.hashCode ^
+      displayOrder.hashCode ^
+      items.hashCode ^
+      currentIndex.hashCode ^
+      playbackPositionMs.hashCode ^
+      wasPlaying.hashCode ^
+      removeAfterPlay.hashCode ^
+      isQueue.hashCode ^
+      createdAt.hashCode ^
+      updatedAt.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is TagMetadata &&
+          runtimeType == other.runtimeType &&
+          isLocked == other.isLocked &&
+          displayOrder == other.displayOrder &&
+          items == other.items &&
+          currentIndex == other.currentIndex &&
+          playbackPositionMs == other.playbackPositionMs &&
+          wasPlaying == other.wasPlaying &&
+          removeAfterPlay == other.removeAfterPlay &&
+          isQueue == other.isQueue &&
+          createdAt == other.createdAt &&
+          updatedAt == other.updatedAt;
+}
+
+/// Tag type classification.
+enum TagType { builtIn, user, automatic }

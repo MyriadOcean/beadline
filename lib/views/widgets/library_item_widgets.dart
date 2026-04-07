@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../i18n/translations.g.dart';
 import '../../models/song_unit.dart';
-import '../../models/tag.dart';
+import '../../models/tag_extensions.dart';
 import '../../viewmodels/settings_view_model.dart';
 import '../../viewmodels/tag_view_model.dart';
 import 'cached_thumbnail.dart';
@@ -161,7 +161,7 @@ class TagChipsRow extends StatelessWidget {
   }
 
   Color _getTagColor(Tag tag, ThemeData theme) {
-    switch (tag.type) {
+    switch (tag.tagType) {
       case TagType.builtIn:
         return theme.colorScheme.primaryContainer;
       case TagType.user:
@@ -247,7 +247,7 @@ class CompactTagChips extends StatelessWidget {
   }
 
   Color _getTagColor(Tag tag, ThemeData theme) {
-    switch (tag.type) {
+    switch (tag.tagType) {
       case TagType.builtIn:
         return theme.colorScheme.primaryContainer;
       case TagType.user:

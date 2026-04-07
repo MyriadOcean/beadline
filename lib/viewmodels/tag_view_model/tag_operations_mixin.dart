@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import '../../models/tag.dart';
+import '../../models/tag_extensions.dart';
 import '../../src/rust/api/tag_api.dart' as rust_tag;
 import '../../src/rust/frb_generated.dart' show RustLib;
 import 'tag_view_model_base.dart';
@@ -42,7 +42,7 @@ mixin TagOperationsMixin on TagViewModelBase {
     }
   }
 
-  /// Silent version of loadTags â€” refreshes in-memory cache without
+  /// Silent version of loadTags â€?refreshes in-memory cache without
   /// triggering intermediate notifyListeners.
   Future<void> loadTagsSilent() async {
     final pureTags = await tagRepository.getAllTags();
@@ -300,7 +300,7 @@ mixin TagOperationsMixin on TagViewModelBase {
     return allTagsList
         .where(
           (tag) =>
-              tag.type == TagType.user && !tag.isGroup && !tag.isCollection,
+              tag.tagType == TagType.user && !tag.isGroup && !tag.isCollection,
         )
         .toList();
   }
@@ -323,7 +323,7 @@ mixin TagOperationsMixin on TagViewModelBase {
     if (tag.isCollection) return;
     if (!_rustAvailable) return;
     final String? key;
-    if (tag.type == TagType.builtIn) {
+    if (tag.tagType == TagType.builtIn) {
       key = tag.name;
     } else {
       key = null;

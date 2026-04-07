@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import '../../models/playlist_metadata.dart';
+import '../../models/tag_extensions.dart';
 import '../../models/song_unit.dart';
 import 'queue_display_item.dart';
 import 'tag_view_model_base.dart';
@@ -33,8 +33,8 @@ mixin CollectionReorderMixin on TagViewModelBase {
         return;
       }
 
-      final metadata = collection.playlistMetadata!;
-      final items = List<PlaylistItem>.from(metadata.items);
+      final metadata = collection.metadata!;
+      final items = List<TagItem>.from(metadata.items);
       final item = items.removeAt(oldIndex);
       items.insert(newIndex, item);
       for (var i = 0; i < items.length; i++) {
@@ -42,7 +42,7 @@ mixin CollectionReorderMixin on TagViewModelBase {
       }
 
       final updatedTag = collection.copyWith(
-        playlistMetadata: metadata.copyWith(items: items),
+        metadata: metadata.copyWith(items: items),
       );
       await tagRepository.updateTag(updatedTag);
       await loadTagsSilent();
@@ -81,12 +81,12 @@ mixin CollectionReorderMixin on TagViewModelBase {
         return;
       }
 
-      final metadata = collection.playlistMetadata!;
-      final items = List<PlaylistItem>.from(metadata.items);
+      final metadata = collection.metadata!;
+      final items = List<TagItem>.from(metadata.items);
 
       final oldIndex = items.indexWhere(
         (item) =>
-            item.type == PlaylistItemType.songUnit &&
+            item.itemType == TagItemType.songUnit &&
             item.targetId == songUnitId,
       );
       if (oldIndex < 0) {
@@ -206,16 +206,16 @@ mixin CollectionReorderMixin on TagViewModelBase {
     suppressEvents = true;
 
     final aq = await getActiveQueue();
-    if (aq?.playlistMetadata == null) {
+    if (aq?.metadata == null) {
       suppressEvents = false;
       return;
     }
 
-    final metadata = aq!.playlistMetadata!;
+    final metadata = aq!.metadata!;
 
-    final topLevelSongItems = <PlaylistItem>[];
+    final topLevelSongItems = <TagItem>[];
     for (final item in metadata.items) {
-      if (item.type == PlaylistItemType.songUnit) {
+      if (item.itemType == TagItemType.songUnit) {
         topLevelSongItems.add(item);
       }
     }
@@ -230,10 +230,10 @@ mixin CollectionReorderMixin on TagViewModelBase {
     }
 
     final movedItem = topLevelSongItems[oldIndex];
-    final allItems = List<PlaylistItem>.from(metadata.items)..remove(movedItem);
+    final allItems = List<TagItem>.from(metadata.items)..remove(movedItem);
 
     final remainingSongItems = allItems
-        .where((i) => i.type == PlaylistItemType.songUnit)
+        .where((i) => i.itemType == TagItemType.songUnit)
         .toList();
 
     int insertPos;
@@ -320,10 +320,10 @@ mixin CollectionReorderMixin on TagViewModelBase {
   Future<void> recomputeDisplayOrders(String collectionId) async {
     final tag = await tagRepository.getCollectionTag(collectionId);
     if (tag == null || !tag.isCollection) return;
-    final metadata = tag.playlistMetadata;
+    final metadata = tag.metadata;
     if (metadata == null || metadata.items.isEmpty) return;
 
-    final sortedItems = List<PlaylistItem>.from(metadata.items)
+    final sortedItems = List<TagItem>.from(metadata.items)
       ..sort((a, b) => a.order.compareTo(b.order));
 
     final reorderedIds = sortedItems.map((i) => i.id).toList();

@@ -104,8 +104,8 @@ proptest! {
             let child = create_collection(&conn, "child".into(), None, CollectionType::Playlist)
                 .await.unwrap();
 
-            let root_id = root.id().to_owned();
-            let child_id = child.id().to_owned();
+            let root_id = root.id.to_owned();
+            let child_id = child.id.to_owned();
 
             // Add song units to child collection
             for su_id in &child_su_ids {
@@ -117,7 +117,7 @@ proptest! {
             let _grandchild_id = if include_grandchild && !grandchild_su_ids.is_empty() {
                 let gc = create_collection(&conn, "grandchild".into(), None, CollectionType::Playlist)
                     .await.unwrap();
-                let gc_id = gc.id().to_owned();
+                let gc_id = gc.id.to_owned();
                 for su_id in &grandchild_su_ids {
                     add_item_to_collection(&conn, &gc_id, CollectionItemType::SongUnit, su_id, true)
                         .await.unwrap();
@@ -221,9 +221,9 @@ proptest! {
             let c = create_collection(&conn, format!("{}C", name_c), None, CollectionType::Playlist)
                 .await.unwrap();
 
-            let a_id = a.id().to_owned();
-            let b_id = b.id().to_owned();
-            let c_id = c.id().to_owned();
+            let a_id = a.id.to_owned();
+            let b_id = b.id.to_owned();
+            let c_id = c.id.to_owned();
 
             // --- Self-reference: always circular ---
             let self_ref = would_create_circular_reference(&conn, &a_id, &a_id).await.unwrap();

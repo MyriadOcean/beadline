@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
-import '../../models/playlist_metadata.dart';
 import '../../models/song_unit.dart';
-import '../../models/tag.dart';
+import '../../models/tag_extensions.dart';
 import '../../services/platform_media_player.dart' show PlaybackStatus;
 import '../../views/player_control_panel.dart';
 import '../player_view_model.dart';
@@ -37,24 +36,17 @@ mixin QueueRequestMixin on TagViewModelBase {
     try {
       errorValue = null;
       final aq = await getActiveQueue();
-      if (aq?.playlistMetadata == null) return false;
-      final metadata = aq!.playlistMetadata!;
+      if (aq?.metadata == null) return false;
+      final metadata = aq!.metadata!;
       final wasEmpty = currentQueueSongsList.isEmpty;
 
-      final newItem = PlaylistItem(
+      final newItem = TagItem(
         id: uuid.v4(),
-        type: PlaylistItemType.songUnit,
+        itemType: TagItemType.songUnit,
         targetId: songUnit.id,
         order: metadata.items.length,
-      );
-
-      final temporarySongUnits = <String, Map<String, dynamic>>{};
-      if (metadata.temporarySongUnits != null) {
-        temporarySongUnits.addAll(metadata.temporarySongUnits!);
-      }
-      if (songUnit.id.startsWith('temp_')) {
-        temporarySongUnits[songUnit.id] = songUnit.toJson();
-      }
+        inheritLock: true,
+        );
 
       final newIndex = metadata.currentIndex < 0 ? 0 : metadata.currentIndex;
 
@@ -62,8 +54,6 @@ mixin QueueRequestMixin on TagViewModelBase {
         metadata.copyWith(
           items: [...metadata.items, newItem],
           currentIndex: newIndex,
-          temporarySongUnits:
-              temporarySongUnits.isNotEmpty ? temporarySongUnits : null,
         ),
       );
 
@@ -84,29 +74,23 @@ mixin QueueRequestMixin on TagViewModelBase {
     try {
       errorValue = null;
       final aq = await getActiveQueue();
-      if (aq?.playlistMetadata == null) return false;
-      final metadata = aq!.playlistMetadata!;
+      if (aq?.metadata == null) return false;
+      final metadata = aq!.metadata!;
       final wasEmpty = currentQueueSongsList.isEmpty;
 
-      final newItems = <PlaylistItem>[];
-      final temporarySongUnits = <String, Map<String, dynamic>>{};
-      if (metadata.temporarySongUnits != null) {
-        temporarySongUnits.addAll(metadata.temporarySongUnits!);
-      }
+      final newItems = <TagItem>[];
 
       for (var i = 0; i < songUnits.length; i++) {
         final songUnit = songUnits[i];
         newItems.add(
-          PlaylistItem(
+          TagItem(
             id: uuid.v4(),
-            type: PlaylistItemType.songUnit,
+            itemType: TagItemType.songUnit,
             targetId: songUnit.id,
             order: metadata.items.length + i,
-          ),
+            inheritLock: true,
+            ),
         );
-        if (songUnit.id.startsWith('temp_')) {
-          temporarySongUnits[songUnit.id] = songUnit.toJson();
-        }
       }
 
       final newIndex = metadata.currentIndex < 0 ? 0 : metadata.currentIndex;
@@ -115,8 +99,6 @@ mixin QueueRequestMixin on TagViewModelBase {
         metadata.copyWith(
           items: [...metadata.items, ...newItems],
           currentIndex: newIndex,
-          temporarySongUnits:
-              temporarySongUnits.isNotEmpty ? temporarySongUnits : null,
         ),
       );
 
@@ -143,27 +125,29 @@ mixin QueueRequestMixin on TagViewModelBase {
       }
 
       final aq = await getActiveQueue();
-      if (aq?.playlistMetadata == null) return;
-      final metadata = aq!.playlistMetadata!;
+      if (aq?.metadata == null) return;
+      final metadata = aq!.metadata!;
 
       if (currentQueueSongsList.isEmpty || metadata.currentIndex < 0) {
-        final newItem = PlaylistItem(
+        final newItem = TagItem(
           id: uuid.v4(),
-          type: PlaylistItemType.songUnit,
+          itemType: TagItemType.songUnit,
           targetId: songUnit.id,
           order: 0,
-        );
+          inheritLock: true,
+          );
         await updateActiveQueue(
           metadata.copyWith(items: [newItem], currentIndex: 0),
         );
       } else {
         final insertIndex = metadata.currentIndex + 1;
-        final newItem = PlaylistItem(
+        final newItem = TagItem(
           id: uuid.v4(),
-          type: PlaylistItemType.songUnit,
+          itemType: TagItemType.songUnit,
           targetId: songUnit.id,
           order: insertIndex,
-        );
+          inheritLock: true,
+          );
         final updatedItems = [
           ...metadata.items.sublist(0, insertIndex),
           newItem,
@@ -210,9 +194,9 @@ mixin QueueRequestMixin on TagViewModelBase {
     );
     if (idx >= 0) {
       final aq = await getActiveQueue();
-      if (aq?.playlistMetadata != null) {
+      if (aq?.metadata != null) {
         await updateActiveQueue(
-          aq!.playlistMetadata!.copyWith(currentIndex: idx),
+          aq!.metadata!.copyWith(currentIndex: idx),
         );
         await updateCachedValues();
       }
@@ -288,11 +272,11 @@ mixin QueueRequestMixin on TagViewModelBase {
       }
 
       final currentQueue = await getActiveQueue();
-      if (currentQueue?.playlistMetadata != null) {
+      if (currentQueue?.metadata != null) {
         final currentPosition = playerVM.position.inMilliseconds;
         final isPlaying = playerVM.isPlaying;
         await updateActiveQueue(
-          currentQueue!.playlistMetadata!.copyWith(
+          currentQueue!.metadata!.copyWith(
             playbackPositionMs: currentPosition,
             wasPlaying: isPlaying,
           ),
@@ -305,7 +289,7 @@ mixin QueueRequestMixin on TagViewModelBase {
       await updateCachedValues();
       notifyListeners();
 
-      final targetMetadata = targetQueue.playlistMetadata;
+      final targetMetadata = targetQueue.metadata;
       if (targetMetadata != null &&
           targetMetadata.currentIndex >= 0 &&
           targetMetadata.currentIndex < currentQueueSongsList.length) {
@@ -347,7 +331,7 @@ mixin QueueRequestMixin on TagViewModelBase {
         notifyListeners();
         return;
       }
-      final metadata = sourceQueue.playlistMetadata!;
+      final metadata = sourceQueue.metadata!;
       final newTag = await tagRepository.createCollection(
         '${sourceQueue.name} (Copy)',
       );
@@ -355,11 +339,8 @@ mixin QueueRequestMixin on TagViewModelBase {
         currentIndex: -1,
         playbackPositionMs: 0,
         wasPlaying: false,
-        temporarySongUnits: metadata.temporarySongUnits != null
-            ? Map.from(metadata.temporarySongUnits!)
-            : null,
       );
-      final updatedTag = newTag.copyWith(playlistMetadata: newMetadata);
+      final updatedTag = newTag.copyWith(metadata: newMetadata);
       await tagRepository.updateTag(updatedTag);
       notifyListeners();
     } catch (e) {

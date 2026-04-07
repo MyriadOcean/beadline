@@ -513,7 +513,7 @@ mod tests {
             is_group: false,
             is_locked: false,
             display_order: 0,
-            has_collection_metadata: false,
+            collection_metadata: None,
         }
     }
 
@@ -529,7 +529,7 @@ mod tests {
             is_group: false,
             is_locked: false,
             display_order: 0,
-            has_collection_metadata: false,
+            collection_metadata: None,
         }
     }
 
@@ -863,7 +863,7 @@ mod tests {
                         is_group: false,
                         is_locked: false,
                         display_order: 0,
-                        has_collection_metadata: false,
+                        collection_metadata: None,
                     });
                 }
 
@@ -881,7 +881,7 @@ mod tests {
                         is_group: false,
                         is_locked: false,
                         display_order: 0,
-                        has_collection_metadata: false,
+                        collection_metadata: None,
                     });
                 }
 
@@ -945,7 +945,7 @@ mod tests {
                         is_group: false,
                         is_locked: false,
                         display_order: 0,
-                        has_collection_metadata: false,
+                        collection_metadata: None,
                     });
                 }
 
@@ -961,7 +961,7 @@ mod tests {
                         is_group: false,
                         is_locked: false,
                         display_order: 0,
-                        has_collection_metadata: false,
+                        collection_metadata: None,
                     });
                 }
 
@@ -1005,7 +1005,7 @@ mod tests {
                         is_group: false,
                         is_locked: false,
                         display_order: 0,
-                        has_collection_metadata: false,
+                        collection_metadata: None,
                     })
                     .collect();
 
@@ -1042,7 +1042,7 @@ mod tests {
                     is_group: false,
                     is_locked: false,
                     display_order: 0,
-                    has_collection_metadata: false,
+                    collection_metadata: None,
                 };
 
                 let tags = vec![tag];

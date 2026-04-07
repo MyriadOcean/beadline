@@ -6,6 +6,7 @@ library;
 
 import 'package:flutter/foundation.dart';
 import '../data/playback_state_storage.dart';
+import '../models/tag_extensions.dart';
 import '../repositories/library_repository.dart';
 import '../repositories/settings_repository.dart';
 import '../repositories/tag_repository.dart'
@@ -168,8 +169,8 @@ class TagViewModel extends TagViewModelBase
               currentQueueSongsList.where((s) => s.id != id).toList();
 
           final aq = await getActiveQueue();
-          if (aq?.playlistMetadata != null) {
-            final metadata = aq!.playlistMetadata!;
+          if (aq?.metadata != null) {
+            final metadata = aq!.metadata!;
             var newIndex = metadata.currentIndex;
             if (index < newIndex) {
               newIndex--;

@@ -88,7 +88,6 @@ class PlaylistMetadata {
     this.playbackPositionMs = 0,
     this.wasPlaying = false,
     this.removeAfterPlay = false,
-    this.temporarySongUnits,
     this.isQueue = false,
   });
 
@@ -130,10 +129,6 @@ class PlaylistMetadata {
   /// Whether to remove songs after playing
   final bool removeAfterPlay;
 
-  /// Temporary song units (for audio entries not in library)
-  /// Map of song unit ID to serialized JSON
-  final Map<String, Map<String, dynamic>>? temporarySongUnits;
-
   /// Whether this collection is a queue (vs a playlist)
   /// Queues appear in Queue Management, playlists appear in Playlists page
   final bool isQueue;
@@ -151,8 +146,7 @@ class PlaylistMetadata {
   bool get hasPlaybackState =>
       currentIndex != -1 ||
       playbackPositionMs != 0 ||
-      wasPlaying ||
-      temporarySongUnits != null;
+      wasPlaying;
 
   Map<String, dynamic> toJson() => _$PlaylistMetadataToJson(this);
 
@@ -166,7 +160,6 @@ class PlaylistMetadata {
     int? playbackPositionMs,
     bool? wasPlaying,
     bool? removeAfterPlay,
-    Map<String, Map<String, dynamic>>? temporarySongUnits,
     bool? isQueue,
   }) {
     return PlaylistMetadata(
@@ -179,7 +172,6 @@ class PlaylistMetadata {
       playbackPositionMs: playbackPositionMs ?? this.playbackPositionMs,
       wasPlaying: wasPlaying ?? this.wasPlaying,
       removeAfterPlay: removeAfterPlay ?? this.removeAfterPlay,
-      temporarySongUnits: temporarySongUnits ?? this.temporarySongUnits,
       isQueue: isQueue ?? this.isQueue,
     );
   }

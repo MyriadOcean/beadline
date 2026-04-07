@@ -5,8 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../i18n/translations.g.dart';
 
-import '../models/playlist_metadata.dart';
-import '../models/tag.dart';
+import '../models/tag_extensions.dart';
 import '../viewmodels/library_view_model.dart';
 import '../viewmodels/tag_view_model.dart';
 import 'song_picker_dialog.dart';
@@ -110,8 +109,8 @@ class PlaylistsManagementPageState extends State<PlaylistsManagementPage> {
     // Sort playlists by displayOrder
     final sorted = List<Tag>.from(playlistTags)
       ..sort(
-        (a, b) => (a.playlistMetadata?.displayOrder ?? 0).compareTo(
-          b.playlistMetadata?.displayOrder ?? 0,
+        (a, b) => (a.metadata?.displayOrder ?? 0).compareTo(
+          b.metadata?.displayOrder ?? 0,
         ),
       );
 
@@ -180,7 +179,7 @@ class PlaylistsManagementPageState extends State<PlaylistsManagementPage> {
             itemBuilder: (context, index) {
               final tag = sorted[index];
               final isSelected = tag.id == _selectedPlaylistId;
-              final metadata = tag.playlistMetadata;
+              final metadata = tag.metadata;
               final isLocked = metadata?.isLocked ?? false;
               final capturedTag = tag;
 
@@ -303,7 +302,7 @@ class PlaylistsManagementPageState extends State<PlaylistsManagementPage> {
           );
         }
 
-        final metadata = tag.playlistMetadata;
+        final metadata = tag.metadata;
         final items = metadata?.items ?? [];
         final hasSelection = tagViewModel.hasSelection;
 
@@ -357,9 +356,9 @@ class PlaylistsManagementPageState extends State<PlaylistsManagementPage> {
                               if (groupId != null) {
                                 // Find the PlaylistItem ID within the group's metadata
                                 final groupTag = tagViewModel.getTagById(groupId);
-                                final groupItems = groupTag?.playlistMetadata?.items ?? [];
+                                final groupItems = groupTag?.metadata?.items ?? [];
                                 final item = groupItems
-                                    .where((i) => i.type == PlaylistItemType.songUnit && i.targetId == songUnitId)
+                                    .where((i) => i.itemType == TagItemType.songUnit && i.targetId == songUnitId)
                                     .firstOrNull;
                                 if (item != null) {
                                   tagViewModel.removeFromCollection(groupId, item.id);
@@ -367,7 +366,7 @@ class PlaylistsManagementPageState extends State<PlaylistsManagementPage> {
                               } else {
                                 // Find the PlaylistItem ID for this song at root level
                                 final item = items
-                                    .where((i) => i.type == PlaylistItemType.songUnit && i.targetId == songUnitId)
+                                    .where((i) => i.itemType == TagItemType.songUnit && i.targetId == songUnitId)
                                     .firstOrNull;
                                 if (item != null) {
                                   _removeItem(context, playlistTagId, item.id);
@@ -396,8 +395,8 @@ class PlaylistsManagementPageState extends State<PlaylistsManagementPage> {
 
     // Collect groups from the playlist's items
     final groups = <Tag>[];
-    for (final item in tag.playlistMetadata?.items ?? []) {
-      if (item.type == PlaylistItemType.collectionReference) {
+    for (final item in tag.metadata?.items ?? []) {
+      if (item.itemType == TagItemType.tagReference) {
         final refTag = tagViewModel.getTagById(item.targetId);
         if (refTag != null && refTag.isGroup) {
           groups.add(refTag);
@@ -429,10 +428,10 @@ class PlaylistsManagementPageState extends State<PlaylistsManagementPage> {
   Widget _buildPlaylistHeader(
     BuildContext context,
     Tag tag,
-    List<PlaylistItem> items,
+    List<TagItem> items,
   ) {
     final theme = Theme.of(context);
-    final metadata = tag.playlistMetadata;
+    final metadata = tag.metadata;
     final isLocked = metadata?.isLocked ?? false;
     final tagViewModel = context.read<TagViewModel>();
 
@@ -653,7 +652,7 @@ class PlaylistsManagementPageState extends State<PlaylistsManagementPage> {
 
   /// Context menu for individual playlist items in the list
   Future<void> _showPlaylistItemContextMenu(BuildContext context, Offset position, Tag tag) {
-    final metadata = tag.playlistMetadata;
+    final metadata = tag.metadata;
     final isLocked = metadata?.isLocked ?? false;
     
     return showMenu<String>(
@@ -812,9 +811,9 @@ class PlaylistsManagementPageState extends State<PlaylistsManagementPage> {
         .firstOrNull;
 
     // Get current playlist items to exclude them from selection
-    final currentItems = currentPlaylist?.playlistMetadata?.items ?? [];
+    final currentItems = currentPlaylist?.metadata?.items ?? [];
     final excludeSongIds = currentItems
-        .where((item) => item.type == PlaylistItemType.songUnit)
+        .where((item) => item.itemType == TagItemType.songUnit)
         .map((item) => item.targetId)
         .toList();
 
@@ -838,7 +837,7 @@ class PlaylistsManagementPageState extends State<PlaylistsManagementPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              '${context.t.queue.songs.replaceAll('{count}', '${selectedSongIds.length}')} â†’ ${context.t.playlists.title}',
+              '${context.t.queue.songs.replaceAll('{count}', '${selectedSongIds.length}')} â†?${context.t.playlists.title}',
             ),
           ),
         );
@@ -921,7 +920,7 @@ class PlaylistsManagementPageState extends State<PlaylistsManagementPage> {
                 leading: const Icon(Icons.playlist_play),
                 title: Text(collection.name),
                 subtitle: Text(
-                  '${collection.playlistMetadata?.items.length ?? 0} ${context.t.common.items}',
+                  '${collection.metadata?.items.length ?? 0} ${context.t.common.items}',
                 ),
                 onTap: () async {
                   await tagViewModel.addCollectionReference(
@@ -1023,23 +1022,23 @@ class PlaylistsManagementPageState extends State<PlaylistsManagementPage> {
   // ===========================================================================
 
   /// Count total song units in a playlist metadata, including nested groups.
-  int _countSongUnits(PlaylistMetadata? metadata) {
+  int _countSongUnits(TagMetadata? metadata) {
     if (metadata == null) return 0;
     return _countSongUnitsRecursive(metadata.items, <String>{});
   }
 
-  int _countSongUnitsRecursive(List<PlaylistItem> items, Set<String> visited) {
+  int _countSongUnitsRecursive(List<TagItem> items, Set<String> visited) {
     final tagVM = context.read<TagViewModel>();
     var count = 0;
     for (final item in items) {
-      if (item.type == PlaylistItemType.songUnit) {
+      if (item.itemType == TagItemType.songUnit) {
         count++;
-      } else if (item.type == PlaylistItemType.collectionReference) {
+      } else if (item.itemType == TagItemType.tagReference) {
         if (visited.contains(item.targetId)) continue;
         visited.add(item.targetId);
         final refTag = tagVM.getTagById(item.targetId);
-        if (refTag != null && refTag.playlistMetadata != null) {
-          count += _countSongUnitsRecursive(refTag.playlistMetadata!.items, visited);
+        if (refTag != null && refTag.metadata != null) {
+          count += _countSongUnitsRecursive(refTag.metadata!.items, visited);
         }
       }
     }
@@ -1163,7 +1162,7 @@ class ReferenceSongList extends StatelessWidget {
   });
 
   final Tag refTag;
-  final List<PlaylistItem> refItems;
+  final List<TagItem> refItems;
   final ValueChanged<String> onPlaySong;
 
   @override
@@ -1172,7 +1171,7 @@ class ReferenceSongList extends StatelessWidget {
     final libraryVM = context.read<LibraryViewModel>();
 
     final songItems = refItems
-        .where((i) => i.type == PlaylistItemType.songUnit)
+        .where((i) => i.itemType == TagItemType.songUnit)
         .toList();
 
     if (songItems.isEmpty) {

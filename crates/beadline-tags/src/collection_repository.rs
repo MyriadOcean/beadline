@@ -13,7 +13,7 @@ use beadline_core::entity::song_unit_tag;
 use crate::entity::tag;
 use crate::error::TagError;
 use crate::model::collection::*;
-use crate::model::tag::TagType;
+use crate::model::tag::{Tag, TagType};
 use crate::repository::get_tag;
 
 // ---------------------------------------------------------------------------
@@ -89,28 +89,26 @@ pub async fn save_collection_metadata(
     Ok(())
 }
 
-/// Build a `Collection` from a tag model row by parsing its metadata JSON.
+/// Build a `Tag` (with collection metadata) from a tag model row.
 /// Returns `None` if the tag has no collection metadata.
-async fn model_to_collection(
+async fn model_to_collection_tag(
     conn: &DatabaseConnection,
     model: tag::Model,
-) -> Result<Option<Collection>, TagError> {
-    let metadata = match load_collection_metadata(model.playlist_metadata_json.as_deref())? {
-        Some(m) => m,
-        None => return Ok(None),
-    };
+) -> Result<Option<Tag>, TagError> {
+    // Only proceed if the tag has collection metadata
+    if model.playlist_metadata_json.is_none() {
+        return Ok(None);
+    }
 
     let tag = get_tag(conn, &model.id)
         .await?
         .ok_or_else(|| TagError::NotFound(model.id.clone()))?;
 
-    let collection_type = metadata.collection_type(model.is_group);
-
-    Ok(Some(Collection {
-        tag,
-        metadata,
-        collection_type,
-    }))
+    if tag.collection_metadata.is_some() {
+        Ok(Some(tag))
+    } else {
+        Ok(None)
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -126,7 +124,7 @@ pub async fn create_collection(
     name: String,
     parent_id: Option<String>,
     collection_type: CollectionType,
-) -> Result<Collection, TagError> {
+) -> Result<Tag, TagError> {
     if name.trim().is_empty() {
         return Err(TagError::Invalid("collection name must not be empty".into()));
     }
@@ -170,14 +168,14 @@ pub async fn create_collection(
 pub async fn get_collection(
     conn: &DatabaseConnection,
     id: &str,
-) -> Result<Option<Collection>, TagError> {
+) -> Result<Option<Tag>, TagError> {
     let result = tag::Entity::find_by_id(id.to_owned())
         .one(conn)
         .await
         .map_err(|e| TagError::Database(e.into()))?;
 
     match result {
-        Some(model) => model_to_collection(conn, model).await,
+        Some(model) => model_to_collection_tag(conn, model).await,
         None => Ok(None),
     }
 }
@@ -186,7 +184,7 @@ pub async fn get_collection(
 pub async fn get_collections(
     conn: &DatabaseConnection,
     filter_type: Option<CollectionType>,
-) -> Result<Vec<Collection>, TagError> {
+) -> Result<Vec<Tag>, TagError> {
     let models = tag::Entity::find()
         .filter(tag::Column::PlaylistMetadataJson.is_not_null())
         .order_by_asc(tag::Column::DisplayOrder)
@@ -197,13 +195,13 @@ pub async fn get_collections(
 
     let mut collections = Vec::new();
     for model in models {
-        if let Some(collection) = model_to_collection(conn, model).await? {
+        if let Some(tag) = model_to_collection_tag(conn, model).await? {
             if let Some(ref ft) = filter_type {
-                if &collection.collection_type != ft {
+                if tag.collection_type().as_ref() != Some(ft) {
                     continue;
                 }
             }
-            collections.push(collection);
+            collections.push(tag);
         }
     }
     Ok(collections)
@@ -215,13 +213,13 @@ pub async fn get_collection_items(
     conn: &DatabaseConnection,
     collection_id: &str,
 ) -> Result<Vec<CollectionItem>, TagError> {
-    let collection = get_collection(conn, collection_id)
+    let tag = get_collection(conn, collection_id)
         .await?
         .ok_or_else(|| {
             TagError::NotACollection(collection_id.to_owned())
         })?;
 
-    let mut items = collection.metadata.items;
+    let mut items = tag.collection_metadata.unwrap().items;
     items.sort_by_key(|item| item.order);
     Ok(items)
 }
@@ -243,11 +241,12 @@ pub async fn add_item_to_collection(
     target_id: &str,
     inherit_lock: bool,
 ) -> Result<CollectionItem, TagError> {
-    let mut collection = get_collection(conn, collection_id)
+    let tag = get_collection(conn, collection_id)
         .await?
         .ok_or_else(|| TagError::NotACollection(collection_id.to_owned()))?;
 
-    let order = collection.metadata.items.len() as i32;
+    let mut metadata = tag.collection_metadata.unwrap();
+    let order = metadata.items.len() as i32;
     let item = CollectionItem {
         id: uuid::Uuid::new_v4().to_string(),
         item_type,
@@ -256,11 +255,10 @@ pub async fn add_item_to_collection(
         inherit_lock,
     };
 
-    collection.metadata.items.push(item.clone());
-    collection.metadata.updated_at = now_iso8601();
+    metadata.items.push(item.clone());
+    metadata.updated_at = now_iso8601();
 
-    let is_group = matches!(collection.collection_type, CollectionType::Group);
-    save_collection_metadata(conn, collection_id, &collection.metadata, is_group).await?;
+    save_collection_metadata(conn, collection_id, &metadata, tag.is_group).await?;
 
     if item_type == CollectionItemType::SongUnit {
         create_collection_tag_association(conn, collection_id, target_id).await?;
@@ -279,22 +277,23 @@ pub async fn remove_item_from_collection(
     collection_id: &str,
     item_id: &str,
 ) -> Result<(), TagError> {
-    let mut collection = get_collection(conn, collection_id)
+    let tag = get_collection(conn, collection_id)
         .await?
         .ok_or_else(|| TagError::NotACollection(collection_id.to_owned()))?;
 
-    let idx = collection
-        .metadata
+    let mut metadata = tag.collection_metadata.unwrap();
+    let is_group = tag.is_group;
+
+    let idx = metadata
         .items
         .iter()
         .position(|i| i.id == item_id)
         .ok_or_else(|| TagError::CollectionItemNotFound(item_id.to_owned()))?;
 
-    let removed = collection.metadata.items.remove(idx);
-    collection.metadata.updated_at = now_iso8601();
+    let removed = metadata.items.remove(idx);
+    metadata.updated_at = now_iso8601();
 
-    let is_group = matches!(collection.collection_type, CollectionType::Group);
-    save_collection_metadata(conn, collection_id, &collection.metadata, is_group).await?;
+    save_collection_metadata(conn, collection_id, &metadata, is_group).await?;
 
     if removed.item_type == CollectionItemType::SongUnit {
         remove_collection_tag_association(conn, collection_id, &removed.target_id).await?;
@@ -316,15 +315,18 @@ pub async fn reorder_collection_items(
     collection_id: &str,
     item_ids: &[String],
 ) -> Result<(), TagError> {
-    let mut collection = get_collection(conn, collection_id)
+    let tag = get_collection(conn, collection_id)
         .await?
         .ok_or_else(|| TagError::NotACollection(collection_id.to_owned()))?;
 
+    let mut metadata = tag.collection_metadata.unwrap();
+    let is_group = tag.is_group;
+
     // Validate that item_ids contains exactly the same set of IDs as the collection.
-    if item_ids.len() != collection.metadata.items.len() {
+    if item_ids.len() != metadata.items.len() {
         return Err(TagError::Invalid(format!(
             "expected {} item IDs, got {}",
-            collection.metadata.items.len(),
+            metadata.items.len(),
             item_ids.len()
         )));
     }
@@ -341,17 +343,16 @@ pub async fn reorder_collection_items(
     }
 
     // Apply the new order to each item.
-    for item in &mut collection.metadata.items {
+    for item in &mut metadata.items {
         let new_order = order_map.get(item.id.as_str()).ok_or_else(|| {
             TagError::CollectionItemNotFound(item.id.clone())
         })?;
         item.order = *new_order;
     }
 
-    collection.metadata.updated_at = now_iso8601();
+    metadata.updated_at = now_iso8601();
 
-    let is_group = matches!(collection.collection_type, CollectionType::Group);
-    save_collection_metadata(conn, collection_id, &collection.metadata, is_group).await?;
+    save_collection_metadata(conn, collection_id, &metadata, is_group).await?;
 
     Ok(())
 }
@@ -362,15 +363,15 @@ pub async fn set_collection_lock(
     collection_id: &str,
     is_locked: bool,
 ) -> Result<(), TagError> {
-    let mut collection = get_collection(conn, collection_id)
+    let tag = get_collection(conn, collection_id)
         .await?
         .ok_or_else(|| TagError::NotACollection(collection_id.to_owned()))?;
 
-    collection.metadata.is_locked = is_locked;
-    collection.metadata.updated_at = now_iso8601();
+    let mut metadata = tag.collection_metadata.unwrap();
+    metadata.is_locked = is_locked;
+    metadata.updated_at = now_iso8601();
 
-    let is_group = matches!(collection.collection_type, CollectionType::Group);
-    save_collection_metadata(conn, collection_id, &collection.metadata, is_group).await?;
+    save_collection_metadata(conn, collection_id, &metadata, tag.is_group).await?;
 
     Ok(())
 }
@@ -390,17 +391,17 @@ pub async fn start_playing(
     start_index: i32,
     playback_position_ms: i64,
 ) -> Result<(), TagError> {
-    let mut collection = get_collection(conn, collection_id)
+    let tag = get_collection(conn, collection_id)
         .await?
         .ok_or_else(|| TagError::NotACollection(collection_id.to_owned()))?;
 
-    collection.metadata.current_index = start_index;
-    collection.metadata.playback_position_ms = playback_position_ms;
-    collection.metadata.was_playing = true;
-    collection.metadata.updated_at = now_iso8601();
+    let mut metadata = tag.collection_metadata.unwrap();
+    metadata.current_index = start_index;
+    metadata.playback_position_ms = playback_position_ms;
+    metadata.was_playing = true;
+    metadata.updated_at = now_iso8601();
 
-    let is_group = matches!(collection.collection_type, CollectionType::Group);
-    save_collection_metadata(conn, collection_id, &collection.metadata, is_group).await?;
+    save_collection_metadata(conn, collection_id, &metadata, tag.is_group).await?;
 
     Ok(())
 }
@@ -414,17 +415,17 @@ pub async fn stop_playing(
     conn: &DatabaseConnection,
     collection_id: &str,
 ) -> Result<(), TagError> {
-    let mut collection = get_collection(conn, collection_id)
+    let tag = get_collection(conn, collection_id)
         .await?
         .ok_or_else(|| TagError::NotACollection(collection_id.to_owned()))?;
 
-    collection.metadata.current_index = -1;
-    collection.metadata.playback_position_ms = 0;
-    collection.metadata.was_playing = false;
-    collection.metadata.updated_at = now_iso8601();
+    let mut metadata = tag.collection_metadata.unwrap();
+    metadata.current_index = -1;
+    metadata.playback_position_ms = 0;
+    metadata.was_playing = false;
+    metadata.updated_at = now_iso8601();
 
-    let is_group = matches!(collection.collection_type, CollectionType::Group);
-    save_collection_metadata(conn, collection_id, &collection.metadata, is_group).await?;
+    save_collection_metadata(conn, collection_id, &metadata, tag.is_group).await?;
 
     Ok(())
 }
@@ -441,17 +442,17 @@ pub async fn update_playback_state(
     playback_position_ms: i64,
     was_playing: bool,
 ) -> Result<(), TagError> {
-    let mut collection = get_collection(conn, collection_id)
+    let tag = get_collection(conn, collection_id)
         .await?
         .ok_or_else(|| TagError::NotACollection(collection_id.to_owned()))?;
 
-    collection.metadata.current_index = current_index;
-    collection.metadata.playback_position_ms = playback_position_ms;
-    collection.metadata.was_playing = was_playing;
-    collection.metadata.updated_at = now_iso8601();
+    let mut metadata = tag.collection_metadata.unwrap();
+    metadata.current_index = current_index;
+    metadata.playback_position_ms = playback_position_ms;
+    metadata.was_playing = was_playing;
+    metadata.updated_at = now_iso8601();
 
-    let is_group = matches!(collection.collection_type, CollectionType::Group);
-    save_collection_metadata(conn, collection_id, &collection.metadata, is_group).await?;
+    save_collection_metadata(conn, collection_id, &metadata, tag.is_group).await?;
 
     Ok(())
 }
@@ -506,6 +507,182 @@ async fn remove_collection_tag_association(
 }
 
 // ---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+// Batch operations
+// ---------------------------------------------------------------------------
+
+/// Deep-copy all items from `source_id` into `target_id`, recursively copying
+/// nested group references. Returns the number of song units copied.
+pub async fn deep_copy_collection(
+    conn: &DatabaseConnection,
+    source_id: &str,
+    target_id: &str,
+    max_depth: usize,
+) -> Result<u32, TagError> {
+    deep_copy_inner(conn, source_id, target_id, max_depth, &mut HashSet::new()).await
+}
+
+fn deep_copy_inner<'a>(
+    conn: &'a DatabaseConnection,
+    source_id: &'a str,
+    target_id: &'a str,
+    max_depth: usize,
+    visited: &'a mut HashSet<String>,
+) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<u32, TagError>> + Send + 'a>> {
+    Box::pin(async move {
+        if max_depth == 0 || visited.contains(source_id) {
+            return Ok(0);
+        }
+        visited.insert(source_id.to_owned());
+
+        let items = get_collection_items(conn, source_id).await?;
+        let mut count = 0u32;
+
+        for item in &items {
+            match item.item_type {
+                CollectionItemType::SongUnit => {
+                    add_item_to_collection(
+                        conn, target_id, CollectionItemType::SongUnit,
+                        &item.target_id, item.inherit_lock,
+                    ).await?;
+                    count += 1;
+                }
+                CollectionItemType::CollectionReference => {
+                    let ref_tag = get_collection(conn, &item.target_id).await?;
+                    if let Some(ref_tag) = ref_tag {
+                        let sub = create_collection(
+                            conn, ref_tag.value.clone(),
+                            Some(target_id.to_owned()),
+                            CollectionType::Group,
+                        ).await?;
+                        if ref_tag.is_locked {
+                            set_collection_lock(conn, &sub.id, true).await?;
+                        }
+                        let sub_count = deep_copy_inner(
+                            conn, &item.target_id, &sub.id, max_depth - 1, visited,
+                        ).await?;
+                        if sub_count == 0 {
+                            // Empty group — clean up
+                            use crate::repository::delete_tag;
+                            delete_tag(conn, &sub.id).await?;
+                        } else {
+                            count += sub_count;
+                        }
+                    }
+                }
+            }
+        }
+        Ok(count)
+    })
+}
+
+/// Remove duplicate song unit entries from a collection, keeping the first
+/// occurrence of each target_id. Returns the number of duplicates removed.
+pub async fn deduplicate_collection(
+    conn: &DatabaseConnection,
+    collection_id: &str,
+) -> Result<u32, TagError> {
+    let tag = get_collection(conn, collection_id)
+        .await?
+        .ok_or_else(|| TagError::NotACollection(collection_id.to_owned()))?;
+
+    let mut metadata = tag.collection_metadata.unwrap();
+    let original_len = metadata.items.len();
+
+    let mut seen = HashSet::new();
+    metadata.items.retain(|item| {
+        if item.item_type == CollectionItemType::SongUnit {
+            seen.insert(item.target_id.clone())
+        } else {
+            true // keep all references
+        }
+    });
+
+    let removed = (original_len - metadata.items.len()) as u32;
+    if removed > 0 {
+        // Re-number orders
+        for (i, item) in metadata.items.iter_mut().enumerate() {
+            item.order = i as i32;
+        }
+        metadata.updated_at = now_iso8601();
+        save_collection_metadata(conn, collection_id, &metadata, tag.is_group).await?;
+    }
+    Ok(removed)
+}
+
+/// Shuffle a collection's items. Locked sub-groups stay together as blocks.
+/// The `current_song_id` (if provided) will be placed at index 0 after shuffle.
+pub async fn shuffle_collection(
+    conn: &DatabaseConnection,
+    collection_id: &str,
+    current_song_id: Option<&str>,
+) -> Result<(), TagError> {
+    use rand::seq::SliceRandom;
+
+    let tag = get_collection(conn, collection_id)
+        .await?
+        .ok_or_else(|| TagError::NotACollection(collection_id.to_owned()))?;
+
+    let mut metadata = tag.collection_metadata.unwrap();
+    if metadata.items.len() <= 1 {
+        return Ok(());
+    }
+
+    // Separate locked groups from unlocked items
+    let mut locked_blocks: Vec<Vec<CollectionItem>> = Vec::new();
+    let mut unlocked: Vec<CollectionItem> = Vec::new();
+
+    for item in &metadata.items {
+        if item.item_type == CollectionItemType::CollectionReference {
+            if let Some(ref_tag) = get_collection(conn, &item.target_id).await? {
+                if ref_tag.is_locked {
+                    // This reference + its contents stay as a block
+                    locked_blocks.push(vec![item.clone()]);
+                    continue;
+                }
+            }
+        }
+        unlocked.push(item.clone());
+    }
+
+    use rand::Rng;
+    use rand::SeedableRng;
+
+    let mut rng = rand::rngs::StdRng::from_os_rng();
+    unlocked.shuffle(&mut rng);
+    locked_blocks.shuffle(&mut rng);
+
+    // Interleave: unlocked items with locked blocks inserted at random positions
+    let mut result = unlocked;
+    for block in locked_blocks {
+        let pos = if result.is_empty() { 0 } else { rng.random_range(0..=result.len()) };
+        for (i, item) in block.into_iter().enumerate() {
+            result.insert(pos + i, item);
+        }
+    }
+
+    // Move current song to front if specified
+    if let Some(song_id) = current_song_id {
+        if let Some(idx) = result.iter().position(|i| {
+            i.item_type == CollectionItemType::SongUnit && i.target_id == song_id
+        }) {
+            let item = result.remove(idx);
+            result.insert(0, item);
+        }
+    }
+
+    // Re-number orders
+    for (i, item) in result.iter_mut().enumerate() {
+        item.order = i as i32;
+    }
+
+    metadata.items = result;
+    metadata.updated_at = now_iso8601();
+    save_collection_metadata(conn, collection_id, &metadata, tag.is_group).await?;
+    Ok(())
+}
+
+// ---------------------------------------------------------------------------
 // Content resolution & circular reference detection
 // ---------------------------------------------------------------------------
 
@@ -542,13 +719,17 @@ fn resolve_content_inner<'a>(
         }
         visited.insert(collection_id.to_owned());
 
-        let collection = get_collection(conn, collection_id).await?;
-        let Some(collection) = collection else {
+        let tag = get_collection(conn, collection_id).await?;
+        let Some(tag) = tag else {
             return Ok(vec![]);
+        };
+        let metadata = match tag.collection_metadata {
+            Some(m) => m,
+            None => return Ok(vec![]),
         };
 
         let mut result = Vec::new();
-        for item in &collection.metadata.items {
+        for item in &metadata.items {
             match item.item_type {
                 CollectionItemType::SongUnit => {
                     result.push(item.target_id.clone());
@@ -606,12 +787,16 @@ fn check_circular<'a>(
         }
         visited.insert(current_id.to_owned());
 
-        let collection = get_collection(conn, current_id).await?;
-        let Some(collection) = collection else {
+        let tag = get_collection(conn, current_id).await?;
+        let Some(tag) = tag else {
             return Ok(false);
         };
+        let metadata = match tag.collection_metadata {
+            Some(m) => m,
+            None => return Ok(false),
+        };
 
-        for item in &collection.metadata.items {
+        for item in &metadata.items {
             if item.item_type == CollectionItemType::CollectionReference {
                 if item.target_id == search_for_id {
                     return Ok(true);

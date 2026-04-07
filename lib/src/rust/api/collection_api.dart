@@ -6,11 +6,11 @@
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 import '../frb_generated.dart';
+import 'tag_api.dart';
 
-// These functions are ignored because they are not marked as `pub`: `collection_type_to_string`, `item_type_to_string`, `string_to_collection_type`, `string_to_item_type`, `to_dart_collection_item`, `to_dart_collection`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `fmt`, `fmt`
+// These functions are ignored because they are not marked as `pub`: `domain_item_to_ffi`, `ffi_item_to_domain`, `str_to_ct`
 
-Future<DartCollection> createCollection({
+Future<Tag> createCollection({
   required String name,
   String? parentId,
   required String collectionType,
@@ -20,23 +20,20 @@ Future<DartCollection> createCollection({
   collectionType: collectionType,
 );
 
-Future<DartCollection?> getCollection({required String id}) =>
+Future<Tag?> getCollection({required String id}) =>
     RustLib.instance.api.crateApiCollectionApiGetCollection(id: id);
 
-Future<List<DartCollection>> getCollections({String? filterType}) => RustLib
-    .instance
-    .api
+Future<List<Tag>> getCollections({String? filterType}) => RustLib.instance.api
     .crateApiCollectionApiGetCollections(filterType: filterType);
 
-Future<List<DartCollectionItem>> getCollectionItems({
-  required String collectionId,
-}) => RustLib.instance.api.crateApiCollectionApiGetCollectionItems(
-  collectionId: collectionId,
-);
+Future<List<TagItem>> getCollectionItems({required String collectionId}) =>
+    RustLib.instance.api.crateApiCollectionApiGetCollectionItems(
+      collectionId: collectionId,
+    );
 
-Future<DartCollectionItem> addItemToCollection({
+Future<TagItem> addItemToCollection({
   required String collectionId,
-  required String itemType,
+  required TagItemType itemType,
   required String targetId,
   required bool inheritLock,
 }) => RustLib.instance.api.crateApiCollectionApiAddItemToCollection(
@@ -95,30 +92,12 @@ Future<void> updatePlaybackState({
   wasPlaying: wasPlaying,
 );
 
-/// Update the full collection metadata (items, playback state, flags).
-///
-/// This is the "bulk update" path used by the Dart `_updateActiveQueue()`
-/// method so that all metadata fields are persisted in a single write.
 Future<void> updateCollectionMetadata({
   required String collectionId,
-  required List<DartCollectionItem> items,
-  required int currentIndex,
-  required PlatformInt64 playbackPositionMs,
-  required bool wasPlaying,
-  required bool removeAfterPlay,
-  required bool isLocked,
-  required int displayOrder,
-  required bool isQueue,
+  required TagMetadata metadata,
 }) => RustLib.instance.api.crateApiCollectionApiUpdateCollectionMetadata(
   collectionId: collectionId,
-  items: items,
-  currentIndex: currentIndex,
-  playbackPositionMs: playbackPositionMs,
-  wasPlaying: wasPlaying,
-  removeAfterPlay: removeAfterPlay,
-  isLocked: isLocked,
-  displayOrder: displayOrder,
-  isQueue: isQueue,
+  metadata: metadata,
 );
 
 Future<List<String>> resolveContent({
@@ -137,121 +116,30 @@ Future<bool> wouldCreateCircularReference({
   targetId: targetId,
 );
 
-/// FRB-transparent collection representation.
-/// All fields are simple types so FRB generates a non-opaque Dart class.
-class DartCollection {
-  const DartCollection({
-    required this.id,
-    required this.name,
-    required this.collectionType,
-    required this.isLocked,
-    required this.displayOrder,
-    required this.items,
-    required this.currentIndex,
-    required this.playbackPositionMs,
-    required this.wasPlaying,
-    required this.removeAfterPlay,
-    required this.isQueue,
-    required this.createdAt,
-    required this.updatedAt,
-    this.parentId,
-    required this.aliasNames,
-    required this.includeChildren,
-    required this.isGroup,
-  });
-  final String id;
-  final String name;
-  final String collectionType;
-  final bool isLocked;
-  final int displayOrder;
-  final List<DartCollectionItem> items;
-  final int currentIndex;
-  final PlatformInt64 playbackPositionMs;
-  final bool wasPlaying;
-  final bool removeAfterPlay;
-  final bool isQueue;
-  final String createdAt;
-  final String updatedAt;
-  final String? parentId;
-  final List<String> aliasNames;
-  final bool includeChildren;
-  final bool isGroup;
+/// Deep-copy all items from source collection into target, recursively.
+/// Returns the number of song units copied.
+Future<int> deepCopyCollection({
+  required String sourceId,
+  required String targetId,
+  required BigInt maxDepth,
+}) => RustLib.instance.api.crateApiCollectionApiDeepCopyCollection(
+  sourceId: sourceId,
+  targetId: targetId,
+  maxDepth: maxDepth,
+);
 
-  @override
-  int get hashCode =>
-      id.hashCode ^
-      name.hashCode ^
-      collectionType.hashCode ^
-      isLocked.hashCode ^
-      displayOrder.hashCode ^
-      items.hashCode ^
-      currentIndex.hashCode ^
-      playbackPositionMs.hashCode ^
-      wasPlaying.hashCode ^
-      removeAfterPlay.hashCode ^
-      isQueue.hashCode ^
-      createdAt.hashCode ^
-      updatedAt.hashCode ^
-      parentId.hashCode ^
-      aliasNames.hashCode ^
-      includeChildren.hashCode ^
-      isGroup.hashCode;
+/// Remove duplicate song unit entries, keeping first occurrence. Returns removed count.
+Future<int> deduplicateCollection({required String collectionId}) => RustLib
+    .instance
+    .api
+    .crateApiCollectionApiDeduplicateCollection(collectionId: collectionId);
 
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is DartCollection &&
-          runtimeType == other.runtimeType &&
-          id == other.id &&
-          name == other.name &&
-          collectionType == other.collectionType &&
-          isLocked == other.isLocked &&
-          displayOrder == other.displayOrder &&
-          items == other.items &&
-          currentIndex == other.currentIndex &&
-          playbackPositionMs == other.playbackPositionMs &&
-          wasPlaying == other.wasPlaying &&
-          removeAfterPlay == other.removeAfterPlay &&
-          isQueue == other.isQueue &&
-          createdAt == other.createdAt &&
-          updatedAt == other.updatedAt &&
-          parentId == other.parentId &&
-          aliasNames == other.aliasNames &&
-          includeChildren == other.includeChildren &&
-          isGroup == other.isGroup;
-}
-
-/// FRB-transparent collection item representation.
-class DartCollectionItem {
-  const DartCollectionItem({
-    required this.id,
-    required this.itemType,
-    required this.targetId,
-    required this.order,
-    required this.inheritLock,
-  });
-  final String id;
-  final String itemType;
-  final String targetId;
-  final int order;
-  final bool inheritLock;
-
-  @override
-  int get hashCode =>
-      id.hashCode ^
-      itemType.hashCode ^
-      targetId.hashCode ^
-      order.hashCode ^
-      inheritLock.hashCode;
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is DartCollectionItem &&
-          runtimeType == other.runtimeType &&
-          id == other.id &&
-          itemType == other.itemType &&
-          targetId == other.targetId &&
-          order == other.order &&
-          inheritLock == other.inheritLock;
-}
+/// Shuffle a collection's items. Locked groups stay together as blocks.
+/// If current_song_id is provided, that song is placed at index 0.
+Future<void> shuffleCollection({
+  required String collectionId,
+  String? currentSongId,
+}) => RustLib.instance.api.crateApiCollectionApiShuffleCollection(
+  collectionId: collectionId,
+  currentSongId: currentSongId,
+);

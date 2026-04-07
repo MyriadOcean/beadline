@@ -9,7 +9,7 @@ import '../models/entry_point_file.dart';
 import '../models/library_location.dart';
 import '../models/song_unit.dart';
 import '../models/source_origin.dart';
-import '../models/tag.dart';
+import '../models/tag_extensions.dart';
 import '../repositories/library_repository.dart';
 import '../repositories/tag_repository.dart';
 import 'entry_point_file_service.dart';
@@ -259,9 +259,9 @@ class ConfigurationMigrationService {
       final tag = await repo.getTag(tagId);
       if (tag == null) return null;
       // Skip built-in tags (always exist, never exported)
-      if (tag.type == TagType.builtIn) return null;
+      if (tag.tagType == TagType.builtIn) return null;
       // Skip automatic tags (system-maintained)
-      if (tag.type == TagType.automatic) return null;
+      if (tag.tagType == TagType.automatic) return null;
       // Skip collections (playlists, queues, groups)
       if (tag.isCollection) return null;
       return tag.name;
@@ -296,8 +296,7 @@ class ConfigurationMigrationService {
 
   /// Create an entry point file in a specific directory.
   ///
-  /// Used when updating a song unit that already has an entry point file â€”
-  /// the new file is written back to the same directory as the old one,
+  /// Used when updating a song unit that already has an entry point file â€?  /// the new file is written back to the same directory as the old one,
   /// regardless of the current configuration mode.
   /// If [libraryLocations] is provided, updates the PathResolver for correct
   /// @library/ path generation.

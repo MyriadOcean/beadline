@@ -5,9 +5,8 @@ import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
 
 import '../data/playback_state_storage.dart';
-import '../models/playlist_metadata.dart';
 import '../models/song_unit.dart';
-import '../models/tag.dart';
+import '../models/tag_extensions.dart';
 import '../repositories/library_repository.dart';
 import '../repositories/settings_repository.dart';
 import '../repositories/tag_repository.dart';
@@ -17,7 +16,7 @@ import 'player_view_model.dart';
 
 /// ViewModel for playlist management with unified tag-based collections
 /// Handles playlist creation, song requests, and queue management
-/// Collections are tags with playlistMetadata, active queues have currentIndex >= 0
+/// Collections are tags with TagMetadata, active queues have currentIndex >= 0
 class PlaylistViewModel extends ChangeNotifier {
   PlaylistViewModel({
     required LibraryRepository libraryRepository,
@@ -68,38 +67,18 @@ class PlaylistViewModel extends ChangeNotifier {
   /// Load songs for the current active queue
   Future<void> _loadCurrentQueueSongs() async {
     final activeQueue = await _getActiveQueue();
-    if (activeQueue == null || activeQueue.playlistMetadata == null) {
+    if (activeQueue == null || activeQueue.metadata == null) {
       _currentQueueSongs = [];
       return;
     }
 
-    final metadata = activeQueue.playlistMetadata!;
+    final metadata = activeQueue.metadata!;
     final songUnits = <SongUnit>[];
 
     for (final item in metadata.items) {
-      if (item.type != PlaylistItemType.songUnit) continue;
+      if (item.itemType != TagItemType.songUnit) continue;
 
-      final songUnitId = item.targetId;
-
-      // Check if this is a temporary song unit
-      if (songUnitId.startsWith('temp_') &&
-          metadata.temporarySongUnits != null) {
-        final tempData = metadata.temporarySongUnits![songUnitId];
-        if (tempData != null) {
-          try {
-            final songUnit = SongUnit.fromJson(tempData);
-            songUnits.add(songUnit);
-            continue;
-          } catch (e) {
-            debugPrint(
-              'Failed to deserialize temporary song unit $songUnitId: $e',
-            );
-          }
-        }
-      }
-
-      // Try to load from library
-      final songUnit = await _libraryRepository.getSongUnit(songUnitId);
+      final songUnit = await _libraryRepository.getSongUnit(item.targetId);
       if (songUnit != null) {
         songUnits.add(songUnit);
       }
@@ -113,12 +92,12 @@ class PlaylistViewModel extends ChangeNotifier {
   }
 
   /// Update the active queue's metadata
-  Future<void> _updateActiveQueue(PlaylistMetadata updatedMetadata) async {
+  Future<void> _updateActiveQueue(TagMetadata updatedMetadata) async {
     final activeQueue = await _getActiveQueue();
     if (activeQueue == null) return;
 
     final updatedTag = activeQueue.copyWith(
-      playlistMetadata: updatedMetadata.copyWith(updatedAt: DateTime.now()),
+      metadata: updatedMetadata.copyWith(updatedAt: DateTime.now().toIso8601String()),
     );
 
     await _tagRepository.updateTag(updatedTag);
@@ -189,9 +168,9 @@ class PlaylistViewModel extends ChangeNotifier {
   /// Update cached values from active queue
   Future<void> _updateCachedValues() async {
     final activeQueue = await _getActiveQueue();
-    if (activeQueue?.playlistMetadata != null) {
-      _cachedCurrentIndex = activeQueue!.playlistMetadata!.currentIndex;
-      _cachedRemoveAfterPlay = activeQueue.playlistMetadata!.removeAfterPlay;
+    if (activeQueue?.metadata != null) {
+      _cachedCurrentIndex = activeQueue!.metadata!.currentIndex;
+      _cachedRemoveAfterPlay = activeQueue.metadata!.removeAfterPlay;
     } else {
       _cachedCurrentIndex = -1;
       _cachedRemoveAfterPlay = false;
@@ -228,8 +207,8 @@ class PlaylistViewModel extends ChangeNotifier {
 
           // Update the active queue
           final activeQueue = await _getActiveQueue();
-          if (activeQueue?.playlistMetadata != null) {
-            final metadata = activeQueue!.playlistMetadata!;
+          if (activeQueue?.metadata != null) {
+            final metadata = activeQueue!.metadata!;
             var newIndex = metadata.currentIndex;
             // Adjust current index if needed
             if (index < newIndex) {
@@ -278,9 +257,9 @@ class PlaylistViewModel extends ChangeNotifier {
   /// Should be called periodically during playback
   void updatePlaybackPosition(Duration position, bool isPlaying) async {
     final activeQueue = await _getActiveQueue();
-    if (activeQueue?.playlistMetadata == null) return;
+    if (activeQueue?.metadata == null) return;
 
-    final metadata = activeQueue!.playlistMetadata!;
+    final metadata = activeQueue!.metadata!;
     await _updateActiveQueue(
       metadata.copyWith(
         playbackPositionMs: position.inMilliseconds,
@@ -375,12 +354,12 @@ class PlaylistViewModel extends ChangeNotifier {
 
       // Save current queue's playback state
       final currentQueue = await _getActiveQueue();
-      if (currentQueue?.playlistMetadata != null) {
+      if (currentQueue?.metadata != null) {
         final currentPosition = playerVM.position.inMilliseconds;
         final isPlaying = playerVM.isPlaying;
 
         await _updateActiveQueue(
-          currentQueue!.playlistMetadata!.copyWith(
+          currentQueue!.metadata!.copyWith(
             playbackPositionMs: currentPosition,
             wasPlaying: isPlaying,
           ),
@@ -395,7 +374,7 @@ class PlaylistViewModel extends ChangeNotifier {
       notifyListeners();
 
       // Restore target queue's playback state
-      final targetMetadata = targetQueue.playlistMetadata;
+      final targetMetadata = targetQueue.metadata;
       if (targetMetadata != null &&
           targetMetadata.currentIndex >= 0 &&
           targetMetadata.currentIndex < _currentQueueSongs.length) {
@@ -445,7 +424,7 @@ class PlaylistViewModel extends ChangeNotifier {
         return;
       }
 
-      final metadata = sourceQueue.playlistMetadata!;
+      final metadata = sourceQueue.metadata!;
 
       // Create new collection with copied metadata
       final newTag = await _tagRepository.createCollection(
@@ -457,12 +436,9 @@ class PlaylistViewModel extends ChangeNotifier {
         currentIndex: -1, // Reset playback position
         playbackPositionMs: 0,
         wasPlaying: false,
-        temporarySongUnits: metadata.temporarySongUnits != null
-            ? Map.from(metadata.temporarySongUnits!)
-            : null,
       );
 
-      final updatedTag = newTag.copyWith(playlistMetadata: newMetadata);
+      final updatedTag = newTag.copyWith(metadata: newMetadata);
       await _tagRepository.updateTag(updatedTag);
 
       notifyListeners();
@@ -510,18 +486,19 @@ class PlaylistViewModel extends ChangeNotifier {
       }
 
       // Create a playlist item
-      final metadata = playlistTag.playlistMetadata ?? PlaylistMetadata.empty();
+      final metadata = playlistTag.metadata ?? TagMetadataExtensions.empty();
       final nextOrder = metadata.items.isEmpty
           ? 0
           : metadata.items.map((i) => i.order).reduce((a, b) => a > b ? a : b) +
                 1;
 
-      final item = PlaylistItem(
+      final item = TagItem(
         id: _uuid.v4(),
-        type: PlaylistItemType.songUnit,
+        itemType: TagItemType.songUnit,
         targetId: songUnitId,
         order: nextOrder,
-      );
+        inheritLock: true,
+        );
 
       await _tagRepository.addItemToPlaylist(playlistId, item);
     } catch (e) {
@@ -566,18 +543,19 @@ class PlaylistViewModel extends ChangeNotifier {
         return;
       }
 
-      final metadata = parentTag.playlistMetadata ?? PlaylistMetadata.empty();
+      final metadata = parentTag.metadata ?? TagMetadataExtensions.empty();
       final nextOrder = metadata.items.isEmpty
           ? 0
           : metadata.items.map((i) => i.order).reduce((a, b) => a > b ? a : b) +
                 1;
 
-      final item = PlaylistItem(
+      final item = TagItem(
         id: _uuid.v4(),
-        type: PlaylistItemType.collectionReference,
+        itemType: TagItemType.tagReference,
         targetId: targetPlaylistId,
         order: nextOrder,
-      );
+        inheritLock: true,
+        );
 
       await _tagRepository.addItemToPlaylist(parentPlaylistId, item);
     } catch (e) {
@@ -611,11 +589,11 @@ class PlaylistViewModel extends ChangeNotifier {
     final tag = await _tagRepository.getCollectionTag(currentId);
     if (tag == null || !tag.isPlaylist) return false;
 
-    final metadata = tag.playlistMetadata;
+    final metadata = tag.metadata;
     if (metadata == null) return false;
 
     for (final item in metadata.items) {
-      if (item.type == PlaylistItemType.collectionReference) {
+      if (item.itemType == TagItemType.tagReference) {
         if (item.targetId == searchForId) return true;
         if (await _checkCircularReference(
           item.targetId,
@@ -641,7 +619,7 @@ class PlaylistViewModel extends ChangeNotifier {
         return;
       }
 
-      final metadata = tag.playlistMetadata ?? PlaylistMetadata.empty();
+      final metadata = tag.metadata ?? TagMetadataExtensions.empty();
       await _tagRepository.setPlaylistLock(playlistId, !metadata.isLocked);
       notifyListeners();
     } catch (e) {
@@ -664,21 +642,21 @@ class PlaylistViewModel extends ChangeNotifier {
     final tag = await _tagRepository.getCollectionTag(playlistId);
     if (tag == null || !tag.isCollection) return [];
 
-    final metadata = tag.playlistMetadata;
+    final metadata = tag.metadata;
     if (metadata == null) return [];
 
     final result = <SongUnit>[];
 
     for (final item in metadata.items) {
-      switch (item.type) {
-        case PlaylistItemType.songUnit:
+      switch (item.itemType) {
+        case TagItemType.songUnit:
           final songUnit = await _libraryRepository.getSongUnit(item.targetId);
           if (songUnit != null) {
             result.add(songUnit);
           }
           break;
 
-        case PlaylistItemType.collectionReference:
+        case TagItemType.tagReference:
           // Recursively resolve referenced collection
           final nestedSongs = await resolvePlaylistContent(
             item.targetId,
@@ -708,7 +686,7 @@ class PlaylistViewModel extends ChangeNotifier {
       }
 
       final activeQueue = await _getActiveQueue();
-      if (activeQueue?.playlistMetadata == null) {
+      if (activeQueue?.metadata == null) {
         _isLoading = false;
         return;
       }
@@ -718,16 +696,17 @@ class PlaylistViewModel extends ChangeNotifier {
 
       // Convert songs to playlist items
       final items = _currentQueueSongs.asMap().entries.map((entry) {
-        return PlaylistItem(
+        return TagItem(
           id: _uuid.v4(),
-          type: PlaylistItemType.songUnit,
+          itemType: TagItemType.songUnit,
           targetId: entry.value.id,
           order: entry.key,
-        );
+          inheritLock: true,
+          );
       }).toList();
 
       await _updateActiveQueue(
-        activeQueue!.playlistMetadata!.copyWith(
+        activeQueue!.metadata!.copyWith(
           items: items,
           currentIndex: _currentQueueSongs.isNotEmpty ? 0 : -1,
         ),
@@ -769,28 +748,20 @@ class PlaylistViewModel extends ChangeNotifier {
     try {
       _error = null;
       final activeQueue = await _getActiveQueue();
-      if (activeQueue?.playlistMetadata == null) return false;
+      if (activeQueue?.metadata == null) return false;
 
-      final metadata = activeQueue!.playlistMetadata!;
+      final metadata = activeQueue!.metadata!;
       final wasEmpty = _currentQueueSongs.isEmpty;
       _currentQueueSongs = [..._currentQueueSongs, songUnit];
 
       // Create new playlist item
-      final newItem = PlaylistItem(
+      final newItem = TagItem(
         id: _uuid.v4(),
-        type: PlaylistItemType.songUnit,
+        itemType: TagItemType.songUnit,
         targetId: songUnit.id,
         order: metadata.items.length,
-      );
-
-      // Separate temporary song units
-      final temporarySongUnits = <String, Map<String, dynamic>>{};
-      if (metadata.temporarySongUnits != null) {
-        temporarySongUnits.addAll(metadata.temporarySongUnits!);
-      }
-      if (songUnit.id.startsWith('temp_')) {
-        temporarySongUnits[songUnit.id] = songUnit.toJson();
-      }
+        inheritLock: true,
+        );
 
       final newIndex = metadata.currentIndex < 0 ? 0 : metadata.currentIndex;
 
@@ -798,9 +769,6 @@ class PlaylistViewModel extends ChangeNotifier {
         metadata.copyWith(
           items: [...metadata.items, newItem],
           currentIndex: newIndex,
-          temporarySongUnits: temporarySongUnits.isNotEmpty
-              ? temporarySongUnits
-              : null,
         ),
       );
 
@@ -826,20 +794,21 @@ class PlaylistViewModel extends ChangeNotifier {
       }
 
       final activeQueue = await _getActiveQueue();
-      if (activeQueue?.playlistMetadata == null) return;
+      if (activeQueue?.metadata == null) return;
 
-      final metadata = activeQueue!.playlistMetadata!;
+      final metadata = activeQueue!.metadata!;
 
       if (_currentQueueSongs.isEmpty || metadata.currentIndex < 0) {
         // Queue is empty, just add to the beginning
         _currentQueueSongs = [songUnit];
 
-        final newItem = PlaylistItem(
+        final newItem = TagItem(
           id: _uuid.v4(),
-          type: PlaylistItemType.songUnit,
+          itemType: TagItemType.songUnit,
           targetId: songUnit.id,
           order: 0,
-        );
+          inheritLock: true,
+          );
 
         await _updateActiveQueue(
           metadata.copyWith(items: [newItem], currentIndex: 0),
@@ -854,12 +823,13 @@ class PlaylistViewModel extends ChangeNotifier {
         ];
 
         // Create new item and reorder
-        final newItem = PlaylistItem(
+        final newItem = TagItem(
           id: _uuid.v4(),
-          type: PlaylistItemType.songUnit,
+          itemType: TagItemType.songUnit,
           targetId: songUnit.id,
           order: insertIndex,
-        );
+          inheritLock: true,
+          );
 
         final updatedItems = [
           ...metadata.items.sublist(0, insertIndex),
@@ -883,9 +853,9 @@ class PlaylistViewModel extends ChangeNotifier {
   /// Set playback mode
   void setPlaybackMode(PlaybackMode mode) async {
     final activeQueue = await _getActiveQueue();
-    if (activeQueue?.playlistMetadata == null) return;
+    if (activeQueue?.metadata == null) return;
 
-    final metadata = activeQueue!.playlistMetadata!;
+    final metadata = activeQueue!.metadata!;
 
     // Disable repeat modes when remove after play is enabled
     if (metadata.removeAfterPlay &&
@@ -950,9 +920,9 @@ class PlaylistViewModel extends ChangeNotifier {
   /// Set whether to remove song from queue after playing
   void setRemoveAfterPlay(bool value) async {
     final activeQueue = await _getActiveQueue();
-    if (activeQueue?.playlistMetadata == null) return;
+    if (activeQueue?.metadata == null) return;
 
-    final metadata = activeQueue!.playlistMetadata!;
+    final metadata = activeQueue!.metadata!;
 
     // Disable repeat modes when remove after play is enabled
     if (value &&
@@ -972,9 +942,9 @@ class PlaylistViewModel extends ChangeNotifier {
     if (_currentQueueSongs.length <= 1) return;
 
     final activeQueue = await _getActiveQueue();
-    if (activeQueue?.playlistMetadata == null) return;
+    if (activeQueue?.metadata == null) return;
 
-    final metadata = activeQueue!.playlistMetadata!;
+    final metadata = activeQueue!.metadata!;
 
     // Save current song if playing
     final currentSong = currentSongUnit;
@@ -1033,12 +1003,13 @@ class PlaylistViewModel extends ChangeNotifier {
 
     // Rebuild items list
     final newItems = _currentQueueSongs.asMap().entries.map((entry) {
-      return PlaylistItem(
+      return TagItem(
         id: _uuid.v4(),
-        type: PlaylistItemType.songUnit,
+        itemType: TagItemType.songUnit,
         targetId: entry.value.id,
         order: entry.key,
-      );
+        inheritLock: true,
+        );
     }).toList();
 
     await _updateActiveQueue(
@@ -1059,7 +1030,7 @@ class PlaylistViewModel extends ChangeNotifier {
 
     // Group songs by locked playlists
     for (final collectionTag in collectionTags) {
-      final metadata = collectionTag.playlistMetadata;
+      final metadata = collectionTag.metadata;
       if (metadata == null || !metadata.isLocked) continue;
 
       final playlistSongs = <SongUnit>[];
@@ -1104,11 +1075,11 @@ class PlaylistViewModel extends ChangeNotifier {
     final tag = await _tagRepository.getCollectionTag(playlistId);
     if (tag == null || !tag.isCollection) return false;
 
-    final metadata = tag.playlistMetadata;
+    final metadata = tag.metadata;
     if (metadata == null) return false;
 
     for (final item in metadata.items) {
-      if (item.type == PlaylistItemType.songUnit &&
+      if (item.itemType == TagItemType.songUnit &&
           item.targetId == songUnitId) {
         return true;
       }
@@ -1123,9 +1094,9 @@ class PlaylistViewModel extends ChangeNotifier {
     if (_currentQueueSongs.length <= 1) return 0;
 
     final activeQueue = await _getActiveQueue();
-    if (activeQueue?.playlistMetadata == null) return 0;
+    if (activeQueue?.metadata == null) return 0;
 
-    final metadata = activeQueue!.playlistMetadata!;
+    final metadata = activeQueue!.metadata!;
 
     // Save current song if playing
     final currentSong = currentSongUnit;
@@ -1161,12 +1132,13 @@ class PlaylistViewModel extends ChangeNotifier {
     if (removedCount > 0) {
       // Rebuild items list
       final newItems = _currentQueueSongs.asMap().entries.map((entry) {
-        return PlaylistItem(
+        return TagItem(
           id: _uuid.v4(),
-          type: PlaylistItemType.songUnit,
+          itemType: TagItemType.songUnit,
           targetId: entry.value.id,
           order: entry.key,
-        );
+          inheritLock: true,
+          );
       }).toList();
 
       await _updateActiveQueue(
@@ -1202,9 +1174,9 @@ class PlaylistViewModel extends ChangeNotifier {
     }
 
     final activeQueue = await _getActiveQueue();
-    if (activeQueue?.playlistMetadata == null) return null;
+    if (activeQueue?.metadata == null) return null;
 
-    final metadata = activeQueue!.playlistMetadata!;
+    final metadata = activeQueue!.metadata!;
     var newIndex = metadata.currentIndex;
 
     switch (_playbackMode) {
@@ -1243,9 +1215,9 @@ class PlaylistViewModel extends ChangeNotifier {
     if (_currentQueueSongs.isEmpty) return;
 
     final activeQueue = await _getActiveQueue();
-    if (activeQueue?.playlistMetadata == null) return;
+    if (activeQueue?.metadata == null) return;
 
-    final metadata = activeQueue!.playlistMetadata!;
+    final metadata = activeQueue!.metadata!;
     var newIndex = metadata.currentIndex;
 
     switch (_playbackMode) {
@@ -1280,9 +1252,9 @@ class PlaylistViewModel extends ChangeNotifier {
     if (_currentQueueSongs.isEmpty) return;
 
     final activeQueue = await _getActiveQueue();
-    if (activeQueue?.playlistMetadata == null) return;
+    if (activeQueue?.metadata == null) return;
 
-    final metadata = activeQueue!.playlistMetadata!;
+    final metadata = activeQueue!.metadata!;
     var newIndex = metadata.currentIndex;
 
     switch (_playbackMode) {
@@ -1324,10 +1296,10 @@ class PlaylistViewModel extends ChangeNotifier {
     if (index < 0 || index >= _currentQueueSongs.length) return;
 
     final activeQueue = await _getActiveQueue();
-    if (activeQueue?.playlistMetadata == null) return;
+    if (activeQueue?.metadata == null) return;
 
     await _updateActiveQueue(
-      activeQueue!.playlistMetadata!.copyWith(currentIndex: index),
+      activeQueue!.metadata!.copyWith(currentIndex: index),
     );
     await _updateCachedValues();
     notifyListeners();
@@ -1341,9 +1313,9 @@ class PlaylistViewModel extends ChangeNotifier {
     }
 
     final activeQueue = await _getActiveQueue();
-    if (activeQueue?.playlistMetadata == null) return false;
+    if (activeQueue?.metadata == null) return false;
 
-    final metadata = activeQueue!.playlistMetadata!;
+    final metadata = activeQueue!.metadata!;
     final wasCurrentlyPlaying = index == metadata.currentIndex;
 
     _currentQueueSongs = [
@@ -1363,12 +1335,13 @@ class PlaylistViewModel extends ChangeNotifier {
 
     // Rebuild items list
     final newItems = _currentQueueSongs.asMap().entries.map((entry) {
-      return PlaylistItem(
+      return TagItem(
         id: _uuid.v4(),
-        type: PlaylistItemType.songUnit,
+        itemType: TagItemType.songUnit,
         targetId: entry.value.id,
         order: entry.key,
-      );
+        inheritLock: true,
+        );
     }).toList();
 
     await _updateActiveQueue(
@@ -1387,9 +1360,9 @@ class PlaylistViewModel extends ChangeNotifier {
     if (oldIndex == newIndex) return;
 
     final activeQueue = await _getActiveQueue();
-    if (activeQueue?.playlistMetadata == null) return;
+    if (activeQueue?.metadata == null) return;
 
-    final metadata = activeQueue!.playlistMetadata!;
+    final metadata = activeQueue!.metadata!;
 
     final songUnit = _currentQueueSongs[oldIndex];
     final newQueue = List<SongUnit>.from(_currentQueueSongs);
@@ -1409,12 +1382,13 @@ class PlaylistViewModel extends ChangeNotifier {
 
     // Rebuild items list
     final newItems = _currentQueueSongs.asMap().entries.map((entry) {
-      return PlaylistItem(
+      return TagItem(
         id: _uuid.v4(),
-        type: PlaylistItemType.songUnit,
+        itemType: TagItemType.songUnit,
         targetId: entry.value.id,
         order: entry.key,
-      );
+        inheritLock: true,
+        );
     }).toList();
 
     await _updateActiveQueue(
@@ -1428,11 +1402,11 @@ class PlaylistViewModel extends ChangeNotifier {
   /// Clear the queue
   Future<void> clearQueue() async {
     final activeQueue = await _getActiveQueue();
-    if (activeQueue?.playlistMetadata == null) return;
+    if (activeQueue?.metadata == null) return;
 
     _currentQueueSongs = [];
     await _updateActiveQueue(
-      activeQueue!.playlistMetadata!.copyWith(items: [], currentIndex: -1),
+      activeQueue!.metadata!.copyWith(items: [], currentIndex: -1),
     );
 
     await _updateCachedValues();

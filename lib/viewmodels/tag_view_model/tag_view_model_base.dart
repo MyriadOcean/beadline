@@ -3,9 +3,8 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
 import '../../data/playback_state_storage.dart';
-import '../../models/playlist_metadata.dart';
 import '../../models/song_unit.dart';
-import '../../models/tag.dart';
+import '../../models/tag_extensions.dart';
 import '../../repositories/library_repository.dart';
 import '../../repositories/settings_repository.dart';
 import '../../repositories/tag_repository.dart' show TagRepository, TagEvent;
@@ -183,8 +182,8 @@ abstract class TagViewModelBase extends ChangeNotifier {
 
   /// Update the active queue's metadata
   @protected
-  Future<void> updateActiveQueue(PlaylistMetadata updatedMetadata) async {
-    final updated = updatedMetadata.copyWith(updatedAt: DateTime.now());
+  Future<void> updateActiveQueue(TagMetadata updatedMetadata) async {
+    final updated = updatedMetadata.copyWith(updatedAt: DateTime.now().toIso8601String());
     await tagRepository.updateCollectionMetadata(activeQueueIdValue, updated);
   }
 
@@ -192,9 +191,9 @@ abstract class TagViewModelBase extends ChangeNotifier {
   @protected
   Future<void> updateCachedValues() async {
     final aq = await getActiveQueue();
-    if (aq?.playlistMetadata != null) {
-      cachedCurrentIndex = aq!.playlistMetadata!.currentIndex;
-      cachedRemoveAfterPlay = aq.playlistMetadata!.removeAfterPlay;
+    if (aq?.metadata != null) {
+      cachedCurrentIndex = aq!.metadata!.currentIndex;
+      cachedRemoveAfterPlay = aq.metadata!.removeAfterPlay;
     } else {
       cachedCurrentIndex = -1;
       cachedRemoveAfterPlay = false;
@@ -204,7 +203,7 @@ abstract class TagViewModelBase extends ChangeNotifier {
   /// Categorize a single tag into the appropriate list
   @protected
   void categorizeTag(Tag tag) {
-    switch (tag.type) {
+    switch (tag.tagType) {
       case TagType.builtIn:
         builtInTagsList = [...builtInTagsList, tag];
       case TagType.user:
@@ -218,10 +217,10 @@ abstract class TagViewModelBase extends ChangeNotifier {
   @protected
   void recategorizeTags() {
     builtInTagsList =
-        allTagsList.where((t) => t.type == TagType.builtIn).toList();
-    userTagsList = allTagsList.where((t) => t.type == TagType.user).toList();
+        allTagsList.where((t) => t.tagType == TagType.builtIn).toList();
+    userTagsList = allTagsList.where((t) => t.tagType == TagType.user).toList();
     automaticTagsList =
-        allTagsList.where((t) => t.type == TagType.automatic).toList();
+        allTagsList.where((t) => t.tagType == TagType.automatic).toList();
   }
 
   /// Clear any error state

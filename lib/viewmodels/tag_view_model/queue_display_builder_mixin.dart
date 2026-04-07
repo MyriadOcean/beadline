@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import '../../models/playlist_metadata.dart';
+import '../../models/tag_extensions.dart';
 import '../../models/song_unit.dart';
 import 'queue_display_item.dart';
 import 'tag_view_model_base.dart';
@@ -13,40 +13,19 @@ mixin QueueDisplayBuilderMixin on TagViewModelBase {
   /// Load songs for the current active queue (implements base abstract method)
   Future<void> loadCurrentQueueSongsImpl() async {
     final aq = await getActiveQueue();
-    if (aq == null || aq.playlistMetadata == null) {
+    if (aq == null || aq.metadata == null) {
       currentQueueSongsList = [];
       queueDisplayItemsList = [];
       return;
     }
 
-    final metadata = aq.playlistMetadata!;
+    final metadata = aq.metadata!;
     final songUnits = <SongUnit>[];
     final displayItems = <QueueDisplayItem>[];
 
     for (final item in metadata.items) {
-      if (item.type == PlaylistItemType.songUnit) {
+      if (item.itemType == TagItemType.songUnit) {
         final songUnitId = item.targetId;
-        if (songUnitId.startsWith('temp_') &&
-            metadata.temporarySongUnits != null) {
-          final tempData = metadata.temporarySongUnits![songUnitId];
-          if (tempData != null) {
-            try {
-              final songUnit = SongUnit.fromJson(tempData);
-              displayItems.add(QueueDisplayItem.song(
-                songUnit: songUnit,
-                flatIndex: songUnits.length,
-                playlistItemId: item.id,
-              ));
-              songUnits.add(songUnit);
-              continue;
-            } catch (e) {
-              debugPrint(
-                'Failed to deserialize temporary song unit $songUnitId: $e',
-              );
-            }
-          }
-        }
-
         final songUnit = await libraryRepository.getSongUnit(songUnitId);
         if (songUnit != null) {
           displayItems.add(QueueDisplayItem.song(
@@ -56,11 +35,10 @@ mixin QueueDisplayBuilderMixin on TagViewModelBase {
           ));
           songUnits.add(songUnit);
         }
-      } else if (item.type == PlaylistItemType.collectionReference) {
+      } else if (item.itemType == TagItemType.tagReference) {
         final groupDisplayItem = await buildGroupDisplayItem(
           item.targetId,
           songUnits,
-          temporarySongUnits: metadata.temporarySongUnits,
         );
         if (groupDisplayItem != null) {
           displayItems.add(groupDisplayItem);
@@ -82,7 +60,6 @@ mixin QueueDisplayBuilderMixin on TagViewModelBase {
     String groupId,
     List<SongUnit> flatSongList, {
     int depth = 0,
-    Map<String, Map<String, dynamic>>? temporarySongUnits,
   }) async {
     if (depth > 10) {
       debugPrint('Max depth exceeded for group $groupId');
@@ -91,28 +68,15 @@ mixin QueueDisplayBuilderMixin on TagViewModelBase {
 
     final groupTag = await tagRepository.getCollectionTag(groupId);
     if (groupTag == null) return null;
-    final groupMetadata = groupTag.playlistMetadata;
+    final groupMetadata = groupTag.metadata;
     if (groupMetadata == null) return null;
 
     final subItems = <QueueDisplayItem>[];
     final allSongs = <SongUnit>[];
 
     for (final item in groupMetadata.items) {
-      if (item.type == PlaylistItemType.songUnit) {
-        SongUnit? songUnit;
-        if (item.targetId.startsWith('temp_') && temporarySongUnits != null) {
-          final tempData = temporarySongUnits[item.targetId];
-          if (tempData != null) {
-            try {
-              songUnit = SongUnit.fromJson(tempData);
-            } catch (e) {
-              debugPrint(
-                'Failed to deserialize temporary song unit ${item.targetId}: $e',
-              );
-            }
-          }
-        }
-        songUnit ??= await libraryRepository.getSongUnit(item.targetId);
+      if (item.itemType == TagItemType.songUnit) {
+        final songUnit = await libraryRepository.getSongUnit(item.targetId);
         if (songUnit != null) {
           subItems.add(QueueDisplayItem.song(
             songUnit: songUnit,
@@ -123,12 +87,11 @@ mixin QueueDisplayBuilderMixin on TagViewModelBase {
           flatSongList.add(songUnit);
           allSongs.add(songUnit);
         }
-      } else if (item.type == PlaylistItemType.collectionReference) {
+      } else if (item.itemType == TagItemType.tagReference) {
         final subGroup = await buildGroupDisplayItem(
           item.targetId,
           flatSongList,
           depth: depth + 1,
-          temporarySongUnits: temporarySongUnits,
         );
         if (subGroup != null) {
           subItems.add(subGroup);
@@ -176,14 +139,14 @@ mixin QueueDisplayBuilderMixin on TagViewModelBase {
     String collectionId,
   ) async {
     final collection = await tagRepository.getCollectionTag(collectionId);
-    if (collection == null || collection.playlistMetadata == null) return [];
+    if (collection == null || collection.metadata == null) return [];
 
-    final metadata = collection.playlistMetadata!;
+    final metadata = collection.metadata!;
     final songUnits = <SongUnit>[];
     final displayItems = <QueueDisplayItem>[];
 
     for (final item in metadata.items) {
-      if (item.type == PlaylistItemType.songUnit) {
+      if (item.itemType == TagItemType.songUnit) {
         final songUnit = await libraryRepository.getSongUnit(item.targetId);
         if (songUnit != null) {
           displayItems.add(QueueDisplayItem.song(
@@ -193,11 +156,10 @@ mixin QueueDisplayBuilderMixin on TagViewModelBase {
           ));
           songUnits.add(songUnit);
         }
-      } else if (item.type == PlaylistItemType.collectionReference) {
+      } else if (item.itemType == TagItemType.tagReference) {
         final groupDisplayItem = await buildGroupDisplayItem(
           item.targetId,
           songUnits,
-          temporarySongUnits: metadata.temporarySongUnits,
         );
         if (groupDisplayItem != null) {
           displayItems.add(groupDisplayItem);

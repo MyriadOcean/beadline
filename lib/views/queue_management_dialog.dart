@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../i18n/translations.g.dart';
-import '../models/playlist_metadata.dart';
 import '../models/song_unit.dart';
-import '../models/tag.dart';
+import '../models/tag_extensions.dart';
 import '../viewmodels/library_view_model.dart';
 import '../viewmodels/player_view_model.dart';
 import '../viewmodels/tag_view_model.dart';
@@ -422,7 +421,7 @@ class _QueueDisplayItem {
        flatIndex = -1;
 
   final _DisplayItemType type;
-  final PlaylistItem playlistItem;
+  final TagItem playlistItem;
   final String songTitle;
   final String songArtist;
   final int flatIndex;
@@ -491,7 +490,7 @@ class _QueueContentViewState extends State<_QueueContentView> {
     setState(() => _isLoading = true);
     try {
       final tag = await widget.tagVM.activeQueue;
-      if (tag == null || tag.playlistMetadata == null) {
+      if (tag == null || tag.metadata == null) {
         setState(() {
           _displayItems = [];
           _isLoading = false;
@@ -499,18 +498,18 @@ class _QueueContentViewState extends State<_QueueContentView> {
         return;
       }
 
-      final metadata = tag.playlistMetadata!;
+      final metadata = tag.metadata!;
       final items = <_QueueDisplayItem>[];
       var flatIndex = 0;
 
       for (final item in metadata.items) {
-        if (item.type == PlaylistItemType.collectionReference) {
+        if (item.itemType == TagItemType.tagReference) {
           final groupTag = await widget.tagVM.getTagAsync(item.targetId);
           if (groupTag != null && groupTag.isCollection) {
-            final groupMeta = groupTag.playlistMetadata!;
+            final groupMeta = groupTag.metadata!;
             final groupSongs = <_GroupSongInfo>[];
             for (final groupItem in groupMeta.items) {
-              if (groupItem.type == PlaylistItemType.songUnit) {
+              if (groupItem.itemType == TagItemType.songUnit) {
                 final su = await widget.libraryVM.getSongUnit(
                   groupItem.targetId,
                 );

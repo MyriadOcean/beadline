@@ -42,8 +42,12 @@ async fn load_aliases(conn: &DatabaseConnection, tag_id: &str) -> Result<Vec<Str
 }
 
 /// Convert a `tag::Model` + its aliases into a domain `Tag`.
+/// Also loads collection metadata from the `playlist_metadata_json` column.
 async fn model_to_tag(conn: &DatabaseConnection, model: tag::Model) -> Result<Tag, TagError> {
     let aliases = load_aliases(conn, &model.id).await?;
+    let collection_metadata = crate::collection_repository::load_collection_metadata(
+        model.playlist_metadata_json.as_deref(),
+    )?;
 
     Ok(Tag {
         id: model.id,
@@ -56,7 +60,7 @@ async fn model_to_tag(conn: &DatabaseConnection, model: tag::Model) -> Result<Ta
         is_group: model.is_group,
         is_locked: model.is_locked,
         display_order: model.display_order,
-        has_collection_metadata: model.playlist_metadata_json.is_some(),
+        collection_metadata,
     })
 }
 

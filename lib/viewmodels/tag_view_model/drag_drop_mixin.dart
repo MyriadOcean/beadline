@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import '../../models/playlist_metadata.dart';
+import '../../models/tag_extensions.dart';
 import 'tag_view_model_base.dart';
 
 /// Mixin handling drag-and-drop grouping operations: move songs to/from groups,
@@ -13,13 +13,13 @@ mixin DragDropMixin on TagViewModelBase {
   // Helpers
   // ==========================================================================
 
-  Future<PlaylistItem?> _findPlaylistItem(
+  Future<TagItem?> _findTagItem(
     String collectionId,
     String itemId,
   ) async {
     final tag = await tagRepository.getCollectionTag(collectionId);
     if (tag == null || !tag.isCollection) return null;
-    final items = tag.playlistMetadata?.items ?? [];
+    final items = tag.metadata?.items ?? [];
     try {
       return items.firstWhere((i) => i.id == itemId);
     } catch (_) {
@@ -34,15 +34,15 @@ mixin DragDropMixin on TagViewModelBase {
   }) async {
     if (depth > 10) return null;
     final parentItem =
-        await _findPlaylistItem(parentCollectionId, itemId);
+        await _findTagItem(parentCollectionId, itemId);
     if (parentItem != null) return parentCollectionId;
 
     final parentTag =
         await tagRepository.getCollectionTag(parentCollectionId);
     if (parentTag == null || !parentTag.isCollection) return null;
-    final items = parentTag.playlistMetadata?.items ?? [];
+    final items = parentTag.metadata?.items ?? [];
     for (final item in items) {
-      if (item.type == PlaylistItemType.collectionReference) {
+      if (item.itemType == TagItemType.tagReference) {
         final refTag =
             await tagRepository.getCollectionTag(item.targetId);
         if (refTag != null && refTag.isGroup) {
@@ -58,7 +58,7 @@ mixin DragDropMixin on TagViewModelBase {
     return null;
   }
 
-  Future<(String, PlaylistItem)?> _findPlaylistItemByTargetId(
+  Future<(String, TagItem)?> _findTagItemByTargetId(
     String parentCollectionId,
     String itemIdOrTargetId, {
     int depth = 0,
@@ -67,21 +67,21 @@ mixin DragDropMixin on TagViewModelBase {
     final parentTag =
         await tagRepository.getCollectionTag(parentCollectionId);
     if (parentTag == null || !parentTag.isCollection) return null;
-    final parentItems = parentTag.playlistMetadata?.items ?? [];
+    final parentItems = parentTag.metadata?.items ?? [];
 
     for (final pi in parentItems) {
-      if (pi.type == PlaylistItemType.songUnit &&
+      if (pi.itemType == TagItemType.songUnit &&
           pi.targetId == itemIdOrTargetId) {
         return (parentCollectionId, pi);
       }
     }
 
     for (final pi in parentItems) {
-      if (pi.type == PlaylistItemType.collectionReference) {
+      if (pi.itemType == TagItemType.tagReference) {
         final groupTag =
             await tagRepository.getCollectionTag(pi.targetId);
         if (groupTag != null && groupTag.isGroup) {
-          final result = await _findPlaylistItemByTargetId(
+          final result = await _findTagItemByTargetId(
             pi.targetId,
             itemIdOrTargetId,
             depth: depth + 1,
@@ -109,7 +109,7 @@ mixin DragDropMixin on TagViewModelBase {
       errorValue = null;
       suppressEvents = true;
 
-      final result = await _findPlaylistItemByTargetId(
+      final result = await _findTagItemByTargetId(
         collectionId,
         songUnitItemId,
       );
@@ -135,7 +135,7 @@ mixin DragDropMixin on TagViewModelBase {
 
       final groupTag =
           await tagRepository.getCollectionTag(targetGroupId);
-      final groupItems = groupTag?.playlistMetadata?.items ?? [];
+      final groupItems = groupTag?.metadata?.items ?? [];
       int order;
       if (insertIndex != null &&
           insertIndex >= 0 &&
@@ -147,20 +147,21 @@ mixin DragDropMixin on TagViewModelBase {
 
       await tagRepository.addItemToCollection(
         targetGroupId,
-        PlaylistItem(
+        TagItem(
           id: uuid.v4(),
-          type: PlaylistItemType.songUnit,
+          itemType: TagItemType.songUnit,
           targetId: targetId,
           order: 0,
-        ),
+          inheritLock: true,
+          ),
       );
 
       final freshGroup =
           await tagRepository.getCollectionTag(targetGroupId);
-      if (freshGroup?.playlistMetadata != null &&
-          order < (freshGroup!.playlistMetadata!.items.length - 1)) {
-        final freshItems = List<PlaylistItem>.from(
-            freshGroup.playlistMetadata!.items);
+      if (freshGroup?.metadata != null &&
+          order < (freshGroup!.metadata!.items.length - 1)) {
+        final freshItems = List<TagItem>.from(
+            freshGroup.metadata!.items);
         if (freshItems.isNotEmpty) {
           final newItem = freshItems.removeLast();
           final clampedIdx = order.clamp(0, freshItems.length);
@@ -202,9 +203,9 @@ mixin DragDropMixin on TagViewModelBase {
       suppressEvents = true;
 
       final result =
-          await _findPlaylistItemByTargetId(groupId, songUnitItemId);
+          await _findTagItemByTargetId(groupId, songUnitItemId);
       final resolved = result ??
-          await _findPlaylistItemByTargetId(
+          await _findTagItemByTargetId(
               parentCollectionId, songUnitItemId);
 
       if (resolved == null) {
@@ -226,19 +227,20 @@ mixin DragDropMixin on TagViewModelBase {
 
       await tagRepository.addItemToCollection(
         parentCollectionId,
-        PlaylistItem(
+        TagItem(
           id: uuid.v4(),
-          type: PlaylistItemType.songUnit,
+          itemType: TagItemType.songUnit,
           targetId: targetId,
           order: 0,
-        ),
+          inheritLock: true,
+          ),
       );
 
       final freshParent =
           await tagRepository.getCollectionTag(parentCollectionId);
-      if (freshParent?.playlistMetadata != null) {
-        final freshItems = List<PlaylistItem>.from(
-            freshParent!.playlistMetadata!.items);
+      if (freshParent?.metadata != null) {
+        final freshItems = List<TagItem>.from(
+            freshParent!.metadata!.items);
         if (freshItems.isNotEmpty) {
           final newItem = freshItems.removeLast();
           final clampedIdx = insertIndex.clamp(0, freshItems.length);
@@ -303,8 +305,8 @@ mixin DragDropMixin on TagViewModelBase {
         return;
       }
 
-      final metadata = collection.playlistMetadata!;
-      final items = List<PlaylistItem>.from(metadata.items);
+      final metadata = collection.metadata!;
+      final items = List<TagItem>.from(metadata.items);
 
       final currentIndex = items.indexWhere((i) => i.id == groupItemId);
       if (currentIndex == -1) {
@@ -365,9 +367,9 @@ mixin DragDropMixin on TagViewModelBase {
         return;
       }
 
-      final item = await _findPlaylistItem(sourceParentId, groupItemId);
+      final item = await _findTagItem(sourceParentId, groupItemId);
       if (item == null ||
-          item.type != PlaylistItemType.collectionReference) {
+          item.itemType != TagItemType.tagReference) {
         errorValue = 'Group reference not found';
         suppressEvents = false;
         notifyListeners();
@@ -382,15 +384,16 @@ mixin DragDropMixin on TagViewModelBase {
 
       final targetTag =
           await tagRepository.getCollectionTag(targetGroupId);
-      final targetItems = targetTag?.playlistMetadata?.items ?? [];
+      final targetItems = targetTag?.metadata?.items ?? [];
       await tagRepository.addItemToCollection(
         targetGroupId,
-        PlaylistItem(
+        TagItem(
           id: uuid.v4(),
-          type: PlaylistItemType.collectionReference,
+          itemType: TagItemType.tagReference,
           targetId: groupId,
           order: targetItems.length,
-        ),
+          inheritLock: true,
+          ),
       );
 
       await recomputeDisplayOrders(sourceParentId);
@@ -440,9 +443,9 @@ mixin DragDropMixin on TagViewModelBase {
         return;
       }
 
-      final item = await _findPlaylistItem(sourceParentId, groupItemId);
+      final item = await _findTagItem(sourceParentId, groupItemId);
       if (item == null ||
-          item.type != PlaylistItemType.collectionReference) {
+          item.itemType != TagItemType.tagReference) {
         errorValue = 'Group reference not found';
         suppressEvents = false;
         notifyListeners();
@@ -456,12 +459,13 @@ mixin DragDropMixin on TagViewModelBase {
 
       await tagRepository.addItemToCollection(
         targetCollectionId,
-        PlaylistItem(
+        TagItem(
           id: uuid.v4(),
-          type: PlaylistItemType.collectionReference,
+          itemType: TagItemType.tagReference,
           targetId: groupId,
           order: insertIndex,
-        ),
+          inheritLock: true,
+          ),
       );
 
       await recomputeDisplayOrders(sourceParentId);

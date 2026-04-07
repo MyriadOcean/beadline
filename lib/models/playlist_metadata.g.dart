@@ -41,8 +41,6 @@ PlaylistMetadata _$PlaylistMetadataFromJson(Map<String, dynamic> json) =>
       playbackPositionMs: (json['playbackPositionMs'] as num?)?.toInt() ?? 0,
       wasPlaying: json['wasPlaying'] as bool? ?? false,
       removeAfterPlay: json['removeAfterPlay'] as bool? ?? false,
-      temporarySongUnits: (json['temporarySongUnits'] as Map<String, dynamic>?)
-          ?.map((k, e) => MapEntry(k, e as Map<String, dynamic>)),
       isQueue: json['isQueue'] as bool? ?? false,
     );
 
@@ -55,7 +53,6 @@ Map<String, dynamic> _$PlaylistMetadataToJson(PlaylistMetadata instance) =>
       'playbackPositionMs': instance.playbackPositionMs,
       'wasPlaying': instance.wasPlaying,
       'removeAfterPlay': instance.removeAfterPlay,
-      'temporarySongUnits': instance.temporarySongUnits,
       'isQueue': instance.isQueue,
       'createdAt': instance.createdAt.toIso8601String(),
       'updatedAt': instance.updatedAt.toIso8601String(),

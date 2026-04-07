@@ -10,6 +10,7 @@ import '../models/song_unit.dart';
 import '../models/source_origin.dart';
 import '../repositories/library_repository.dart';
 import '../repositories/tag_repository.dart';
+import '../models/tag_extensions.dart';
 import 'entry_point_file_service.dart';
 import 'library_location_manager.dart';
 import 'thumbnail_cache.dart';

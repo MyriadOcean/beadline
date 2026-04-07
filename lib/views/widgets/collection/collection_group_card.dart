@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../i18n/translations.g.dart';
-import '../../../models/playlist_metadata.dart';
-import '../../../models/tag.dart';
+import '../../../models/tag_extensions.dart';
 import 'collection_drag_data.dart';
 import 'collection_drop_zone.dart';
 
@@ -183,8 +182,8 @@ class _CollectionGroupCardState extends State<CollectionGroupCard> {
 
   Widget _buildHeader(BuildContext context, ThemeData theme, bool highlight) {
     final isLocked = group.isLocked;
-    final songCount = group.playlistMetadata?.items
-            .where((i) => i.type == PlaylistItemType.songUnit)
+    final songCount = group.metadata?.items
+            .where((i) => i.itemType == TagItemType.songUnit)
             .length ??
         0;
 

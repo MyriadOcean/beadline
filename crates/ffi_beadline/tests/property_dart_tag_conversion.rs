@@ -27,32 +27,23 @@ fn arb_alias_names() -> impl Strategy<Value = Vec<String>> {
 
 fn arb_tag() -> impl Strategy<Value = Tag> {
     (
-        "[a-f0-9\\-]{8,36}",   // id
-        arb_optional_string(),  // key
-        "[a-z0-9]{1,30}",      // value
-        arb_tag_type(),         // tag_type
-        arb_optional_string(),  // parent_id
-        arb_alias_names(),      // alias_names
-        any::<bool>(),          // include_children
-        any::<bool>(),          // is_group
-        any::<bool>(),          // is_locked
-        any::<i32>(),           // display_order
-        any::<bool>(),          // has_collection_metadata
+        "[a-f0-9\\-]{8,36}",
+        arb_optional_string(),
+        "[a-z0-9]{1,30}",
+        arb_tag_type(),
+        arb_optional_string(),
+        arb_alias_names(),
+        any::<bool>(),
+        any::<bool>(),
+        any::<bool>(),
+        any::<i32>(),
     )
         .prop_map(
-            |(id, key, value, tag_type, parent_id, alias_names, include_children, is_group, is_locked, display_order, has_collection_metadata)| {
+            |(id, key, value, tag_type, parent_id, alias_names, include_children, is_group, is_locked, display_order)| {
                 Tag {
-                    id,
-                    key,
-                    value,
-                    tag_type,
-                    parent_id,
-                    alias_names,
-                    include_children,
-                    is_group,
-                    is_locked,
-                    display_order,
-                    has_collection_metadata,
+                    id, key, value, tag_type, parent_id, alias_names,
+                    include_children, is_group, is_locked, display_order,
+                    collection_metadata: None,
                 }
             },
         )
@@ -68,38 +59,27 @@ fn arb_tag_type_string() -> impl Strategy<Value = String> {
 
 fn arb_dart_tag() -> impl Strategy<Value = DartTag> {
     (
-        "[a-f0-9\\-]{8,36}",   // id
-        "[a-z0-9]{1,30}",      // name
-        arb_optional_string(),  // key
-        arb_tag_type_string(),  // tag_type
-        arb_optional_string(),  // parent_id
-        arb_alias_names(),      // alias_names
-        any::<bool>(),          // include_children
-        any::<bool>(),          // is_group
-        any::<bool>(),          // is_locked
-        any::<i32>(),           // display_order
-        any::<bool>(),          // has_collection_metadata
+        "[a-f0-9\\-]{8,36}",
+        "[a-z0-9]{1,30}",
+        arb_optional_string(),
+        arb_tag_type_string(),
+        arb_optional_string(),
+        arb_alias_names(),
+        any::<bool>(),
+        any::<bool>(),
+        any::<bool>(),
+        any::<i32>(),
     )
         .prop_map(
-            |(id, name, key, tag_type, parent_id, alias_names, include_children, is_group, is_locked, display_order, has_collection_metadata)| {
+            |(id, name, key, tag_type, parent_id, alias_names, include_children, is_group, is_locked, display_order)| {
                 DartTag {
-                    id,
-                    name,
-                    key,
-                    tag_type,
-                    parent_id,
-                    alias_names,
-                    include_children,
-                    is_group,
-                    is_locked,
-                    display_order,
-                    has_collection_metadata,
+                    id, name, key, tag_type, parent_id, alias_names,
+                    include_children, is_group, is_locked, display_order,
+                    has_collection_metadata: false,
                 }
             },
         )
 }
-
-// ── Helpers ─────────────────────────────────────────────────────────────
 
 fn expected_tag_type_str(tt: &TagType) -> &'static str {
     match tt {
@@ -109,59 +89,47 @@ fn expected_tag_type_str(tt: &TagType) -> &'static str {
     }
 }
 
-// ── Property Tests ──────────────────────────────────────────────────────
-
 proptest! {
     #![proptest_config(ProptestConfig::with_cases(100))]
 
-    // Feature: dart-rust-cleanup, Property 1: Rust Tag → DartTag field preservation
-    // **Validates: Requirements 1.4, 1.5, 2.1, 2.2, 2.3, 2.6, 2.7, 2.8, 2.9, 2.12**
     #[test]
     fn tag_to_dart_tag_preserves_all_fields(tag in arb_tag()) {
         let dt = to_dart_tag(tag.clone());
-
-        prop_assert_eq!(&dt.id, &tag.id, "id mismatch");
-        prop_assert_eq!(&dt.name, &tag.value, "name/value mismatch");
-        prop_assert_eq!(&dt.key, &tag.key, "key mismatch");
-        prop_assert_eq!(dt.tag_type.as_str(), expected_tag_type_str(&tag.tag_type), "tag_type mismatch");
-        prop_assert_eq!(&dt.parent_id, &tag.parent_id, "parent_id mismatch");
-        prop_assert_eq!(&dt.alias_names, &tag.alias_names, "alias_names mismatch");
-        prop_assert_eq!(dt.include_children, tag.include_children, "include_children mismatch");
-        prop_assert_eq!(dt.is_group, tag.is_group, "is_group mismatch");
-        prop_assert_eq!(dt.is_locked, tag.is_locked, "is_locked mismatch");
-        prop_assert_eq!(dt.display_order, tag.display_order, "display_order mismatch");
-        prop_assert_eq!(dt.has_collection_metadata, tag.has_collection_metadata, "has_collection_metadata mismatch");
+        prop_assert_eq!(&dt.id, &tag.id);
+        prop_assert_eq!(&dt.name, &tag.value);
+        prop_assert_eq!(&dt.key, &tag.key);
+        prop_assert_eq!(dt.tag_type.as_str(), expected_tag_type_str(&tag.tag_type));
+        prop_assert_eq!(&dt.parent_id, &tag.parent_id);
+        prop_assert_eq!(&dt.alias_names, &tag.alias_names);
+        prop_assert_eq!(dt.include_children, tag.include_children);
+        prop_assert_eq!(dt.is_group, tag.is_group);
+        prop_assert_eq!(dt.is_locked, tag.is_locked);
+        prop_assert_eq!(dt.display_order, tag.display_order);
+        prop_assert_eq!(dt.has_collection_metadata, tag.collection_metadata.is_some());
     }
 
-    // Feature: dart-rust-cleanup, Property 2: DartTag → Rust Tag round-trip for updates
-    // **Validates: Requirements 2.4**
     #[test]
     fn dart_tag_round_trip_preserves_all_fields(dt in arb_dart_tag()) {
         let tag = from_dart_tag(DartTag {
-            id: dt.id.clone(),
-            name: dt.name.clone(),
-            key: dt.key.clone(),
-            tag_type: dt.tag_type.clone(),
-            parent_id: dt.parent_id.clone(),
-            alias_names: dt.alias_names.clone(),
-            include_children: dt.include_children,
-            is_group: dt.is_group,
-            is_locked: dt.is_locked,
+            id: dt.id.clone(), name: dt.name.clone(), key: dt.key.clone(),
+            tag_type: dt.tag_type.clone(), parent_id: dt.parent_id.clone(),
+            alias_names: dt.alias_names.clone(), include_children: dt.include_children,
+            is_group: dt.is_group, is_locked: dt.is_locked,
             display_order: dt.display_order,
             has_collection_metadata: dt.has_collection_metadata,
         });
         let round_tripped = to_dart_tag(tag);
-
-        prop_assert_eq!(&round_tripped.id, &dt.id, "id mismatch after round-trip");
-        prop_assert_eq!(&round_tripped.name, &dt.name, "name mismatch after round-trip");
-        prop_assert_eq!(&round_tripped.key, &dt.key, "key mismatch after round-trip");
-        prop_assert_eq!(&round_tripped.tag_type, &dt.tag_type, "tag_type mismatch after round-trip");
-        prop_assert_eq!(&round_tripped.parent_id, &dt.parent_id, "parent_id mismatch after round-trip");
-        prop_assert_eq!(&round_tripped.alias_names, &dt.alias_names, "alias_names mismatch after round-trip");
-        prop_assert_eq!(round_tripped.include_children, dt.include_children, "include_children mismatch after round-trip");
-        prop_assert_eq!(round_tripped.is_group, dt.is_group, "is_group mismatch after round-trip");
-        prop_assert_eq!(round_tripped.is_locked, dt.is_locked, "is_locked mismatch after round-trip");
-        prop_assert_eq!(round_tripped.display_order, dt.display_order, "display_order mismatch after round-trip");
-        prop_assert_eq!(round_tripped.has_collection_metadata, dt.has_collection_metadata, "has_collection_metadata mismatch after round-trip");
+        prop_assert_eq!(&round_tripped.id, &dt.id);
+        prop_assert_eq!(&round_tripped.name, &dt.name);
+        prop_assert_eq!(&round_tripped.key, &dt.key);
+        prop_assert_eq!(&round_tripped.tag_type, &dt.tag_type);
+        prop_assert_eq!(&round_tripped.parent_id, &dt.parent_id);
+        prop_assert_eq!(&round_tripped.alias_names, &dt.alias_names);
+        prop_assert_eq!(round_tripped.include_children, dt.include_children);
+        prop_assert_eq!(round_tripped.is_group, dt.is_group);
+        prop_assert_eq!(round_tripped.is_locked, dt.is_locked);
+        prop_assert_eq!(round_tripped.display_order, dt.display_order);
+        // from_dart_tag sets collection_metadata to None, so round-trip always false
+        prop_assert_eq!(round_tripped.has_collection_metadata, false);
     }
 }

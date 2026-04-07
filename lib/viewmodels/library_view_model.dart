@@ -11,6 +11,7 @@ import '../models/source_collection.dart';
 import '../models/source_origin.dart';
 import '../repositories/library_repository.dart';
 import '../repositories/tag_repository.dart';
+import '../models/tag_extensions.dart';
 import '../services/audio_discovery_service.dart';
 import '../services/configuration_migration_service.dart';
 import '../services/discovery_service.dart';

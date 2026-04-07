@@ -1,5 +1,4 @@
-import '../../models/playlist_metadata.dart';
-import '../../models/tag.dart';
+import '../../models/tag_extensions.dart';
 import 'tag_view_model_base.dart';
 
 /// Mixin handling collection CRUD, add/remove items, and add references.
@@ -53,17 +52,18 @@ mixin CollectionCrudMixin on TagViewModelBase {
         isGroup: true,
       );
 
-      final metadata = parentTag.playlistMetadata!;
+      final metadata = parentTag.metadata!;
       final nextOrder = metadata.items.isEmpty
           ? 0
           : metadata.items.map((i) => i.order).reduce((a, b) => a > b ? a : b) +
               1;
 
-      final newItem = PlaylistItem(
+      final newItem = TagItem(
         id: uuid.v4(),
-        type: PlaylistItemType.collectionReference,
+        itemType: TagItemType.tagReference,
         targetId: group.id,
         order: nextOrder,
+        inheritLock: true,
       );
 
       await tagRepository.addItemToCollection(parentCollectionId, newItem);
@@ -71,14 +71,14 @@ mixin CollectionCrudMixin on TagViewModelBase {
       if (insertIndex != null) {
         final freshParent =
             await tagRepository.getCollectionTag(parentCollectionId);
-        if (freshParent?.playlistMetadata != null) {
-          final items = List<PlaylistItem>.from(
-              freshParent!.playlistMetadata!.items)
+        if (freshParent?.metadata != null) {
+          final items = List<TagItem>.from(
+              freshParent!.metadata!.items)
             ..sort((a, b) => a.order.compareTo(b.order));
           final addedIndex = items.lastIndexWhere(
             (i) =>
                 i.targetId == group.id &&
-                i.type == PlaylistItemType.collectionReference,
+                i.itemType == TagItemType.tagReference,
           );
           if (addedIndex >= 0) {
             final addedItem = items.removeAt(addedIndex);
@@ -112,7 +112,7 @@ mixin CollectionCrudMixin on TagViewModelBase {
         final tag = await tagRepository.getCollectionTag(playlistIds[i]);
         if (tag != null && tag.isCollection) {
           final updated = tag.copyWith(
-            playlistMetadata: tag.playlistMetadata?.copyWith(displayOrder: i),
+            metadata: tag.metadata?.copyWith(displayOrder: i),
           );
           await tagRepository.updateTag(updated);
         }
@@ -187,17 +187,18 @@ mixin CollectionCrudMixin on TagViewModelBase {
       }
 
       final metadata =
-          collectionTag.playlistMetadata ?? PlaylistMetadata.empty();
+          collectionTag.metadata ?? TagMetadataExtensions.empty();
       final nextOrder = metadata.items.isEmpty
           ? 0
           : metadata.items.map((i) => i.order).reduce((a, b) => a > b ? a : b) +
               1;
 
-      final item = PlaylistItem(
+      final item = TagItem(
         id: uuid.v4(),
-        type: PlaylistItemType.songUnit,
+        itemType: TagItemType.songUnit,
         targetId: songUnitId,
         order: nextOrder,
+        inheritLock: true,
       );
 
       await tagRepository.addItemToPlaylist(collectionId, item);
@@ -230,17 +231,18 @@ mixin CollectionCrudMixin on TagViewModelBase {
         return;
       }
 
-      final metadata = parentTag.playlistMetadata ?? PlaylistMetadata.empty();
+      final metadata = parentTag.metadata ?? TagMetadataExtensions.empty();
       final nextOrder = metadata.items.isEmpty
           ? 0
           : metadata.items.map((i) => i.order).reduce((a, b) => a > b ? a : b) +
               1;
 
-      final item = PlaylistItem(
+      final item = TagItem(
         id: uuid.v4(),
-        type: PlaylistItemType.collectionReference,
+        itemType: TagItemType.tagReference,
         targetId: targetId,
         order: nextOrder,
+        inheritLock: true,
       );
 
       await tagRepository.addItemToPlaylist(parentId, item);
@@ -297,11 +299,11 @@ mixin CollectionCrudMixin on TagViewModelBase {
     final tag = await tagRepository.getCollectionTag(currentId);
     if (tag == null || !tag.isCollection) return false;
 
-    final metadata = tag.playlistMetadata;
+    final metadata = tag.metadata;
     if (metadata == null) return false;
 
     for (final item in metadata.items) {
-      if (item.type == PlaylistItemType.collectionReference) {
+      if (item.itemType == TagItemType.tagReference) {
         if (item.targetId == searchForId) return true;
         if (await _checkCircularReference(
           item.targetId,
@@ -325,7 +327,7 @@ mixin CollectionCrudMixin on TagViewModelBase {
         notifyListeners();
         return;
       }
-      final metadata = tag.playlistMetadata ?? PlaylistMetadata.empty();
+      final metadata = tag.metadata ?? TagMetadataExtensions.empty();
       await tagRepository.setPlaylistLock(collectionId, !metadata.isLocked);
       await loadCurrentQueueSongs();
       notifyListeners();

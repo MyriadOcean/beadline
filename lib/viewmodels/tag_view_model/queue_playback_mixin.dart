@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import '../../models/song_unit.dart';
+import '../../models/tag_extensions.dart';
 import '../../views/player_control_panel.dart';
 import 'tag_view_model_base.dart';
 
@@ -38,8 +39,8 @@ mixin QueuePlaybackMixin on TagViewModelBase {
   /// Set playback mode
   void setPlaybackMode(PlaybackMode mode) async {
     final aq = await getActiveQueue();
-    if (aq?.playlistMetadata == null) return;
-    final metadata = aq!.playlistMetadata!;
+    if (aq?.metadata == null) return;
+    final metadata = aq!.metadata!;
     if (metadata.removeAfterPlay &&
         (mode == PlaybackMode.repeatAll || mode == PlaybackMode.repeatOne)) {
       return;
@@ -52,8 +53,8 @@ mixin QueuePlaybackMixin on TagViewModelBase {
   /// Set whether to remove song from queue after playing
   void setRemoveAfterPlay(bool value) async {
     final aq = await getActiveQueue();
-    if (aq?.playlistMetadata == null) return;
-    final metadata = aq!.playlistMetadata!;
+    if (aq?.metadata == null) return;
+    final metadata = aq!.metadata!;
     if (value &&
         (playbackModeValue == PlaybackMode.repeatAll ||
             playbackModeValue == PlaybackMode.repeatOne)) {
@@ -72,8 +73,8 @@ mixin QueuePlaybackMixin on TagViewModelBase {
   Future<SongUnit?> advanceToNext() async {
     if (currentQueueSongsList.isEmpty) return null;
     final aq = await getActiveQueue();
-    if (aq?.playlistMetadata == null) return null;
-    final metadata = aq!.playlistMetadata!;
+    if (aq?.metadata == null) return null;
+    final metadata = aq!.metadata!;
     var newIndex = metadata.currentIndex;
 
     switch (playbackModeValue) {
@@ -109,8 +110,8 @@ mixin QueuePlaybackMixin on TagViewModelBase {
   Future<void> previous() async {
     if (currentQueueSongsList.isEmpty) return;
     final aq = await getActiveQueue();
-    if (aq?.playlistMetadata == null) return;
-    final metadata = aq!.playlistMetadata!;
+    if (aq?.metadata == null) return;
+    final metadata = aq!.metadata!;
     var newIndex = metadata.currentIndex;
 
     switch (playbackModeValue) {
@@ -140,9 +141,9 @@ mixin QueuePlaybackMixin on TagViewModelBase {
   Future<void> jumpTo(int index) async {
     if (index < 0 || index >= currentQueueSongsList.length) return;
     final aq = await getActiveQueue();
-    if (aq?.playlistMetadata == null) return;
+    if (aq?.metadata == null) return;
     await updateActiveQueue(
-      aq!.playlistMetadata!.copyWith(currentIndex: index),
+      aq!.metadata!.copyWith(currentIndex: index),
     );
     await updateCachedValues();
     notifyListeners();
@@ -156,8 +157,8 @@ mixin QueuePlaybackMixin on TagViewModelBase {
   /// Update playback position for the active queue
   void updatePlaybackPosition(Duration position, bool isPlaying) async {
     final aq = await getActiveQueue();
-    if (aq?.playlistMetadata == null) return;
-    final metadata = aq!.playlistMetadata!;
+    if (aq?.metadata == null) return;
+    final metadata = aq!.metadata!;
     await updateActiveQueue(
       metadata.copyWith(
         playbackPositionMs: position.inMilliseconds,
@@ -186,8 +187,8 @@ mixin QueuePlaybackMixin on TagViewModelBase {
     if (currentQueueSongsList.isEmpty) return;
 
     final aq = await getActiveQueue();
-    if (aq?.playlistMetadata == null) return;
-    final metadata = aq!.playlistMetadata!;
+    if (aq?.metadata == null) return;
+    final metadata = aq!.metadata!;
     var newIndex = metadata.currentIndex;
 
     switch (playbackModeValue) {

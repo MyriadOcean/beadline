@@ -81,7 +81,7 @@ pub async fn search_song_units(
                 is_group: false,
                 is_locked: false,
                 display_order: 0,
-                has_collection_metadata: false,
+                collection_metadata: None,
             });
             tag_ids.push(syn_id);
         }

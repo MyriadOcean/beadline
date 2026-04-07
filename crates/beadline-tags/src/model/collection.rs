@@ -1,7 +1,4 @@
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-
-use super::tag::Tag;
 
 // ── Enums ──────────────────────────────────────────────────────────────
 
@@ -75,8 +72,6 @@ pub struct CollectionMetadata {
     pub was_playing: bool,
     #[serde(default, rename = "removeAfterPlay")]
     pub remove_after_play: bool,
-    #[serde(skip_serializing_if = "Option::is_none", rename = "temporarySongUnits")]
-    pub temporary_song_units: Option<HashMap<String, serde_json::Value>>,
     #[serde(default, rename = "isQueue")]
     pub is_queue: bool,
     #[serde(rename = "createdAt")]
@@ -135,7 +130,6 @@ impl CollectionMetadata {
             playback_position_ms: 0,
             was_playing: false,
             remove_after_play: false,
-            temporary_song_units: None,
             is_queue: matches!(collection_type, CollectionType::Queue),
             created_at: now.clone(),
             updated_at: now,
@@ -160,48 +154,11 @@ impl CollectionMetadata {
     }
 }
 
-// ── Collection ─────────────────────────────────────────────────────────
+// ── Collection (deprecated — use Tag with collection_metadata) ─────────
 
-/// A collection (playlist, queue, or group) — a `Tag` composed with
-/// `CollectionMetadata`.
-#[derive(Debug, Clone, PartialEq)]
-pub struct Collection {
-    pub tag: Tag,
-    pub metadata: CollectionMetadata,
-    pub collection_type: CollectionType,
-}
-
-impl Collection {
-    /// The underlying tag ID.
-    pub fn id(&self) -> &str {
-        &self.tag.id
-    }
-
-    /// The collection's display name (the tag value).
-    pub fn name(&self) -> &str {
-        &self.tag.value
-    }
-
-    /// Whether this collection is an active queue (currently playing).
-    pub fn is_active_queue(&self) -> bool {
-        self.metadata.is_playing()
-    }
-
-    /// Whether the collection is currently playing.
-    pub fn is_playing(&self) -> bool {
-        self.metadata.is_playing()
-    }
-
-    /// Number of items in the collection.
-    pub fn item_count(&self) -> usize {
-        self.metadata.items.len()
-    }
-
-    /// Whether the collection is locked.
-    pub fn is_locked(&self) -> bool {
-        self.metadata.is_locked
-    }
-}
+// The `Collection` struct has been removed. Tags with `collection_metadata: Some(..)`
+// are collections. Use `Tag::is_collection()`, `Tag::is_active_queue()`,
+// `Tag::item_count()`, and `Tag::collection_type()` instead.
 
 
 #[cfg(test)]
@@ -290,7 +247,6 @@ mod tests {
                         playback_position_ms,
                         was_playing,
                         remove_after_play,
-                        temporary_song_units: None,
                         is_queue,
                         created_at,
                         updated_at,
@@ -315,16 +271,17 @@ mod tests {
                 is_group: false,
                 is_locked: false,
                 display_order: 0,
-                has_collection_metadata: true,
+                collection_metadata: None, // set by arb_collection_tag
             })
     }
 
-    fn arb_collection() -> impl Strategy<Value = Collection> {
+    /// Generate a Tag that is a collection (has collection_metadata).
+    fn arb_collection_tag() -> impl Strategy<Value = Tag> {
         (arb_tag(), arb_collection_metadata(), arb_collection_type()).prop_map(
-            |(tag, metadata, collection_type)| Collection {
-                tag,
-                metadata,
-                collection_type,
+            |(mut tag, metadata, ct)| {
+                tag.is_group = matches!(ct, CollectionType::Group);
+                tag.collection_metadata = Some(metadata);
+                tag
             },
         )
     }
@@ -359,7 +316,6 @@ mod tests {
                 playback_position_ms: 0,
                 was_playing: false,
                 remove_after_play: false,
-                temporary_song_units: None,
                 created_at: String::new(),
                 updated_at: String::new(),
             };
@@ -373,21 +329,22 @@ mod tests {
         // Feature: collection-rust-migration, Property 2: Convenience method correctness
         // **Validates: Requirements 1.6**
         //
-        // For any valid Collection, is_active_queue() and is_playing() return true
+        // For any valid collection Tag, is_active_queue() and is_playing() return true
         // iff current_index >= 0, and item_count() equals items.len().
         #[test]
-        fn convenience_method_correctness(collection in arb_collection()) {
-            let expected_playing = collection.metadata.current_index >= 0;
+        fn convenience_method_correctness(tag in arb_collection_tag()) {
+            let metadata = tag.collection_metadata.as_ref().unwrap();
+            let expected_playing = metadata.current_index >= 0;
 
-            prop_assert_eq!(collection.is_active_queue(), expected_playing,
+            prop_assert_eq!(tag.is_active_queue(), expected_playing,
                 "is_active_queue() should be {} for current_index={}",
-                expected_playing, collection.metadata.current_index);
+                expected_playing, metadata.current_index);
 
-            prop_assert_eq!(collection.is_playing(), expected_playing,
+            prop_assert_eq!(tag.is_playing(), expected_playing,
                 "is_playing() should be {} for current_index={}",
-                expected_playing, collection.metadata.current_index);
+                expected_playing, metadata.current_index);
 
-            prop_assert_eq!(collection.item_count(), collection.metadata.items.len(),
+            prop_assert_eq!(tag.item_count(), metadata.items.len(),
                 "item_count() should equal items.len()");
         }
 

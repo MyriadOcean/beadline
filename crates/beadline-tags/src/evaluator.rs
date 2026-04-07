@@ -397,7 +397,7 @@ mod tests {
             is_group: false,
             is_locked: false,
             display_order: 0,
-            has_collection_metadata: false,
+            collection_metadata: None,
         }
     }
 
@@ -414,7 +414,7 @@ mod tests {
             is_group: false,
             is_locked: false,
             display_order: 0,
-            has_collection_metadata: false,
+            collection_metadata: None,
         }
     }
 
@@ -791,7 +791,7 @@ mod tests {
             is_group: false,
             is_locked: false,
             display_order: 0,
-            has_collection_metadata: false,
+            collection_metadata: None,
         }
     }
 
@@ -1008,7 +1008,7 @@ mod tests {
                 is_group: false,
                 is_locked: false,
                 display_order: 0,
-                has_collection_metadata: false,
+                collection_metadata: None,
             };
 
             let child = Tag {
@@ -1022,7 +1022,7 @@ mod tests {
                 is_group: false,
                 is_locked: false,
                 display_order: 0,
-                has_collection_metadata: false,
+                collection_metadata: None,
             };
 
             let tags = vec![parent, child];
@@ -1090,7 +1090,7 @@ mod tests {
                 is_group: false,
                 is_locked: false,
                 display_order: 0,
-                has_collection_metadata: false,
+                collection_metadata: None,
             };
 
             let child = Tag {
@@ -1104,7 +1104,7 @@ mod tests {
                 is_group: false,
                 is_locked: false,
                 display_order: 0,
-                has_collection_metadata: false,
+                collection_metadata: None,
             };
 
             let tags = vec![parent, child];
@@ -1165,7 +1165,7 @@ mod tests {
                 is_group: false,
                 is_locked: false,
                 display_order: 0,
-                has_collection_metadata: false,
+                collection_metadata: None,
             };
 
             // A nameless tag with the same value
@@ -1180,7 +1180,7 @@ mod tests {
                 is_group: false,
                 is_locked: false,
                 display_order: 0,
-                has_collection_metadata: false,
+                collection_metadata: None,
             };
 
             let tags = vec![named.clone(), nameless.clone()];
@@ -1258,7 +1258,7 @@ mod tests {
                 is_group: false,
                 is_locked: false,
                 display_order: 0,
-                has_collection_metadata: false,
+                collection_metadata: None,
             };
 
             let tags = vec![tag];

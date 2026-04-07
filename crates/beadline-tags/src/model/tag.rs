@@ -16,7 +16,10 @@ pub enum TagType {
 ///
 /// - Named tag: `key` is `Some` (e.g. key="artist", value="luotianyi")
 /// - Nameless tag: `key` is `None` (e.g. value="luotianyi")
-#[derive(Debug, Clone, PartialEq, Eq)]
+///
+/// A tag with `collection_metadata` set is a collection (playlist/queue/group).
+/// This unifies the old separate `Collection` struct into `Tag` itself.
+#[derive(Debug, Clone, PartialEq)]
 pub struct Tag {
     pub id: String,
     pub key: Option<String>,
@@ -29,8 +32,8 @@ pub struct Tag {
     pub is_group: bool,
     pub is_locked: bool,
     pub display_order: i32,
-    /// `true` if `playlist_metadata_json` is non-null in the DB.
-    pub has_collection_metadata: bool,
+    /// Collection metadata — `Some` if this tag is a collection (playlist/queue/group).
+    pub collection_metadata: Option<super::collection::CollectionMetadata>,
 }
 
 impl Tag {
@@ -42,6 +45,32 @@ impl Tag {
     /// Returns `true` if this is a nameless tag (no key or empty key).
     pub fn is_nameless(&self) -> bool {
         !self.is_named()
+    }
+
+    /// Whether this tag is an active queue (currently playing).
+    pub fn is_active_queue(&self) -> bool {
+        self.collection_metadata
+            .as_ref()
+            .map_or(false, |m| m.is_playing())
+    }
+
+    /// Whether this tag is currently playing.
+    pub fn is_playing(&self) -> bool {
+        self.is_active_queue()
+    }
+
+    /// Number of items in the collection metadata (0 if no metadata).
+    pub fn item_count(&self) -> usize {
+        self.collection_metadata
+            .as_ref()
+            .map_or(0, |m| m.items.len())
+    }
+
+    /// Derives the `CollectionType` from the tag's fields.
+    pub fn collection_type(&self) -> Option<super::collection::CollectionType> {
+        self.collection_metadata
+            .as_ref()
+            .map(|m| m.collection_type(self.is_group))
     }
 }
 
@@ -86,7 +115,7 @@ mod tests {
                 is_group: false,
                 is_locked: false,
                 display_order: 0,
-                has_collection_metadata: false,
+                collection_metadata: None,
             })
     }
 

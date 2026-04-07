@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../i18n/translations.g.dart';
-import '../../models/tag.dart';
+import '../../models/tag_extensions.dart';
 
 /// Dialog that lists available groups within a collection for the user to pick.
 /// Returns the selected group's tag ID, or null if cancelled.
@@ -32,7 +32,7 @@ class GroupPickerDialog extends StatelessWidget {
                 itemCount: groups.length,
                 itemBuilder: (context, index) {
                   final group = groups[index];
-                  final songCount = group.playlistMetadata?.items.length ?? 0;
+                  final songCount = group.metadata?.items.length ?? 0;
                   final isLocked = group.isLocked;
 
                   return ListTile(

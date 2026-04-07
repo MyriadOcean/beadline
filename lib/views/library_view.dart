@@ -10,7 +10,7 @@ import '../models/configuration_mode.dart';
 import '../models/library_item.dart';
 import '../models/library_location.dart';
 import '../models/song_unit.dart';
-import '../models/tag.dart';
+import '../models/tag_extensions.dart';
 import '../viewmodels/library_view_model.dart';
 import '../viewmodels/player_view_model.dart';
 import '../viewmodels/search_view_model.dart';

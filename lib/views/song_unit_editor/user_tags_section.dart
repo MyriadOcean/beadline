@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../i18n/translations.g.dart';
-import '../../models/tag.dart';
+import '../../models/tag_extensions.dart';
 import '../../viewmodels/tag_view_model.dart';
 import '../app_theme.dart';
 
@@ -70,7 +70,7 @@ class UserTagsSection extends StatelessWidget {
                   return const Center(child: CircularProgressIndicator());
                 }
                 final userTags = tagViewModel.allTags
-                    .where((t) => t.type == TagType.user && !t.isCollection)
+                    .where((t) => t.tagType == TagType.user && !t.isCollection)
                     .toList();
 
                 if (userTags.isEmpty) {

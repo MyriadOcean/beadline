@@ -41,10 +41,11 @@ class Tag {
   /// Groups are collections that don't appear in Tag Panel or top-level Playlist Panel
   final bool isGroup;
 
-  /// Check if this tag is a collection (contains songs)
+  /// Whether this tag has playlist/queue metadata (i.e. contains songs).
+  /// Equivalent to `playlistMetadata != null`.
   bool get isCollection => playlistMetadata != null;
 
-  /// Check if this collection is currently being played
+  /// Check if this tag is currently being played
   bool get isActiveQueue =>
       playlistMetadata != null && playlistMetadata!.currentIndex >= 0;
 

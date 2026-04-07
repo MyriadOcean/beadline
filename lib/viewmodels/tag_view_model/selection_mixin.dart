@@ -1,5 +1,5 @@
 import 'dart:math';
-import '../../models/playlist_metadata.dart';
+import '../../models/tag_extensions.dart';
 import 'tag_view_model_base.dart';
 
 /// Mixin handling selection state and bulk move operations.
@@ -52,17 +52,17 @@ mixin SelectionMixin on TagViewModelBase {
   // Bulk Move Operations
   // ==========================================================================
 
-  Future<List<PlaylistItem>> _collectSelectedItemsFromGroups(
+  Future<List<TagItem>> _collectSelectedItemsFromGroups(
     String collectionId,
   ) async {
-    final result = <PlaylistItem>[];
+    final result = <TagItem>[];
     final parentTag =
         await tagRepository.getCollectionTag(collectionId);
     if (parentTag == null || !parentTag.isCollection) return result;
 
-    final items = parentTag.playlistMetadata?.items ?? [];
+    final items = parentTag.metadata?.items ?? [];
     for (final item in items) {
-      if (item.type == PlaylistItemType.collectionReference) {
+      if (item.itemType == TagItemType.tagReference) {
         final refTag =
             await tagRepository.getCollectionTag(item.targetId);
         if (refTag != null && refTag.isGroup) {
@@ -99,14 +99,14 @@ mixin SelectionMixin on TagViewModelBase {
     final parentTag =
         await tagRepository.getCollectionTag(parentCollectionId);
     if (parentTag == null || !parentTag.isCollection) return null;
-    final items = parentTag.playlistMetadata?.items ?? [];
+    final items = parentTag.metadata?.items ?? [];
 
     for (final item in items) {
       if (item.id == itemId) return parentCollectionId;
     }
 
     for (final item in items) {
-      if (item.type == PlaylistItemType.collectionReference) {
+      if (item.itemType == TagItemType.tagReference) {
         final refTag =
             await tagRepository.getCollectionTag(item.targetId);
         if (refTag != null && refTag.isGroup) {
@@ -164,12 +164,13 @@ mixin SelectionMixin on TagViewModelBase {
       for (final item in selectedItems) {
         await tagRepository.addItemToCollection(
           targetGroupId,
-          PlaylistItem(
+          TagItem(
             id: uuid.v4(),
-            type: PlaylistItemType.songUnit,
+            itemType: TagItemType.songUnit,
             targetId: item.targetId,
             order: insertOrder++,
-          ),
+            inheritLock: true,
+            ),
         );
       }
 
@@ -222,12 +223,13 @@ mixin SelectionMixin on TagViewModelBase {
       for (final item in selectedItems) {
         await tagRepository.addItemToCollection(
           collectionId,
-          PlaylistItem(
+          TagItem(
             id: uuid.v4(),
-            type: PlaylistItemType.songUnit,
+            itemType: TagItemType.songUnit,
             targetId: item.targetId,
             order: insertOrder++,
-          ),
+            inheritLock: true,
+            ),
         );
       }
 

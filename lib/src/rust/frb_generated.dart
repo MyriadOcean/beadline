@@ -17,6 +17,7 @@ import 'api/simple.dart';
 import 'api/song_unit_api.dart';
 import 'api/suggestion_api.dart';
 import 'api/tag_api.dart';
+import 'api/thumbnail_cache_api.dart';
 import 'frb_generated.dart';
 import 'frb_generated.io.dart'
     if (dart.library.js_interop) 'frb_generated.web.dart';
@@ -75,7 +76,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.11.1';
 
   @override
-  int get rustContentHash => 1801592126;
+  int get rustContentHash => -1766770525;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -91,9 +92,9 @@ abstract class RustLibApi extends BaseApi {
     required String alias,
   });
 
-  Future<DartCollectionItem> crateApiCollectionApiAddItemToCollection({
+  Future<TagItem> crateApiCollectionApiAddItemToCollection({
     required String collectionId,
-    required String itemType,
+    required TagItemType itemType,
     required String targetId,
     required bool inheritLock,
   });
@@ -105,7 +106,7 @@ abstract class RustLibApi extends BaseApi {
 
   Future<void> crateApiDatabaseApiCloseDatabase();
 
-  Future<DartCollection> crateApiCollectionApiCreateCollection({
+  Future<Tag> crateApiCollectionApiCreateCollection({
     required String name,
     String? parentId,
     required String collectionType,
@@ -123,10 +124,20 @@ abstract class RustLibApi extends BaseApi {
     String? originalFilePath,
   });
 
-  Future<DartTag> crateApiTagApiCreateTag({
+  Future<Tag> crateApiTagApiCreateTag({
     String? key,
     required String value,
     String? parentId,
+  });
+
+  Future<int> crateApiCollectionApiDeduplicateCollection({
+    required String collectionId,
+  });
+
+  Future<int> crateApiCollectionApiDeepCopyCollection({
+    required String sourceId,
+    required String targetId,
+    required BigInt maxDepth,
   });
 
   Future<BigInt> crateApiSongUnitApiDeleteAllTemporarySongUnits();
@@ -148,32 +159,26 @@ abstract class RustLibApi extends BaseApi {
     required List<SongUnitView> units,
   });
 
-  Future<Tag> crateApiTagApiFromDartTag({required DartTag dt});
-
   Future<List<FfiSongUnit>> crateApiSongUnitApiGetAllSongUnits();
 
-  Future<List<DartTag>> crateApiTagApiGetAllTags();
+  Future<List<Tag>> crateApiTagApiGetAllTags();
 
-  Future<List<DartTag>> crateApiTagApiGetChildren({required String parentId});
+  Future<List<Tag>> crateApiTagApiGetChildren({required String parentId});
 
-  Future<DartCollection?> crateApiCollectionApiGetCollection({
-    required String id,
-  });
+  Future<Tag?> crateApiCollectionApiGetCollection({required String id});
 
-  Future<List<DartCollectionItem>> crateApiCollectionApiGetCollectionItems({
+  Future<List<TagItem>> crateApiCollectionApiGetCollectionItems({
     required String collectionId,
   });
 
-  Future<List<DartCollection>> crateApiCollectionApiGetCollections({
-    String? filterType,
-  });
+  Future<List<Tag>> crateApiCollectionApiGetCollections({String? filterType});
 
   Future<List<DartSuggestion>> crateApiSuggestionApiGetDartSuggestions({
     required String fragment,
     required int maxResults,
   });
 
-  Future<List<DartTag>> crateApiTagApiGetDescendants({required String tagId});
+  Future<List<Tag>> crateApiTagApiGetDescendants({required String tagId});
 
   Future<FfiSongUnit?> crateApiSongUnitApiGetSongUnit({required String id});
 
@@ -197,11 +202,11 @@ abstract class RustLibApi extends BaseApi {
     required int maxResults,
   });
 
-  Future<DartTag?> crateApiTagApiGetTag({required String id});
+  Future<Tag?> crateApiTagApiGetTag({required String id});
 
   Future<String> crateApiTagApiGetTagPath({required String tagId});
 
-  Future<List<DartTag>> crateApiTagApiGetTagsByType({required String tagType});
+  Future<List<Tag>> crateApiTagApiGetTagsByType({required String tagType});
 
   Future<List<FfiSongUnit>> crateApiSongUnitApiGetTemporarySongUnits();
 
@@ -247,7 +252,7 @@ abstract class RustLibApi extends BaseApi {
     required BigInt maxDepth,
   });
 
-  Future<DartTag?> crateApiTagApiResolveTag({required String nameOrAlias});
+  Future<Tag?> crateApiTagApiResolveTag({required String nameOrAlias});
 
   Future<List<String>> crateApiEvaluatorApiSearchSongUnits({
     required String queryText,
@@ -263,6 +268,11 @@ abstract class RustLibApi extends BaseApi {
     required bool isLocked,
   });
 
+  Future<void> crateApiCollectionApiShuffleCollection({
+    required String collectionId,
+    String? currentSongId,
+  });
+
   Future<void> crateApiCollectionApiStartPlaying({
     required String collectionId,
     required int startIndex,
@@ -271,18 +281,34 @@ abstract class RustLibApi extends BaseApi {
 
   Future<void> crateApiCollectionApiStopPlaying({required String collectionId});
 
-  Future<DartTag> crateApiTagApiToDartTag({required Tag tag});
+  Future<List<String>> crateApiThumbnailCacheApiThumbnailCacheFindMissing({
+    required String cacheDir,
+    required List<String> referencedHashes,
+  });
+
+  Future<String> crateApiThumbnailCacheApiThumbnailCacheFromBytes({
+    required String cacheDir,
+    required List<int> bytes,
+  });
+
+  Future<String?> crateApiThumbnailCacheApiThumbnailCacheGet({
+    required String cacheDir,
+    required String contentHash,
+  });
+
+  Future<RustCacheStats> crateApiThumbnailCacheApiThumbnailCacheGetStats({
+    required String cacheDir,
+    required List<String> referencedHashes,
+  });
+
+  Future<int> crateApiThumbnailCacheApiThumbnailCachePurgeOrphans({
+    required String cacheDir,
+    required List<String> referencedHashes,
+  });
 
   Future<void> crateApiCollectionApiUpdateCollectionMetadata({
     required String collectionId,
-    required List<DartCollectionItem> items,
-    required int currentIndex,
-    required PlatformInt64 playbackPositionMs,
-    required bool wasPlaying,
-    required bool removeAfterPlay,
-    required bool isLocked,
-    required int displayOrder,
-    required bool isQueue,
+    required TagMetadata metadata,
   });
 
   Future<void> crateApiCollectionApiUpdatePlaybackState({
@@ -304,7 +330,7 @@ abstract class RustLibApi extends BaseApi {
     String? originalFilePath,
   });
 
-  Future<DartTag> crateApiTagApiUpdateTag({required DartTag tag});
+  Future<Tag> crateApiTagApiUpdateTag({required Tag tag});
 
   Future<bool> crateApiCollectionApiWouldCreateCircularReference({
     required String parentId,
@@ -343,12 +369,6 @@ abstract class RustLibApi extends BaseApi {
   get rust_arc_decrement_strong_count_Suggestion;
 
   CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_SuggestionPtr;
-
-  RustArcIncrementStrongCountFnType get rust_arc_increment_strong_count_Tag;
-
-  RustArcDecrementStrongCountFnType get rust_arc_decrement_strong_count_Tag;
-
-  CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_TagPtr;
 }
 
 class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
@@ -392,9 +412,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: 'add_alias', argNames: ['tagId', 'alias']);
 
   @override
-  Future<DartCollectionItem> crateApiCollectionApiAddItemToCollection({
+  Future<TagItem> crateApiCollectionApiAddItemToCollection({
     required String collectionId,
-    required String itemType,
+    required TagItemType itemType,
     required String targetId,
     required bool inheritLock,
   }) {
@@ -403,7 +423,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_String(collectionId, serializer);
-          sse_encode_String(itemType, serializer);
+          sse_encode_tag_item_type(itemType, serializer);
           sse_encode_String(targetId, serializer);
           sse_encode_bool(inheritLock, serializer);
           pdeCallFfi(
@@ -414,7 +434,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           );
         },
         codec: SseCodec(
-          decodeSuccessData: sse_decode_dart_collection_item,
+          decodeSuccessData: sse_decode_tag_item,
           decodeErrorData: sse_decode_String,
         ),
         constMeta: kCrateApiCollectionApiAddItemToCollectionConstMeta,
@@ -493,7 +513,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: 'close_database', argNames: []);
 
   @override
-  Future<DartCollection> crateApiCollectionApiCreateCollection({
+  Future<Tag> crateApiCollectionApiCreateCollection({
     required String name,
     String? parentId,
     required String collectionType,
@@ -513,7 +533,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           );
         },
         codec: SseCodec(
-          decodeSuccessData: sse_decode_dart_collection,
+          decodeSuccessData: sse_decode_tag,
           decodeErrorData: sse_decode_String,
         ),
         constMeta: kCrateApiCollectionApiCreateCollectionConstMeta,
@@ -599,7 +619,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<DartTag> crateApiTagApiCreateTag({
+  Future<Tag> crateApiTagApiCreateTag({
     String? key,
     required String value,
     String? parentId,
@@ -619,7 +639,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           );
         },
         codec: SseCodec(
-          decodeSuccessData: sse_decode_dart_tag,
+          decodeSuccessData: sse_decode_tag,
           decodeErrorData: sse_decode_String,
         ),
         constMeta: kCrateApiTagApiCreateTagConstMeta,
@@ -635,6 +655,76 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   );
 
   @override
+  Future<int> crateApiCollectionApiDeduplicateCollection({
+    required String collectionId,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(collectionId, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 8,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_u_32,
+          decodeErrorData: sse_decode_String,
+        ),
+        constMeta: kCrateApiCollectionApiDeduplicateCollectionConstMeta,
+        argValues: [collectionId],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiCollectionApiDeduplicateCollectionConstMeta =>
+      const TaskConstMeta(
+        debugName: 'deduplicate_collection',
+        argNames: ['collectionId'],
+      );
+
+  @override
+  Future<int> crateApiCollectionApiDeepCopyCollection({
+    required String sourceId,
+    required String targetId,
+    required BigInt maxDepth,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(sourceId, serializer);
+          sse_encode_String(targetId, serializer);
+          sse_encode_usize(maxDepth, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 9,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_u_32,
+          decodeErrorData: sse_decode_String,
+        ),
+        constMeta: kCrateApiCollectionApiDeepCopyCollectionConstMeta,
+        argValues: [sourceId, targetId, maxDepth],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiCollectionApiDeepCopyCollectionConstMeta =>
+      const TaskConstMeta(
+        debugName: 'deep_copy_collection',
+        argNames: ['sourceId', 'targetId', 'maxDepth'],
+      );
+
+  @override
   Future<BigInt> crateApiSongUnitApiDeleteAllTemporarySongUnits() {
     return handler.executeNormal(
       NormalTask(
@@ -643,7 +733,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 8,
+            funcId: 10,
             port: port_,
           );
         },
@@ -674,7 +764,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 9,
+            funcId: 11,
             port: port_,
           );
         },
@@ -702,7 +792,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 10,
+            funcId: 12,
             port: port_,
           );
         },
@@ -732,7 +822,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 11,
+            funcId: 13,
             port: port_,
           );
         },
@@ -766,7 +856,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 12,
+            funcId: 14,
             port: port_,
           );
         },
@@ -807,7 +897,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 13,
+            funcId: 15,
             port: port_,
           );
         },
@@ -829,35 +919,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<Tag> crateApiTagApiFromDartTag({required DartTag dt}) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_box_autoadd_dart_tag(dt, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 14,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData:
-              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTag,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiTagApiFromDartTagConstMeta,
-        argValues: [dt],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiTagApiFromDartTagConstMeta =>
-      const TaskConstMeta(debugName: 'from_dart_tag', argNames: ['dt']);
-
-  @override
   Future<List<FfiSongUnit>> crateApiSongUnitApiGetAllSongUnits() {
     return handler.executeNormal(
       NormalTask(
@@ -866,7 +927,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 15,
+            funcId: 16,
             port: port_,
           );
         },
@@ -885,7 +946,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: 'get_all_song_units', argNames: []);
 
   @override
-  Future<List<DartTag>> crateApiTagApiGetAllTags() {
+  Future<List<Tag>> crateApiTagApiGetAllTags() {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
@@ -893,12 +954,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 16,
+            funcId: 17,
             port: port_,
           );
         },
         codec: SseCodec(
-          decodeSuccessData: sse_decode_list_dart_tag,
+          decodeSuccessData: sse_decode_list_tag,
           decodeErrorData: sse_decode_String,
         ),
         constMeta: kCrateApiTagApiGetAllTagsConstMeta,
@@ -912,7 +973,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: 'get_all_tags', argNames: []);
 
   @override
-  Future<List<DartTag>> crateApiTagApiGetChildren({required String parentId}) {
+  Future<List<Tag>> crateApiTagApiGetChildren({required String parentId}) {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
@@ -921,12 +982,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 17,
+            funcId: 18,
             port: port_,
           );
         },
         codec: SseCodec(
-          decodeSuccessData: sse_decode_list_dart_tag,
+          decodeSuccessData: sse_decode_list_tag,
           decodeErrorData: sse_decode_String,
         ),
         constMeta: kCrateApiTagApiGetChildrenConstMeta,
@@ -940,9 +1001,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: 'get_children', argNames: ['parentId']);
 
   @override
-  Future<DartCollection?> crateApiCollectionApiGetCollection({
-    required String id,
-  }) {
+  Future<Tag?> crateApiCollectionApiGetCollection({required String id}) {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
@@ -951,12 +1010,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 18,
+            funcId: 19,
             port: port_,
           );
         },
         codec: SseCodec(
-          decodeSuccessData: sse_decode_opt_box_autoadd_dart_collection,
+          decodeSuccessData: sse_decode_opt_box_autoadd_tag,
           decodeErrorData: sse_decode_String,
         ),
         constMeta: kCrateApiCollectionApiGetCollectionConstMeta,
@@ -970,7 +1029,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: 'get_collection', argNames: ['id']);
 
   @override
-  Future<List<DartCollectionItem>> crateApiCollectionApiGetCollectionItems({
+  Future<List<TagItem>> crateApiCollectionApiGetCollectionItems({
     required String collectionId,
   }) {
     return handler.executeNormal(
@@ -981,12 +1040,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 19,
+            funcId: 20,
             port: port_,
           );
         },
         codec: SseCodec(
-          decodeSuccessData: sse_decode_list_dart_collection_item,
+          decodeSuccessData: sse_decode_list_tag_item,
           decodeErrorData: sse_decode_String,
         ),
         constMeta: kCrateApiCollectionApiGetCollectionItemsConstMeta,
@@ -1003,9 +1062,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<List<DartCollection>> crateApiCollectionApiGetCollections({
-    String? filterType,
-  }) {
+  Future<List<Tag>> crateApiCollectionApiGetCollections({String? filterType}) {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
@@ -1014,12 +1071,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 20,
+            funcId: 21,
             port: port_,
           );
         },
         codec: SseCodec(
-          decodeSuccessData: sse_decode_list_dart_collection,
+          decodeSuccessData: sse_decode_list_tag,
           decodeErrorData: sse_decode_String,
         ),
         constMeta: kCrateApiCollectionApiGetCollectionsConstMeta,
@@ -1049,7 +1106,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 21,
+            funcId: 22,
             port: port_,
           );
         },
@@ -1071,7 +1128,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<List<DartTag>> crateApiTagApiGetDescendants({required String tagId}) {
+  Future<List<Tag>> crateApiTagApiGetDescendants({required String tagId}) {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
@@ -1080,12 +1137,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 22,
+            funcId: 23,
             port: port_,
           );
         },
         codec: SseCodec(
-          decodeSuccessData: sse_decode_list_dart_tag,
+          decodeSuccessData: sse_decode_list_tag,
           decodeErrorData: sse_decode_String,
         ),
         constMeta: kCrateApiTagApiGetDescendantsConstMeta,
@@ -1108,7 +1165,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 23,
+            funcId: 24,
             port: port_,
           );
         },
@@ -1135,7 +1192,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 24,
+            funcId: 25,
             port: port_,
           );
         },
@@ -1165,7 +1222,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 25,
+            funcId: 26,
             port: port_,
           );
         },
@@ -1198,7 +1255,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 26,
+            funcId: 27,
             port: port_,
           );
         },
@@ -1234,7 +1291,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 27,
+            funcId: 28,
             port: port_,
           );
         },
@@ -1269,7 +1326,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 28,
+            funcId: 29,
             port: port_,
           );
         },
@@ -1292,7 +1349,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<DartTag?> crateApiTagApiGetTag({required String id}) {
+  Future<Tag?> crateApiTagApiGetTag({required String id}) {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
@@ -1301,12 +1358,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 29,
+            funcId: 30,
             port: port_,
           );
         },
         codec: SseCodec(
-          decodeSuccessData: sse_decode_opt_box_autoadd_dart_tag,
+          decodeSuccessData: sse_decode_opt_box_autoadd_tag,
           decodeErrorData: sse_decode_String,
         ),
         constMeta: kCrateApiTagApiGetTagConstMeta,
@@ -1329,7 +1386,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 30,
+            funcId: 31,
             port: port_,
           );
         },
@@ -1348,7 +1405,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: 'get_tag_path', argNames: ['tagId']);
 
   @override
-  Future<List<DartTag>> crateApiTagApiGetTagsByType({required String tagType}) {
+  Future<List<Tag>> crateApiTagApiGetTagsByType({required String tagType}) {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
@@ -1357,12 +1414,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 31,
+            funcId: 32,
             port: port_,
           );
         },
         codec: SseCodec(
-          decodeSuccessData: sse_decode_list_dart_tag,
+          decodeSuccessData: sse_decode_list_tag,
           decodeErrorData: sse_decode_String,
         ),
         constMeta: kCrateApiTagApiGetTagsByTypeConstMeta,
@@ -1384,7 +1441,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 32,
+            funcId: 33,
             port: port_,
           );
         },
@@ -1409,7 +1466,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_String(name, serializer);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 33)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 34)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_String,
@@ -1437,7 +1494,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 34,
+            funcId: 35,
             port: port_,
           );
         },
@@ -1467,7 +1524,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 35,
+            funcId: 36,
             port: port_,
           );
         },
@@ -1495,7 +1552,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 36,
+            funcId: 37,
             port: port_,
           );
         },
@@ -1527,7 +1584,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 37,
+            funcId: 38,
             port: port_,
           );
         },
@@ -1563,7 +1620,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 38,
+            funcId: 39,
             port: port_,
           );
         },
@@ -1599,7 +1656,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 39,
+            funcId: 40,
             port: port_,
           );
         },
@@ -1630,7 +1687,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 40,
+            funcId: 41,
             port: port_,
           );
         },
@@ -1662,7 +1719,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 41,
+            funcId: 42,
             port: port_,
           );
         },
@@ -1697,7 +1754,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 42,
+            funcId: 43,
             port: port_,
           );
         },
@@ -1732,7 +1789,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 43,
+            funcId: 44,
             port: port_,
           );
         },
@@ -1754,7 +1811,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<DartTag?> crateApiTagApiResolveTag({required String nameOrAlias}) {
+  Future<Tag?> crateApiTagApiResolveTag({required String nameOrAlias}) {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
@@ -1763,12 +1820,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 44,
+            funcId: 45,
             port: port_,
           );
         },
         codec: SseCodec(
-          decodeSuccessData: sse_decode_opt_box_autoadd_dart_tag,
+          decodeSuccessData: sse_decode_opt_box_autoadd_tag,
           decodeErrorData: sse_decode_String,
         ),
         constMeta: kCrateApiTagApiResolveTagConstMeta,
@@ -1795,7 +1852,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 45,
+            funcId: 46,
             port: port_,
           );
         },
@@ -1831,7 +1888,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 46,
+            funcId: 47,
             port: port_,
           );
         },
@@ -1863,7 +1920,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 47,
+            funcId: 48,
             port: port_,
           );
         },
@@ -1885,6 +1942,41 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  Future<void> crateApiCollectionApiShuffleCollection({
+    required String collectionId,
+    String? currentSongId,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(collectionId, serializer);
+          sse_encode_opt_String(currentSongId, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 49,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: sse_decode_String,
+        ),
+        constMeta: kCrateApiCollectionApiShuffleCollectionConstMeta,
+        argValues: [collectionId, currentSongId],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiCollectionApiShuffleCollectionConstMeta =>
+      const TaskConstMeta(
+        debugName: 'shuffle_collection',
+        argNames: ['collectionId', 'currentSongId'],
+      );
+
+  @override
   Future<void> crateApiCollectionApiStartPlaying({
     required String collectionId,
     required int startIndex,
@@ -1900,7 +1992,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 48,
+            funcId: 50,
             port: port_,
           );
         },
@@ -1933,7 +2025,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 49,
+            funcId: 51,
             port: port_,
           );
         },
@@ -1955,65 +2047,199 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<DartTag> crateApiTagApiToDartTag({required Tag tag}) {
+  Future<List<String>> crateApiThumbnailCacheApiThumbnailCacheFindMissing({
+    required String cacheDir,
+    required List<String> referencedHashes,
+  }) {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTag(
-            tag,
-            serializer,
-          );
+          sse_encode_String(cacheDir, serializer);
+          sse_encode_list_String(referencedHashes, serializer);
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 50,
+            funcId: 52,
             port: port_,
           );
         },
         codec: SseCodec(
-          decodeSuccessData: sse_decode_dart_tag,
+          decodeSuccessData: sse_decode_list_String,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiTagApiToDartTagConstMeta,
-        argValues: [tag],
+        constMeta: kCrateApiThumbnailCacheApiThumbnailCacheFindMissingConstMeta,
+        argValues: [cacheDir, referencedHashes],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiTagApiToDartTagConstMeta =>
-      const TaskConstMeta(debugName: 'to_dart_tag', argNames: ['tag']);
+  TaskConstMeta
+  get kCrateApiThumbnailCacheApiThumbnailCacheFindMissingConstMeta =>
+      const TaskConstMeta(
+        debugName: 'thumbnail_cache_find_missing',
+        argNames: ['cacheDir', 'referencedHashes'],
+      );
+
+  @override
+  Future<String> crateApiThumbnailCacheApiThumbnailCacheFromBytes({
+    required String cacheDir,
+    required List<int> bytes,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(cacheDir, serializer);
+          sse_encode_list_prim_u_8_loose(bytes, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 53,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_String,
+          decodeErrorData: sse_decode_String,
+        ),
+        constMeta: kCrateApiThumbnailCacheApiThumbnailCacheFromBytesConstMeta,
+        argValues: [cacheDir, bytes],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiThumbnailCacheApiThumbnailCacheFromBytesConstMeta =>
+      const TaskConstMeta(
+        debugName: 'thumbnail_cache_from_bytes',
+        argNames: ['cacheDir', 'bytes'],
+      );
+
+  @override
+  Future<String?> crateApiThumbnailCacheApiThumbnailCacheGet({
+    required String cacheDir,
+    required String contentHash,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(cacheDir, serializer);
+          sse_encode_String(contentHash, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 54,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_opt_String,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiThumbnailCacheApiThumbnailCacheGetConstMeta,
+        argValues: [cacheDir, contentHash],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiThumbnailCacheApiThumbnailCacheGetConstMeta =>
+      const TaskConstMeta(
+        debugName: 'thumbnail_cache_get',
+        argNames: ['cacheDir', 'contentHash'],
+      );
+
+  @override
+  Future<RustCacheStats> crateApiThumbnailCacheApiThumbnailCacheGetStats({
+    required String cacheDir,
+    required List<String> referencedHashes,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(cacheDir, serializer);
+          sse_encode_list_String(referencedHashes, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 55,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_rust_cache_stats,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiThumbnailCacheApiThumbnailCacheGetStatsConstMeta,
+        argValues: [cacheDir, referencedHashes],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiThumbnailCacheApiThumbnailCacheGetStatsConstMeta =>
+      const TaskConstMeta(
+        debugName: 'thumbnail_cache_get_stats',
+        argNames: ['cacheDir', 'referencedHashes'],
+      );
+
+  @override
+  Future<int> crateApiThumbnailCacheApiThumbnailCachePurgeOrphans({
+    required String cacheDir,
+    required List<String> referencedHashes,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(cacheDir, serializer);
+          sse_encode_list_String(referencedHashes, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 56,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_u_32,
+          decodeErrorData: sse_decode_String,
+        ),
+        constMeta:
+            kCrateApiThumbnailCacheApiThumbnailCachePurgeOrphansConstMeta,
+        argValues: [cacheDir, referencedHashes],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiThumbnailCacheApiThumbnailCachePurgeOrphansConstMeta =>
+      const TaskConstMeta(
+        debugName: 'thumbnail_cache_purge_orphans',
+        argNames: ['cacheDir', 'referencedHashes'],
+      );
 
   @override
   Future<void> crateApiCollectionApiUpdateCollectionMetadata({
     required String collectionId,
-    required List<DartCollectionItem> items,
-    required int currentIndex,
-    required PlatformInt64 playbackPositionMs,
-    required bool wasPlaying,
-    required bool removeAfterPlay,
-    required bool isLocked,
-    required int displayOrder,
-    required bool isQueue,
+    required TagMetadata metadata,
   }) {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_String(collectionId, serializer);
-          sse_encode_list_dart_collection_item(items, serializer);
-          sse_encode_i_32(currentIndex, serializer);
-          sse_encode_i_64(playbackPositionMs, serializer);
-          sse_encode_bool(wasPlaying, serializer);
-          sse_encode_bool(removeAfterPlay, serializer);
-          sse_encode_bool(isLocked, serializer);
-          sse_encode_i_32(displayOrder, serializer);
-          sse_encode_bool(isQueue, serializer);
+          sse_encode_box_autoadd_tag_metadata(metadata, serializer);
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 51,
+            funcId: 57,
             port: port_,
           );
         },
@@ -2022,17 +2248,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           decodeErrorData: sse_decode_String,
         ),
         constMeta: kCrateApiCollectionApiUpdateCollectionMetadataConstMeta,
-        argValues: [
-          collectionId,
-          items,
-          currentIndex,
-          playbackPositionMs,
-          wasPlaying,
-          removeAfterPlay,
-          isLocked,
-          displayOrder,
-          isQueue,
-        ],
+        argValues: [collectionId, metadata],
         apiImpl: this,
       ),
     );
@@ -2041,17 +2257,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   TaskConstMeta get kCrateApiCollectionApiUpdateCollectionMetadataConstMeta =>
       const TaskConstMeta(
         debugName: 'update_collection_metadata',
-        argNames: [
-          'collectionId',
-          'items',
-          'currentIndex',
-          'playbackPositionMs',
-          'wasPlaying',
-          'removeAfterPlay',
-          'isLocked',
-          'displayOrder',
-          'isQueue',
-        ],
+        argNames: ['collectionId', 'metadata'],
       );
 
   @override
@@ -2072,7 +2278,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 52,
+            funcId: 58,
             port: port_,
           );
         },
@@ -2126,7 +2332,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 53,
+            funcId: 59,
             port: port_,
           );
         },
@@ -2168,21 +2374,21 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<DartTag> crateApiTagApiUpdateTag({required DartTag tag}) {
+  Future<Tag> crateApiTagApiUpdateTag({required Tag tag}) {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_box_autoadd_dart_tag(tag, serializer);
+          sse_encode_box_autoadd_tag(tag, serializer);
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 54,
+            funcId: 60,
             port: port_,
           );
         },
         codec: SseCodec(
-          decodeSuccessData: sse_decode_dart_tag,
+          decodeSuccessData: sse_decode_tag,
           decodeErrorData: sse_decode_String,
         ),
         constMeta: kCrateApiTagApiUpdateTagConstMeta,
@@ -2209,7 +2415,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 55,
+            funcId: 61,
             port: port_,
           );
         },
@@ -2263,14 +2469,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   get rust_arc_decrement_strong_count_Suggestion => wire
       .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSuggestion;
 
-  RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_Tag => wire
-      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTag;
-
-  RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_Tag => wire
-      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTag;
-
   @protected
   QueryChip
   dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerQueryChip(
@@ -2305,15 +2503,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return SuggestionImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  Tag
-  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTag(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return TagImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
@@ -2353,15 +2542,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  Tag
-  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTag(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return TagImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
   String dco_decode_String(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as String;
@@ -2371,18 +2551,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   bool dco_decode_bool(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as bool;
-  }
-
-  @protected
-  DartCollection dco_decode_box_autoadd_dart_collection(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return dco_decode_dart_collection(raw);
-  }
-
-  @protected
-  DartTag dco_decode_box_autoadd_dart_tag(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return dco_decode_dart_tag(raw);
   }
 
   @protected
@@ -2404,51 +2572,21 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  Tag dco_decode_box_autoadd_tag(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_tag(raw);
+  }
+
+  @protected
+  TagMetadata dco_decode_box_autoadd_tag_metadata(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_tag_metadata(raw);
+  }
+
+  @protected
   int dco_decode_box_autoadd_u_32(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as int;
-  }
-
-  @protected
-  DartCollection dco_decode_dart_collection(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    final arr = raw as List<dynamic>;
-    if (arr.length != 17)
-      throw Exception('unexpected arr length: expect 17 but see ${arr.length}');
-    return DartCollection(
-      id: dco_decode_String(arr[0]),
-      name: dco_decode_String(arr[1]),
-      collectionType: dco_decode_String(arr[2]),
-      isLocked: dco_decode_bool(arr[3]),
-      displayOrder: dco_decode_i_32(arr[4]),
-      items: dco_decode_list_dart_collection_item(arr[5]),
-      currentIndex: dco_decode_i_32(arr[6]),
-      playbackPositionMs: dco_decode_i_64(arr[7]),
-      wasPlaying: dco_decode_bool(arr[8]),
-      removeAfterPlay: dco_decode_bool(arr[9]),
-      isQueue: dco_decode_bool(arr[10]),
-      createdAt: dco_decode_String(arr[11]),
-      updatedAt: dco_decode_String(arr[12]),
-      parentId: dco_decode_opt_String(arr[13]),
-      aliasNames: dco_decode_list_String(arr[14]),
-      includeChildren: dco_decode_bool(arr[15]),
-      isGroup: dco_decode_bool(arr[16]),
-    );
-  }
-
-  @protected
-  DartCollectionItem dco_decode_dart_collection_item(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    final arr = raw as List<dynamic>;
-    if (arr.length != 5)
-      throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
-    return DartCollectionItem(
-      id: dco_decode_String(arr[0]),
-      itemType: dco_decode_String(arr[1]),
-      targetId: dco_decode_String(arr[2]),
-      order: dco_decode_i_32(arr[3]),
-      inheritLock: dco_decode_bool(arr[4]),
-    );
   }
 
   @protected
@@ -2475,27 +2613,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       displayText: dco_decode_String(arr[0]),
       insertText: dco_decode_String(arr[1]),
       suggestionType: dco_decode_String(arr[2]),
-    );
-  }
-
-  @protected
-  DartTag dco_decode_dart_tag(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    final arr = raw as List<dynamic>;
-    if (arr.length != 11)
-      throw Exception('unexpected arr length: expect 11 but see ${arr.length}');
-    return DartTag(
-      id: dco_decode_String(arr[0]),
-      name: dco_decode_String(arr[1]),
-      key: dco_decode_opt_String(arr[2]),
-      tagType: dco_decode_String(arr[3]),
-      parentId: dco_decode_opt_String(arr[4]),
-      aliasNames: dco_decode_list_String(arr[5]),
-      includeChildren: dco_decode_bool(arr[6]),
-      isGroup: dco_decode_bool(arr[7]),
-      isLocked: dco_decode_bool(arr[8]),
-      displayOrder: dco_decode_i_32(arr[9]),
-      hasCollectionMetadata: dco_decode_bool(arr[10]),
     );
   }
 
@@ -2576,18 +2693,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  List<DartCollection> dco_decode_list_dart_collection(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return (raw as List<dynamic>).map(dco_decode_dart_collection).toList();
-  }
-
-  @protected
-  List<DartCollectionItem> dco_decode_list_dart_collection_item(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return (raw as List<dynamic>).map(dco_decode_dart_collection_item).toList();
-  }
-
-  @protected
   List<DartQueryChip> dco_decode_list_dart_query_chip(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return (raw as List<dynamic>).map(dco_decode_dart_query_chip).toList();
@@ -2600,21 +2705,33 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  List<DartTag> dco_decode_list_dart_tag(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return (raw as List<dynamic>).map(dco_decode_dart_tag).toList();
-  }
-
-  @protected
   List<FfiSongUnit> dco_decode_list_ffi_song_unit(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return (raw as List<dynamic>).map(dco_decode_ffi_song_unit).toList();
   }
 
   @protected
+  List<int> dco_decode_list_prim_u_8_loose(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as List<int>;
+  }
+
+  @protected
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as Uint8List;
+  }
+
+  @protected
+  List<Tag> dco_decode_list_tag(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_tag).toList();
+  }
+
+  @protected
+  List<TagItem> dco_decode_list_tag_item(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_tag_item).toList();
   }
 
   @protected
@@ -2640,18 +2757,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  DartCollection? dco_decode_opt_box_autoadd_dart_collection(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return raw == null ? null : dco_decode_box_autoadd_dart_collection(raw);
-  }
-
-  @protected
-  DartTag? dco_decode_opt_box_autoadd_dart_tag(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return raw == null ? null : dco_decode_box_autoadd_dart_tag(raw);
-  }
-
-  @protected
   FfiSongUnit? dco_decode_opt_box_autoadd_ffi_song_unit(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw == null ? null : dco_decode_box_autoadd_ffi_song_unit(raw);
@@ -2670,9 +2775,102 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  Tag? dco_decode_opt_box_autoadd_tag(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_box_autoadd_tag(raw);
+  }
+
+  @protected
+  TagMetadata? dco_decode_opt_box_autoadd_tag_metadata(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_box_autoadd_tag_metadata(raw);
+  }
+
+  @protected
   int? dco_decode_opt_box_autoadd_u_32(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw == null ? null : dco_decode_box_autoadd_u_32(raw);
+  }
+
+  @protected
+  RustCacheStats dco_decode_rust_cache_stats(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 3)
+      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    return RustCacheStats(
+      totalEntries: dco_decode_u_32(arr[0]),
+      totalBytes: dco_decode_u_64(arr[1]),
+      orphanCount: dco_decode_u_32(arr[2]),
+    );
+  }
+
+  @protected
+  Tag dco_decode_tag(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 11)
+      throw Exception('unexpected arr length: expect 11 but see ${arr.length}');
+    return Tag(
+      id: dco_decode_String(arr[0]),
+      name: dco_decode_String(arr[1]),
+      key: dco_decode_opt_String(arr[2]),
+      tagType: dco_decode_tag_type(arr[3]),
+      parentId: dco_decode_opt_String(arr[4]),
+      aliasNames: dco_decode_list_String(arr[5]),
+      includeChildren: dco_decode_bool(arr[6]),
+      isGroup: dco_decode_bool(arr[7]),
+      isLocked: dco_decode_bool(arr[8]),
+      displayOrder: dco_decode_i_32(arr[9]),
+      metadata: dco_decode_opt_box_autoadd_tag_metadata(arr[10]),
+    );
+  }
+
+  @protected
+  TagItem dco_decode_tag_item(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 5)
+      throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
+    return TagItem(
+      id: dco_decode_String(arr[0]),
+      itemType: dco_decode_tag_item_type(arr[1]),
+      targetId: dco_decode_String(arr[2]),
+      order: dco_decode_i_32(arr[3]),
+      inheritLock: dco_decode_bool(arr[4]),
+    );
+  }
+
+  @protected
+  TagItemType dco_decode_tag_item_type(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return TagItemType.values[raw as int];
+  }
+
+  @protected
+  TagMetadata dco_decode_tag_metadata(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 10)
+      throw Exception('unexpected arr length: expect 10 but see ${arr.length}');
+    return TagMetadata(
+      isLocked: dco_decode_bool(arr[0]),
+      displayOrder: dco_decode_i_32(arr[1]),
+      items: dco_decode_list_tag_item(arr[2]),
+      currentIndex: dco_decode_i_32(arr[3]),
+      playbackPositionMs: dco_decode_i_64(arr[4]),
+      wasPlaying: dco_decode_bool(arr[5]),
+      removeAfterPlay: dco_decode_bool(arr[6]),
+      isQueue: dco_decode_bool(arr[7]),
+      createdAt: dco_decode_String(arr[8]),
+      updatedAt: dco_decode_String(arr[9]),
+    );
+  }
+
+  @protected
+  TagType dco_decode_tag_type(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return TagType.values[raw as int];
   }
 
   @protected
@@ -2754,18 +2952,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  Tag
-  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTag(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return TagImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
   QueryChip
   sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerQueryChip(
     SseDeserializer deserializer,
@@ -2814,18 +3000,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  Tag
-  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTag(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return TagImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
   String sse_decode_String(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     final inner = sse_decode_list_prim_u_8_strict(deserializer);
@@ -2836,20 +3010,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   bool sse_decode_bool(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return deserializer.buffer.getUint8() != 0;
-  }
-
-  @protected
-  DartCollection sse_decode_box_autoadd_dart_collection(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return sse_decode_dart_collection(deserializer);
-  }
-
-  @protected
-  DartTag sse_decode_box_autoadd_dart_tag(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return sse_decode_dart_tag(deserializer);
   }
 
   @protected
@@ -2875,69 +3035,23 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  int sse_decode_box_autoadd_u_32(SseDeserializer deserializer) {
+  Tag sse_decode_box_autoadd_tag(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return sse_decode_u_32(deserializer);
+    return sse_decode_tag(deserializer);
   }
 
   @protected
-  DartCollection sse_decode_dart_collection(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    final var_id = sse_decode_String(deserializer);
-    final var_name = sse_decode_String(deserializer);
-    final var_collectionType = sse_decode_String(deserializer);
-    final var_isLocked = sse_decode_bool(deserializer);
-    final var_displayOrder = sse_decode_i_32(deserializer);
-    final var_items = sse_decode_list_dart_collection_item(deserializer);
-    final var_currentIndex = sse_decode_i_32(deserializer);
-    final var_playbackPositionMs = sse_decode_i_64(deserializer);
-    final var_wasPlaying = sse_decode_bool(deserializer);
-    final var_removeAfterPlay = sse_decode_bool(deserializer);
-    final var_isQueue = sse_decode_bool(deserializer);
-    final var_createdAt = sse_decode_String(deserializer);
-    final var_updatedAt = sse_decode_String(deserializer);
-    final var_parentId = sse_decode_opt_String(deserializer);
-    final var_aliasNames = sse_decode_list_String(deserializer);
-    final var_includeChildren = sse_decode_bool(deserializer);
-    final var_isGroup = sse_decode_bool(deserializer);
-    return DartCollection(
-      id: var_id,
-      name: var_name,
-      collectionType: var_collectionType,
-      isLocked: var_isLocked,
-      displayOrder: var_displayOrder,
-      items: var_items,
-      currentIndex: var_currentIndex,
-      playbackPositionMs: var_playbackPositionMs,
-      wasPlaying: var_wasPlaying,
-      removeAfterPlay: var_removeAfterPlay,
-      isQueue: var_isQueue,
-      createdAt: var_createdAt,
-      updatedAt: var_updatedAt,
-      parentId: var_parentId,
-      aliasNames: var_aliasNames,
-      includeChildren: var_includeChildren,
-      isGroup: var_isGroup,
-    );
-  }
-
-  @protected
-  DartCollectionItem sse_decode_dart_collection_item(
+  TagMetadata sse_decode_box_autoadd_tag_metadata(
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    final var_id = sse_decode_String(deserializer);
-    final var_itemType = sse_decode_String(deserializer);
-    final var_targetId = sse_decode_String(deserializer);
-    final var_order = sse_decode_i_32(deserializer);
-    final var_inheritLock = sse_decode_bool(deserializer);
-    return DartCollectionItem(
-      id: var_id,
-      itemType: var_itemType,
-      targetId: var_targetId,
-      order: var_order,
-      inheritLock: var_inheritLock,
-    );
+    return sse_decode_tag_metadata(deserializer);
+  }
+
+  @protected
+  int sse_decode_box_autoadd_u_32(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return sse_decode_u_32(deserializer);
   }
 
   @protected
@@ -2965,35 +3079,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       displayText: var_displayText,
       insertText: var_insertText,
       suggestionType: var_suggestionType,
-    );
-  }
-
-  @protected
-  DartTag sse_decode_dart_tag(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    final var_id = sse_decode_String(deserializer);
-    final var_name = sse_decode_String(deserializer);
-    final var_key = sse_decode_opt_String(deserializer);
-    final var_tagType = sse_decode_String(deserializer);
-    final var_parentId = sse_decode_opt_String(deserializer);
-    final var_aliasNames = sse_decode_list_String(deserializer);
-    final var_includeChildren = sse_decode_bool(deserializer);
-    final var_isGroup = sse_decode_bool(deserializer);
-    final var_isLocked = sse_decode_bool(deserializer);
-    final var_displayOrder = sse_decode_i_32(deserializer);
-    final var_hasCollectionMetadata = sse_decode_bool(deserializer);
-    return DartTag(
-      id: var_id,
-      name: var_name,
-      key: var_key,
-      tagType: var_tagType,
-      parentId: var_parentId,
-      aliasNames: var_aliasNames,
-      includeChildren: var_includeChildren,
-      isGroup: var_isGroup,
-      isLocked: var_isLocked,
-      displayOrder: var_displayOrder,
-      hasCollectionMetadata: var_hasCollectionMetadata,
     );
   }
 
@@ -3104,34 +3189,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  List<DartCollection> sse_decode_list_dart_collection(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-
-    final len_ = sse_decode_i_32(deserializer);
-    final ans_ = <DartCollection>[];
-    for (var idx_ = 0; idx_ < len_; ++idx_) {
-      ans_.add(sse_decode_dart_collection(deserializer));
-    }
-    return ans_;
-  }
-
-  @protected
-  List<DartCollectionItem> sse_decode_list_dart_collection_item(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-
-    final len_ = sse_decode_i_32(deserializer);
-    final ans_ = <DartCollectionItem>[];
-    for (var idx_ = 0; idx_ < len_; ++idx_) {
-      ans_.add(sse_decode_dart_collection_item(deserializer));
-    }
-    return ans_;
-  }
-
-  @protected
   List<DartQueryChip> sse_decode_list_dart_query_chip(
     SseDeserializer deserializer,
   ) {
@@ -3160,18 +3217,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  List<DartTag> sse_decode_list_dart_tag(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-
-    final len_ = sse_decode_i_32(deserializer);
-    final ans_ = <DartTag>[];
-    for (var idx_ = 0; idx_ < len_; ++idx_) {
-      ans_.add(sse_decode_dart_tag(deserializer));
-    }
-    return ans_;
-  }
-
-  @protected
   List<FfiSongUnit> sse_decode_list_ffi_song_unit(
     SseDeserializer deserializer,
   ) {
@@ -3186,10 +3231,41 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<int> sse_decode_list_prim_u_8_loose(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    final len_ = sse_decode_i_32(deserializer);
+    return deserializer.buffer.getUint8List(len_);
+  }
+
+  @protected
   Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     final len_ = sse_decode_i_32(deserializer);
     return deserializer.buffer.getUint8List(len_);
+  }
+
+  @protected
+  List<Tag> sse_decode_list_tag(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    final len_ = sse_decode_i_32(deserializer);
+    final ans_ = <Tag>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_tag(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<TagItem> sse_decode_list_tag_item(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    final len_ = sse_decode_i_32(deserializer);
+    final ans_ = <TagItem>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_tag_item(deserializer));
+    }
+    return ans_;
   }
 
   @protected
@@ -3217,30 +3293,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
     if (sse_decode_bool(deserializer)) {
       return sse_decode_String(deserializer);
-    } else {
-      return null;
-    }
-  }
-
-  @protected
-  DartCollection? sse_decode_opt_box_autoadd_dart_collection(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-
-    if (sse_decode_bool(deserializer)) {
-      return sse_decode_box_autoadd_dart_collection(deserializer);
-    } else {
-      return null;
-    }
-  }
-
-  @protected
-  DartTag? sse_decode_opt_box_autoadd_dart_tag(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-
-    if (sse_decode_bool(deserializer)) {
-      return sse_decode_box_autoadd_dart_tag(deserializer);
     } else {
       return null;
     }
@@ -3284,6 +3336,30 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  Tag? sse_decode_opt_box_autoadd_tag(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return sse_decode_box_autoadd_tag(deserializer);
+    } else {
+      return null;
+    }
+  }
+
+  @protected
+  TagMetadata? sse_decode_opt_box_autoadd_tag_metadata(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return sse_decode_box_autoadd_tag_metadata(deserializer);
+    } else {
+      return null;
+    }
+  }
+
+  @protected
   int? sse_decode_opt_box_autoadd_u_32(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
@@ -3292,6 +3368,106 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     } else {
       return null;
     }
+  }
+
+  @protected
+  RustCacheStats sse_decode_rust_cache_stats(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    final var_totalEntries = sse_decode_u_32(deserializer);
+    final var_totalBytes = sse_decode_u_64(deserializer);
+    final var_orphanCount = sse_decode_u_32(deserializer);
+    return RustCacheStats(
+      totalEntries: var_totalEntries,
+      totalBytes: var_totalBytes,
+      orphanCount: var_orphanCount,
+    );
+  }
+
+  @protected
+  Tag sse_decode_tag(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    final var_id = sse_decode_String(deserializer);
+    final var_name = sse_decode_String(deserializer);
+    final var_key = sse_decode_opt_String(deserializer);
+    final var_tagType = sse_decode_tag_type(deserializer);
+    final var_parentId = sse_decode_opt_String(deserializer);
+    final var_aliasNames = sse_decode_list_String(deserializer);
+    final var_includeChildren = sse_decode_bool(deserializer);
+    final var_isGroup = sse_decode_bool(deserializer);
+    final var_isLocked = sse_decode_bool(deserializer);
+    final var_displayOrder = sse_decode_i_32(deserializer);
+    final var_metadata = sse_decode_opt_box_autoadd_tag_metadata(deserializer);
+    return Tag(
+      id: var_id,
+      name: var_name,
+      key: var_key,
+      tagType: var_tagType,
+      parentId: var_parentId,
+      aliasNames: var_aliasNames,
+      includeChildren: var_includeChildren,
+      isGroup: var_isGroup,
+      isLocked: var_isLocked,
+      displayOrder: var_displayOrder,
+      metadata: var_metadata,
+    );
+  }
+
+  @protected
+  TagItem sse_decode_tag_item(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    final var_id = sse_decode_String(deserializer);
+    final var_itemType = sse_decode_tag_item_type(deserializer);
+    final var_targetId = sse_decode_String(deserializer);
+    final var_order = sse_decode_i_32(deserializer);
+    final var_inheritLock = sse_decode_bool(deserializer);
+    return TagItem(
+      id: var_id,
+      itemType: var_itemType,
+      targetId: var_targetId,
+      order: var_order,
+      inheritLock: var_inheritLock,
+    );
+  }
+
+  @protected
+  TagItemType sse_decode_tag_item_type(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    final inner = sse_decode_i_32(deserializer);
+    return TagItemType.values[inner];
+  }
+
+  @protected
+  TagMetadata sse_decode_tag_metadata(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    final var_isLocked = sse_decode_bool(deserializer);
+    final var_displayOrder = sse_decode_i_32(deserializer);
+    final var_items = sse_decode_list_tag_item(deserializer);
+    final var_currentIndex = sse_decode_i_32(deserializer);
+    final var_playbackPositionMs = sse_decode_i_64(deserializer);
+    final var_wasPlaying = sse_decode_bool(deserializer);
+    final var_removeAfterPlay = sse_decode_bool(deserializer);
+    final var_isQueue = sse_decode_bool(deserializer);
+    final var_createdAt = sse_decode_String(deserializer);
+    final var_updatedAt = sse_decode_String(deserializer);
+    return TagMetadata(
+      isLocked: var_isLocked,
+      displayOrder: var_displayOrder,
+      items: var_items,
+      currentIndex: var_currentIndex,
+      playbackPositionMs: var_playbackPositionMs,
+      wasPlaying: var_wasPlaying,
+      removeAfterPlay: var_removeAfterPlay,
+      isQueue: var_isQueue,
+      createdAt: var_createdAt,
+      updatedAt: var_updatedAt,
+    );
+  }
+
+  @protected
+  TagType sse_decode_tag_type(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    final inner = sse_decode_i_32(deserializer);
+    return TagType.values[inner];
   }
 
   @protected
@@ -3377,19 +3553,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void
-  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTag(
-    Tag self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as TagImpl).frbInternalSseEncode(move: true),
-      serializer,
-    );
-  }
-
-  @protected
-  void
   sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerQueryChip(
     QueryChip self,
     SseSerializer serializer,
@@ -3441,16 +3604,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void
-  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTag(
-    Tag self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize((self as TagImpl).frbInternalSseEncode(), serializer);
-  }
-
-  @protected
   void sse_encode_String(String self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_list_prim_u_8_strict(utf8.encoder.convert(self), serializer);
@@ -3460,21 +3613,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   void sse_encode_bool(bool self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     serializer.buffer.putUint8(self ? 1 : 0);
-  }
-
-  @protected
-  void sse_encode_box_autoadd_dart_collection(
-    DartCollection self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_dart_collection(self, serializer);
-  }
-
-  @protected
-  void sse_encode_box_autoadd_dart_tag(DartTag self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_dart_tag(self, serializer);
   }
 
   @protected
@@ -3505,47 +3643,24 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_box_autoadd_tag(Tag self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_tag(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_tag_metadata(
+    TagMetadata self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_tag_metadata(self, serializer);
+  }
+
+  @protected
   void sse_encode_box_autoadd_u_32(int self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_u_32(self, serializer);
-  }
-
-  @protected
-  void sse_encode_dart_collection(
-    DartCollection self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_String(self.id, serializer);
-    sse_encode_String(self.name, serializer);
-    sse_encode_String(self.collectionType, serializer);
-    sse_encode_bool(self.isLocked, serializer);
-    sse_encode_i_32(self.displayOrder, serializer);
-    sse_encode_list_dart_collection_item(self.items, serializer);
-    sse_encode_i_32(self.currentIndex, serializer);
-    sse_encode_i_64(self.playbackPositionMs, serializer);
-    sse_encode_bool(self.wasPlaying, serializer);
-    sse_encode_bool(self.removeAfterPlay, serializer);
-    sse_encode_bool(self.isQueue, serializer);
-    sse_encode_String(self.createdAt, serializer);
-    sse_encode_String(self.updatedAt, serializer);
-    sse_encode_opt_String(self.parentId, serializer);
-    sse_encode_list_String(self.aliasNames, serializer);
-    sse_encode_bool(self.includeChildren, serializer);
-    sse_encode_bool(self.isGroup, serializer);
-  }
-
-  @protected
-  void sse_encode_dart_collection_item(
-    DartCollectionItem self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_String(self.id, serializer);
-    sse_encode_String(self.itemType, serializer);
-    sse_encode_String(self.targetId, serializer);
-    sse_encode_i_32(self.order, serializer);
-    sse_encode_bool(self.inheritLock, serializer);
   }
 
   @protected
@@ -3569,22 +3684,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_String(self.displayText, serializer);
     sse_encode_String(self.insertText, serializer);
     sse_encode_String(self.suggestionType, serializer);
-  }
-
-  @protected
-  void sse_encode_dart_tag(DartTag self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_String(self.id, serializer);
-    sse_encode_String(self.name, serializer);
-    sse_encode_opt_String(self.key, serializer);
-    sse_encode_String(self.tagType, serializer);
-    sse_encode_opt_String(self.parentId, serializer);
-    sse_encode_list_String(self.aliasNames, serializer);
-    sse_encode_bool(self.includeChildren, serializer);
-    sse_encode_bool(self.isGroup, serializer);
-    sse_encode_bool(self.isLocked, serializer);
-    sse_encode_i_32(self.displayOrder, serializer);
-    sse_encode_bool(self.hasCollectionMetadata, serializer);
   }
 
   @protected
@@ -3671,30 +3770,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_list_dart_collection(
-    List<DartCollection> self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_i_32(self.length, serializer);
-    for (final item in self) {
-      sse_encode_dart_collection(item, serializer);
-    }
-  }
-
-  @protected
-  void sse_encode_list_dart_collection_item(
-    List<DartCollectionItem> self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_i_32(self.length, serializer);
-    for (final item in self) {
-      sse_encode_dart_collection_item(item, serializer);
-    }
-  }
-
-  @protected
   void sse_encode_list_dart_query_chip(
     List<DartQueryChip> self,
     SseSerializer serializer,
@@ -3719,15 +3794,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_list_dart_tag(List<DartTag> self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_i_32(self.length, serializer);
-    for (final item in self) {
-      sse_encode_dart_tag(item, serializer);
-    }
-  }
-
-  @protected
   void sse_encode_list_ffi_song_unit(
     List<FfiSongUnit> self,
     SseSerializer serializer,
@@ -3740,6 +3806,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_list_prim_u_8_loose(
+    List<int> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    serializer.buffer.putUint8List(
+      self is Uint8List ? self : Uint8List.fromList(self),
+    );
+  }
+
+  @protected
   void sse_encode_list_prim_u_8_strict(
     Uint8List self,
     SseSerializer serializer,
@@ -3747,6 +3825,24 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_i_32(self.length, serializer);
     serializer.buffer.putUint8List(self);
+  }
+
+  @protected
+  void sse_encode_list_tag(List<Tag> self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_tag(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_tag_item(List<TagItem> self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_tag_item(item, serializer);
+    }
   }
 
   @protected
@@ -3767,32 +3863,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_bool(self != null, serializer);
     if (self != null) {
       sse_encode_String(self, serializer);
-    }
-  }
-
-  @protected
-  void sse_encode_opt_box_autoadd_dart_collection(
-    DartCollection? self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-
-    sse_encode_bool(self != null, serializer);
-    if (self != null) {
-      sse_encode_box_autoadd_dart_collection(self, serializer);
-    }
-  }
-
-  @protected
-  void sse_encode_opt_box_autoadd_dart_tag(
-    DartTag? self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-
-    sse_encode_bool(self != null, serializer);
-    if (self != null) {
-      sse_encode_box_autoadd_dart_tag(self, serializer);
     }
   }
 
@@ -3836,6 +3906,29 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_opt_box_autoadd_tag(Tag? self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_box_autoadd_tag(self, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_opt_box_autoadd_tag_metadata(
+    TagMetadata? self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_box_autoadd_tag_metadata(self, serializer);
+    }
+  }
+
+  @protected
   void sse_encode_opt_box_autoadd_u_32(int? self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
@@ -3843,6 +3936,70 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     if (self != null) {
       sse_encode_box_autoadd_u_32(self, serializer);
     }
+  }
+
+  @protected
+  void sse_encode_rust_cache_stats(
+    RustCacheStats self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_u_32(self.totalEntries, serializer);
+    sse_encode_u_64(self.totalBytes, serializer);
+    sse_encode_u_32(self.orphanCount, serializer);
+  }
+
+  @protected
+  void sse_encode_tag(Tag self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.id, serializer);
+    sse_encode_String(self.name, serializer);
+    sse_encode_opt_String(self.key, serializer);
+    sse_encode_tag_type(self.tagType, serializer);
+    sse_encode_opt_String(self.parentId, serializer);
+    sse_encode_list_String(self.aliasNames, serializer);
+    sse_encode_bool(self.includeChildren, serializer);
+    sse_encode_bool(self.isGroup, serializer);
+    sse_encode_bool(self.isLocked, serializer);
+    sse_encode_i_32(self.displayOrder, serializer);
+    sse_encode_opt_box_autoadd_tag_metadata(self.metadata, serializer);
+  }
+
+  @protected
+  void sse_encode_tag_item(TagItem self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.id, serializer);
+    sse_encode_tag_item_type(self.itemType, serializer);
+    sse_encode_String(self.targetId, serializer);
+    sse_encode_i_32(self.order, serializer);
+    sse_encode_bool(self.inheritLock, serializer);
+  }
+
+  @protected
+  void sse_encode_tag_item_type(TagItemType self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.index, serializer);
+  }
+
+  @protected
+  void sse_encode_tag_metadata(TagMetadata self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_bool(self.isLocked, serializer);
+    sse_encode_i_32(self.displayOrder, serializer);
+    sse_encode_list_tag_item(self.items, serializer);
+    sse_encode_i_32(self.currentIndex, serializer);
+    sse_encode_i_64(self.playbackPositionMs, serializer);
+    sse_encode_bool(self.wasPlaying, serializer);
+    sse_encode_bool(self.removeAfterPlay, serializer);
+    sse_encode_bool(self.isQueue, serializer);
+    sse_encode_String(self.createdAt, serializer);
+    sse_encode_String(self.updatedAt, serializer);
+  }
+
+  @protected
+  void sse_encode_tag_type(TagType self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.index, serializer);
   }
 
   @protected
@@ -3952,25 +4109,5 @@ class SuggestionImpl extends RustOpaque implements Suggestion {
         RustLib.instance.api.rust_arc_decrement_strong_count_Suggestion,
     rustArcDecrementStrongCountPtr:
         RustLib.instance.api.rust_arc_decrement_strong_count_SuggestionPtr,
-  );
-}
-
-@sealed
-class TagImpl extends RustOpaque implements Tag {
-  // Not to be used by end users
-  TagImpl.frbInternalDcoDecode(List<dynamic> wire)
-    : super.frbInternalDcoDecode(wire, _kStaticData);
-
-  // Not to be used by end users
-  TagImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative)
-    : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
-
-  static final _kStaticData = RustArcStaticData(
-    rustArcIncrementStrongCount:
-        RustLib.instance.api.rust_arc_increment_strong_count_Tag,
-    rustArcDecrementStrongCount:
-        RustLib.instance.api.rust_arc_decrement_strong_count_Tag,
-    rustArcDecrementStrongCountPtr:
-        RustLib.instance.api.rust_arc_decrement_strong_count_TagPtr,
   );
 }

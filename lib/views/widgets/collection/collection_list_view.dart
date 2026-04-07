@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../../i18n/translations.g.dart';
 import '../../../models/song_unit.dart';
-import '../../../models/tag.dart';
+import '../../../models/tag_extensions.dart';
 import '../../../viewmodels/tag_view_model.dart';
 import '../song_unit_list_tile.dart';
 import 'collection_drag_data.dart';

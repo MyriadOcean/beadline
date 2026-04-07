@@ -18,6 +18,7 @@ import 'api/simple.dart';
 import 'api/song_unit_api.dart';
 import 'api/suggestion_api.dart';
 import 'api/tag_api.dart';
+import 'api/thumbnail_cache_api.dart';
 import 'frb_generated.dart';
 
 abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
@@ -44,9 +45,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   get rust_arc_decrement_strong_count_SuggestionPtr => wire
       ._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSuggestionPtr;
 
-  CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_TagPtr => wire
-      ._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTagPtr;
-
   @protected
   QueryChip
   dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerQueryChip(
@@ -68,12 +66,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   Suggestion
   dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSuggestion(
-    dynamic raw,
-  );
-
-  @protected
-  Tag
-  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTag(
     dynamic raw,
   );
 
@@ -102,22 +94,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  Tag
-  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTag(
-    dynamic raw,
-  );
-
-  @protected
   String dco_decode_String(dynamic raw);
 
   @protected
   bool dco_decode_bool(dynamic raw);
-
-  @protected
-  DartCollection dco_decode_box_autoadd_dart_collection(dynamic raw);
-
-  @protected
-  DartTag dco_decode_box_autoadd_dart_tag(dynamic raw);
 
   @protected
   FfiSongUnit dco_decode_box_autoadd_ffi_song_unit(dynamic raw);
@@ -129,22 +109,19 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   LoftyMetadata dco_decode_box_autoadd_lofty_metadata(dynamic raw);
 
   @protected
+  Tag dco_decode_box_autoadd_tag(dynamic raw);
+
+  @protected
+  TagMetadata dco_decode_box_autoadd_tag_metadata(dynamic raw);
+
+  @protected
   int dco_decode_box_autoadd_u_32(dynamic raw);
-
-  @protected
-  DartCollection dco_decode_dart_collection(dynamic raw);
-
-  @protected
-  DartCollectionItem dco_decode_dart_collection_item(dynamic raw);
 
   @protected
   DartQueryChip dco_decode_dart_query_chip(dynamic raw);
 
   @protected
   DartSuggestion dco_decode_dart_suggestion(dynamic raw);
-
-  @protected
-  DartTag dco_decode_dart_tag(dynamic raw);
 
   @protected
   FfiSongUnit dco_decode_ffi_song_unit(dynamic raw);
@@ -177,37 +154,31 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<String> dco_decode_list_String(dynamic raw);
 
   @protected
-  List<DartCollection> dco_decode_list_dart_collection(dynamic raw);
-
-  @protected
-  List<DartCollectionItem> dco_decode_list_dart_collection_item(dynamic raw);
-
-  @protected
   List<DartQueryChip> dco_decode_list_dart_query_chip(dynamic raw);
 
   @protected
   List<DartSuggestion> dco_decode_list_dart_suggestion(dynamic raw);
 
   @protected
-  List<DartTag> dco_decode_list_dart_tag(dynamic raw);
-
-  @protected
   List<FfiSongUnit> dco_decode_list_ffi_song_unit(dynamic raw);
 
   @protected
+  List<int> dco_decode_list_prim_u_8_loose(dynamic raw);
+
+  @protected
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw);
+
+  @protected
+  List<Tag> dco_decode_list_tag(dynamic raw);
+
+  @protected
+  List<TagItem> dco_decode_list_tag_item(dynamic raw);
 
   @protected
   LoftyMetadata dco_decode_lofty_metadata(dynamic raw);
 
   @protected
   String? dco_decode_opt_String(dynamic raw);
-
-  @protected
-  DartCollection? dco_decode_opt_box_autoadd_dart_collection(dynamic raw);
-
-  @protected
-  DartTag? dco_decode_opt_box_autoadd_dart_tag(dynamic raw);
 
   @protected
   FfiSongUnit? dco_decode_opt_box_autoadd_ffi_song_unit(dynamic raw);
@@ -219,7 +190,31 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   LoftyMetadata? dco_decode_opt_box_autoadd_lofty_metadata(dynamic raw);
 
   @protected
+  Tag? dco_decode_opt_box_autoadd_tag(dynamic raw);
+
+  @protected
+  TagMetadata? dco_decode_opt_box_autoadd_tag_metadata(dynamic raw);
+
+  @protected
   int? dco_decode_opt_box_autoadd_u_32(dynamic raw);
+
+  @protected
+  RustCacheStats dco_decode_rust_cache_stats(dynamic raw);
+
+  @protected
+  Tag dco_decode_tag(dynamic raw);
+
+  @protected
+  TagItem dco_decode_tag_item(dynamic raw);
+
+  @protected
+  TagItemType dco_decode_tag_item_type(dynamic raw);
+
+  @protected
+  TagMetadata dco_decode_tag_metadata(dynamic raw);
+
+  @protected
+  TagType dco_decode_tag_type(dynamic raw);
 
   @protected
   int dco_decode_u_32(dynamic raw);
@@ -261,12 +256,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  Tag
-  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTag(
-    SseDeserializer deserializer,
-  );
-
-  @protected
   QueryChip
   sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerQueryChip(
     SseDeserializer deserializer,
@@ -291,24 +280,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  Tag
-  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTag(
-    SseDeserializer deserializer,
-  );
-
-  @protected
   String sse_decode_String(SseDeserializer deserializer);
 
   @protected
   bool sse_decode_bool(SseDeserializer deserializer);
-
-  @protected
-  DartCollection sse_decode_box_autoadd_dart_collection(
-    SseDeserializer deserializer,
-  );
-
-  @protected
-  DartTag sse_decode_box_autoadd_dart_tag(SseDeserializer deserializer);
 
   @protected
   FfiSongUnit sse_decode_box_autoadd_ffi_song_unit(
@@ -324,24 +299,19 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  Tag sse_decode_box_autoadd_tag(SseDeserializer deserializer);
+
+  @protected
+  TagMetadata sse_decode_box_autoadd_tag_metadata(SseDeserializer deserializer);
+
+  @protected
   int sse_decode_box_autoadd_u_32(SseDeserializer deserializer);
-
-  @protected
-  DartCollection sse_decode_dart_collection(SseDeserializer deserializer);
-
-  @protected
-  DartCollectionItem sse_decode_dart_collection_item(
-    SseDeserializer deserializer,
-  );
 
   @protected
   DartQueryChip sse_decode_dart_query_chip(SseDeserializer deserializer);
 
   @protected
   DartSuggestion sse_decode_dart_suggestion(SseDeserializer deserializer);
-
-  @protected
-  DartTag sse_decode_dart_tag(SseDeserializer deserializer);
 
   @protected
   FfiSongUnit sse_decode_ffi_song_unit(SseDeserializer deserializer);
@@ -374,16 +344,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<String> sse_decode_list_String(SseDeserializer deserializer);
 
   @protected
-  List<DartCollection> sse_decode_list_dart_collection(
-    SseDeserializer deserializer,
-  );
-
-  @protected
-  List<DartCollectionItem> sse_decode_list_dart_collection_item(
-    SseDeserializer deserializer,
-  );
-
-  @protected
   List<DartQueryChip> sse_decode_list_dart_query_chip(
     SseDeserializer deserializer,
   );
@@ -394,27 +354,25 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  List<DartTag> sse_decode_list_dart_tag(SseDeserializer deserializer);
-
-  @protected
   List<FfiSongUnit> sse_decode_list_ffi_song_unit(SseDeserializer deserializer);
 
   @protected
+  List<int> sse_decode_list_prim_u_8_loose(SseDeserializer deserializer);
+
+  @protected
   Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer);
+
+  @protected
+  List<Tag> sse_decode_list_tag(SseDeserializer deserializer);
+
+  @protected
+  List<TagItem> sse_decode_list_tag_item(SseDeserializer deserializer);
 
   @protected
   LoftyMetadata sse_decode_lofty_metadata(SseDeserializer deserializer);
 
   @protected
   String? sse_decode_opt_String(SseDeserializer deserializer);
-
-  @protected
-  DartCollection? sse_decode_opt_box_autoadd_dart_collection(
-    SseDeserializer deserializer,
-  );
-
-  @protected
-  DartTag? sse_decode_opt_box_autoadd_dart_tag(SseDeserializer deserializer);
 
   @protected
   FfiSongUnit? sse_decode_opt_box_autoadd_ffi_song_unit(
@@ -430,7 +388,33 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  Tag? sse_decode_opt_box_autoadd_tag(SseDeserializer deserializer);
+
+  @protected
+  TagMetadata? sse_decode_opt_box_autoadd_tag_metadata(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   int? sse_decode_opt_box_autoadd_u_32(SseDeserializer deserializer);
+
+  @protected
+  RustCacheStats sse_decode_rust_cache_stats(SseDeserializer deserializer);
+
+  @protected
+  Tag sse_decode_tag(SseDeserializer deserializer);
+
+  @protected
+  TagItem sse_decode_tag_item(SseDeserializer deserializer);
+
+  @protected
+  TagItemType sse_decode_tag_item_type(SseDeserializer deserializer);
+
+  @protected
+  TagMetadata sse_decode_tag_metadata(SseDeserializer deserializer);
+
+  @protected
+  TagType sse_decode_tag_type(SseDeserializer deserializer);
 
   @protected
   int sse_decode_u_32(SseDeserializer deserializer);
@@ -477,13 +461,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void
-  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTag(
-    Tag self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void
   sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerQueryChip(
     QueryChip self,
     SseSerializer serializer,
@@ -511,26 +488,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  void
-  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTag(
-    Tag self,
-    SseSerializer serializer,
-  );
-
-  @protected
   void sse_encode_String(String self, SseSerializer serializer);
 
   @protected
   void sse_encode_bool(bool self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_box_autoadd_dart_collection(
-    DartCollection self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_box_autoadd_dart_tag(DartTag self, SseSerializer serializer);
 
   @protected
   void sse_encode_box_autoadd_ffi_song_unit(
@@ -551,19 +512,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_box_autoadd_tag(Tag self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_tag_metadata(
+    TagMetadata self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_box_autoadd_u_32(int self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_dart_collection(
-    DartCollection self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_dart_collection_item(
-    DartCollectionItem self,
-    SseSerializer serializer,
-  );
 
   @protected
   void sse_encode_dart_query_chip(DartQueryChip self, SseSerializer serializer);
@@ -573,9 +531,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     DartSuggestion self,
     SseSerializer serializer,
   );
-
-  @protected
-  void sse_encode_dart_tag(DartTag self, SseSerializer serializer);
 
   @protected
   void sse_encode_ffi_song_unit(FfiSongUnit self, SseSerializer serializer);
@@ -611,18 +566,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_list_String(List<String> self, SseSerializer serializer);
 
   @protected
-  void sse_encode_list_dart_collection(
-    List<DartCollection> self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_list_dart_collection_item(
-    List<DartCollectionItem> self,
-    SseSerializer serializer,
-  );
-
-  @protected
   void sse_encode_list_dart_query_chip(
     List<DartQueryChip> self,
     SseSerializer serializer,
@@ -635,13 +578,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  void sse_encode_list_dart_tag(List<DartTag> self, SseSerializer serializer);
-
-  @protected
   void sse_encode_list_ffi_song_unit(
     List<FfiSongUnit> self,
     SseSerializer serializer,
   );
+
+  @protected
+  void sse_encode_list_prim_u_8_loose(List<int> self, SseSerializer serializer);
 
   @protected
   void sse_encode_list_prim_u_8_strict(
@@ -650,22 +593,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_list_tag(List<Tag> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_tag_item(List<TagItem> self, SseSerializer serializer);
+
+  @protected
   void sse_encode_lofty_metadata(LoftyMetadata self, SseSerializer serializer);
 
   @protected
   void sse_encode_opt_String(String? self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_opt_box_autoadd_dart_collection(
-    DartCollection? self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_opt_box_autoadd_dart_tag(
-    DartTag? self,
-    SseSerializer serializer,
-  );
 
   @protected
   void sse_encode_opt_box_autoadd_ffi_song_unit(
@@ -686,7 +623,37 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_opt_box_autoadd_tag(Tag? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_box_autoadd_tag_metadata(
+    TagMetadata? self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_opt_box_autoadd_u_32(int? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_rust_cache_stats(
+    RustCacheStats self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_tag(Tag self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_tag_item(TagItem self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_tag_item_type(TagItemType self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_tag_metadata(TagMetadata self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_tag_type(TagType self, SseSerializer serializer);
 
   @protected
   void sse_encode_u_32(int self, SseSerializer serializer);
@@ -852,39 +819,5 @@ class RustLibWire implements BaseWire {
       );
   late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSuggestion =
       _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSuggestionPtr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
-
-  void
-  rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTag(
-    ffi.Pointer<ffi.Void> ptr,
-  ) {
-    return _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTag(
-      ptr,
-    );
-  }
-
-  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTagPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
-        'frbgen_beadline_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTag',
-      );
-  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTag =
-      _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTagPtr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
-
-  void
-  rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTag(
-    ffi.Pointer<ffi.Void> ptr,
-  ) {
-    return _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTag(
-      ptr,
-    );
-  }
-
-  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTagPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
-        'frbgen_beadline_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTag',
-      );
-  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTag =
-      _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTagPtr
           .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
 }
