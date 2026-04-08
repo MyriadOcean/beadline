@@ -42,6 +42,9 @@ class HomePageState extends State<HomePage> {
   // Navigation history for back button (tracks tab switches)
   final List<NavDestination> _navigationHistory = [NavDestination.home];
 
+  // Queue view key for scroll-to-current
+  final GlobalKey<QueueViewState> _queueViewKey = GlobalKey();
+
   // Fullscreen state
   bool _isFullscreen = false;
   bool _showFullscreenControls = false;
@@ -657,6 +660,7 @@ class HomePageState extends State<HomePage> {
     return Consumer3<PlayerViewModel, TagViewModel, SettingsViewModel>(
       builder: (context, playerVM, tagVM, settingsVM, child) {
         return QueueView(
+          key: _queueViewKey,
           tagViewModel: tagVM,
           playerViewModel: playerVM,
           settingsViewModel: settingsVM,
@@ -682,6 +686,14 @@ class HomePageState extends State<HomePage> {
           child: PlayerControlPanel(
             viewModel: playerViewModel,
             isHorizontal: true,
+            onSongInfoTap: () {
+              // Navigate to home (queue) tab and scroll to current song
+              _navigateTo(NavDestination.home);
+              // Delay slightly to let the queue view build if switching tabs
+              Future.delayed(const Duration(milliseconds: 100), () {
+                _queueViewKey.currentState?.scrollToCurrentSong();
+              });
+            },
           ),
         );
       },

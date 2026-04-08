@@ -55,6 +55,7 @@ class CollectionListView extends StatefulWidget {
     required this.tagViewModel,
     required this.config,
     required this.resolveSongUnit,
+    this.scrollController,
     super.key,
   });
 
@@ -63,6 +64,8 @@ class CollectionListView extends StatefulWidget {
   final TagViewModel tagViewModel;
   final CollectionListConfig config;
   final SongUnit? Function(String songUnitId) resolveSongUnit;
+  /// Optional external scroll controller. If null, an internal one is created.
+  final ScrollController? scrollController;
 
   @override
   State<CollectionListView> createState() => _CollectionListViewState();
@@ -70,14 +73,26 @@ class CollectionListView extends StatefulWidget {
 
 class _CollectionListViewState extends State<CollectionListView> {
   final Set<String> _collapsedGroups = {};
-  final ScrollController _scrollController = ScrollController();
+  late ScrollController _scrollController;
+  bool _ownsScrollController = false;
 
   int? _hoverIndex;
   bool _hoverAbove = true;
 
   @override
+  void initState() {
+    super.initState();
+    if (widget.scrollController != null) {
+      _scrollController = widget.scrollController!;
+    } else {
+      _scrollController = ScrollController();
+      _ownsScrollController = true;
+    }
+  }
+
+  @override
   void dispose() {
-    _scrollController.dispose();
+    if (_ownsScrollController) _scrollController.dispose();
     super.dispose();
   }
 

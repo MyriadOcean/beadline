@@ -21,9 +21,12 @@ class PlayerControlPanel extends StatelessWidget {
     super.key,
     required this.viewModel,
     this.isHorizontal = false,
+    this.onSongInfoTap,
   });
   final PlayerViewModel viewModel;
   final bool isHorizontal;
+  /// Called when the user taps the song info area (title/artist/thumbnail).
+  final VoidCallback? onSongInfoTap;
 
   @override
   Widget build(BuildContext context) {
@@ -46,7 +49,11 @@ class PlayerControlPanel extends StatelessWidget {
       child: Row(
         children: [
           // Song info (left)
-          Expanded(flex: 2, child: _buildCompactSongInfo(context)),
+          Expanded(flex: 2, child: _TappableSongInfo(
+            enabled: viewModel.currentSongUnit != null,
+            onTap: onSongInfoTap,
+            child: _buildCompactSongInfo(context),
+          )),
           // Main controls (center)
           Expanded(
             flex: 3,
@@ -141,7 +148,11 @@ class PlayerControlPanel extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               // Song info
-              Expanded(child: _buildMobileSongInfo(context)),
+              Expanded(child: _TappableSongInfo(
+                enabled: viewModel.currentSongUnit != null,
+                onTap: onSongInfoTap,
+                child: _buildMobileSongInfo(context),
+              )),
               // More options button
               PopupMenuButton<String>(
                 icon: const Icon(Icons.more_vert),
@@ -1037,6 +1048,61 @@ class PlayerControlPanel extends StatelessWidget {
     final minutes = duration.inMinutes;
     final seconds = duration.inSeconds % 60;
     return '$minutes:${seconds.toString().padLeft(2, '0')}';
+  }
+}
+
+/// Tappable song info area with opacity feedback and pointer cursor.
+class _TappableSongInfo extends StatefulWidget {
+  const _TappableSongInfo({
+    required this.child,
+    required this.enabled,
+    this.onTap,
+  });
+  final Widget child;
+  final bool enabled;
+  final VoidCallback? onTap;
+
+  @override
+  State<_TappableSongInfo> createState() => _TappableSongInfoState();
+}
+
+class _TappableSongInfoState extends State<_TappableSongInfo> {
+  bool _pressed = false;
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return MouseRegion(
+      cursor: widget.enabled ? SystemMouseCursors.click : SystemMouseCursors.basic,
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTapDown: widget.enabled ? (_) => setState(() => _pressed = true) : null,
+        onTapUp: widget.enabled ? (_) {
+          setState(() => _pressed = false);
+          widget.onTap?.call();
+        } : null,
+        onTapCancel: () => setState(() => _pressed = false),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 120),
+          curve: Curves.easeOut,
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            color: _pressed
+                ? theme.colorScheme.onSurface.withValues(alpha: 0.08)
+                : _hovered && widget.enabled
+                    ? theme.colorScheme.onSurface.withValues(alpha: 0.04)
+                    : Colors.transparent,
+          ),
+          transform: _pressed ? (Matrix4.identity()..scale(0.97)) : Matrix4.identity(),
+          transformAlignment: Alignment.center,
+          child: widget.child,
+        ),
+      ),
+    );
   }
 }
 

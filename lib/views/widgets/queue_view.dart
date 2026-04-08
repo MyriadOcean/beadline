@@ -24,10 +24,37 @@ class QueueView extends StatefulWidget {
   final SettingsViewModel settingsViewModel;
 
   @override
-  State<QueueView> createState() => _QueueViewState();
+  State<QueueView> createState() => QueueViewState();
 }
 
-class _QueueViewState extends State<QueueView> {
+class QueueViewState extends State<QueueView> {
+  final ScrollController _queueScrollController = ScrollController();
+
+  /// Scroll the queue list to make the currently playing song visible.
+  void scrollToCurrentSong() {
+    final currentIndex = widget.tagViewModel.currentIndex;
+    if (currentIndex < 0 || !_queueScrollController.hasClients) return;
+
+    // Estimate item height (~60px per item) and scroll to center the current item
+    const estimatedItemHeight = 60.0;
+    final targetOffset = currentIndex * estimatedItemHeight;
+    final viewportHeight = _queueScrollController.position.viewportDimension;
+    final centeredOffset = (targetOffset - viewportHeight / 2 + estimatedItemHeight / 2)
+        .clamp(0.0, _queueScrollController.position.maxScrollExtent);
+
+    _queueScrollController.animateTo(
+      centeredOffset,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+  }
+
+  @override
+  void dispose() {
+    _queueScrollController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -51,6 +78,7 @@ class _QueueViewState extends State<QueueView> {
                     collectionId: tagVM.activeQueueId,
                     displayItems: displayItems,
                     tagViewModel: tagVM,
+                    scrollController: _queueScrollController,
                     resolveSongUnit: (id) => tagVM.queueSongUnits
                         .where((s) => s.id == id)
                         .firstOrNull,
