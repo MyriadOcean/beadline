@@ -137,8 +137,8 @@ class _CollectionGroupCardState extends State<CollectionGroupCard> {
       },
     );
 
-    // Wrap in Draggable so groups can be rearranged
-    card = Draggable<CollectionDragData>(
+    // Wrap in LongPressDraggable so groups can be rearranged (hold to drag)
+    card = LongPressDraggable<CollectionDragData>(
       data: CollectionDragData.group(
         groupId: group.id,
         sourceCollectionId: widget.collectionId,

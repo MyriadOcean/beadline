@@ -61,7 +61,7 @@ class SongUnitListTile extends StatelessWidget {
     }
 
     if (draggable && dragData != null) {
-      tile = Draggable<CollectionDragData>(
+      tile = LongPressDraggable<CollectionDragData>(
         data: dragData,
         feedback: _buildDragFeedback(context, theme),
         childWhenDragging: Opacity(opacity: 0.3, child: tile),
