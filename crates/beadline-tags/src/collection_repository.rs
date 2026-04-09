@@ -35,13 +35,14 @@ pub fn load_collection_metadata(json: Option<&str>) -> Result<Option<CollectionM
         None => Ok(None),
         Some(s) if s.trim().is_empty() => Ok(None),
         Some(s) => {
-            let metadata: CollectionMetadata =
+            let mut metadata: CollectionMetadata =
                 serde_json::from_str(s).map_err(|e| TagError::Database(
                     crate::error::DbError::QueryFailed(format!(
                         "failed to parse collection metadata JSON: {}",
                         e
                     )),
                 ))?;
+            metadata.items.sort_by_key(|item| item.order);
             Ok(Some(metadata))
         }
     }
@@ -350,6 +351,8 @@ pub async fn reorder_collection_items(
         item.order = *new_order;
     }
 
+    // Sort items by their new order so the persisted JSON matches the logical order.
+    metadata.items.sort_by_key(|item| item.order);
     metadata.updated_at = now_iso8601();
 
     save_collection_metadata(conn, collection_id, &metadata, is_group).await?;
