@@ -5,11 +5,18 @@ resolver = "2"
 [workspace.dependencies]
 criterion = "0.8.2"
 
+[profile.dev]
+opt-level = 0          # No optimization (fast compile, like -O0)
+debug = true           # Full debug symbols (like -g)
+
 [profile.release]
-strip = true
-opt-level = "s"
-lto = true
-codegen-units = 1
+opt-level = 3          # Maximum optimization (like -O3)
+lto = "fat"            # Link-Time Optimization (like -flto)
+strip = true           # Strip symbols (like the strip command)
+codegen-units = 1      # Single codegen unit — slower compile, better optimization
+panic = "abort"        # No unwind tables (smaller binary)
+
+
 
 
 [profile.bench]

@@ -49,7 +49,7 @@ dependencies:
   
   # Media playback (media_kit for all platforms)
   # NOTE: media_kit_libs_video includes audio support on all platforms.
-  # Do NOT add media_kit_libs_audio 鈥?it causes duplicate class errors on Android.
+  # Do NOT add media_kit_libs_audio - it causes duplicate class errors on Android.
   media_kit: ^1.1.11
   media_kit_video: ^2.0.1
   media_kit_libs_video: ^1.0.5

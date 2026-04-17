@@ -181,6 +181,11 @@ Direct distribution (split APKs by ABI, recommended):
 flutter build apk --release --split-per-abi --obfuscate --split-debug-info=debug-info/
 ```
 
+Only for arm64
+```bash
+flutter build apk --release --target-platform android-arm64 --obfuscate --split-debug-info=debug-info/
+```
+
 Google Play Store (App Bundle):
 ```bash
 flutter build appbundle --release
